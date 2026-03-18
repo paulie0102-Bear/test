@@ -690,42 +690,45 @@ function renderPokedex() {
 function openModalById(id) {
     // 1. 先隱藏所有彈窗
     closeAllModals();
-    
+
     // 2. 顯示目標彈窗
     const target = document.getElementById(id);
-    if (target) {
-        target.style.display = 'flex';
-    } else {
+    if (!target) {
         console.error("找不到 ID 為 " + id + " 的彈窗：" + id);
         return;
     }
-    
+    target.style.display = 'flex'; // 確保是 flex，讓內容顯示
+
     // 3. 根據開啟的 ID 觸發對應的資料渲染邏輯
     switch(id) {
         case 'modal-shop':
             renderSeeds(); 
             break;
+
         case 'modal-bank':
         case 'modal-exam': 
-        case 'modal-quiz-select': // ✨ 新增：如果你有建立這個選擇清單
-            renderBankList(); 
+        case 'modal-quiz-select': 
+            // ✨ 確保渲染考卷區和題庫區
+            if (typeof renderBankList === 'function') renderBankList(); 
             break;
+
         case 'modal-quiz':
-            // 這裡千萬不要再呼叫會觸發 openModalById 的函式，否則會死循環
-            // 確保進到這裡時，題目的渲染已經交給 startExam 或渲染函式處理
+            // 渲染考卷題目等由 startExam 或其他函式負責
             break;
+
         case 'modal-pokedex':
             renderPokedex(); 
             break;
+
         case 'modal-wrong':
             if (typeof openWrongPool === 'function') openWrongPool(); 
             break;
+
         case 'modal-player':
             if (typeof renderPlayerInfo === 'function') renderPlayerInfo();
             break;
     }
 }
-
 function closeAllModals() {
     // 這裡確保你的彈窗類名都是 fullscreen-modal
     document.querySelectorAll('.fullscreen-modal').forEach(m => m.style.display = 'none');
@@ -1107,30 +1110,19 @@ function handleFileUpload(input) {
 
     const reader = new FileReader();
     reader.onload = function(e) {
-    const content = e.target.result;
-    const doc = new DOMParser().parseFromString(content, 'text/html');
+        const content = e.target.result;
+        const doc = new DOMParser().parseFromString(content, 'text/html');
 
-    // --- 標題抓取邏輯開始 ---
-    // 1. 優先找 <h1> (通常是最完整的考試名稱)
-    let bankName = doc.querySelector('h1')?.innerText.trim();
+        // === 標題抓取 ===
+        let bankName = doc.querySelector('h1')?.innerText.trim();
+        if (!bankName) bankName = doc.querySelector('title')?.innerText.trim();
+        if (!bankName || bankName === "Document" || bankName.includes('exam-')) {
+            let fileNameTitle = file.name.replace('.html', '');
+            bankName = bankName && !bankName.includes('exam-') ? bankName : fileNameTitle;
+        }
 
-    // 2. 如果沒 <h1>，找 <title> (例如 exam-115896)
-    if (!bankName) {
-        bankName = doc.querySelector('title')?.innerText.trim();
-    }
-
-    // 3. 如果連 <title> 都沒意義 (例如標題是空白)，才用檔名
-    if (!bankName || bankName === "Document" || bankName.includes('exam-')) {
-        // 如果標題是 exam- 開頭的代碼，我們優先保留檔名比較好認
-        let fileNameTitle = file.name.replace('.html', '');
-        // 如果有抓到 h1 但它是 exam- 代碼，這裡可以做個防錯
-        bankName = bankName && !bankName.includes('exam-') ? bankName : fileNameTitle;
-    }
-    // --- 標題抓取邏輯結束 ---
-
-    const blocks = doc.querySelectorAll('.border-b.border-gray-200');
-    // ... 後續解析題目的邏輯 ...
-
+        // === 解析題目 ===
+        const blocks = doc.querySelectorAll('.border-b.border-gray-200');
         const newQuestions = [];
 
         blocks.forEach((block, index) => {
@@ -1146,23 +1138,20 @@ function handleFileUpload(input) {
                       posD = text.lastIndexOf("(D)");
 
                 if (posA !== -1 && posB !== -1 && posC !== -1 && posD !== -1) {
-                    
-                    // 2. 抓取阿摩需要的原始題號 (例如 "第78題" -> "78")
                     const rawNumText = block.querySelector('.css-fyswvn')?.innerText || "";
                     const originalNum = rawNumText.replace(/[^0-9]/g, '') || (index + 1);
 
-                    // 3. 建立唯一的題目 ID (包含時間戳記避免不同次匯入重複)
                     const questionId = `${bankName}_${originalNum}_${Date.now()}_${index}`;
 
                     newQuestions.push({
-                        id: questionId,             // 用於續測紀錄
-                        originalNum: originalNum,   // 用於阿摩連結
-                        source: bankName,           // 考卷名稱
+                        id: questionId,
+                        originalNum: originalNum,
+                        source: bankName,
                         q: contentDiv.innerHTML.split('(A)')[0].replace(/^\d+[\.\s]*/, '').trim(),
                         a: [
-                            text.substring(posA + 3, posB).trim(), 
-                            text.substring(posB + 3, posC).trim(), 
-                            text.substring(posC + 3, posD).trim(), 
+                            text.substring(posA + 3, posB).trim(),
+                            text.substring(posB + 3, posC).trim(),
+                            text.substring(posC + 3, posD).trim(),
                             text.substring(posD + 3).trim()
                         ],
                         correct: ansMap[ansText]
@@ -1171,21 +1160,31 @@ function handleFileUpload(input) {
             }
         });
 
-        // ... 解析題目邏輯不變 ...
-if (newQuestions.length > 0) {
-    rawBanks.push({ 
-        id: Date.now(), 
-        name: bankName, 
-        data: newQuestions 
-    });
-    localStorage.setItem('garden_raw_banks', JSON.stringify(rawBanks));
-    renderBankList(); // 更新題庫區 UI
-    alert("原始題庫匯入成功！");
+        // === 匯入成功後處理 ===
+        if (newQuestions.length > 0) {
+            // 1️⃣ 儲存原始題庫
+            const rawBankId = Date.now();
+            rawBanks.push({ 
+                id: rawBankId, 
+                name: bankName, 
+                data: newQuestions 
+            });
+            localStorage.setItem('garden_raw_banks', JSON.stringify(rawBanks));
 
-            
-            // 介面更新
+            // 2️⃣ 生成一份新的考卷
+            const newExamPaper = {
+                id: Date.now(),
+                name: bankName + '_考卷',
+                data: newQuestions,
+                solvedIds: []
+            };
+            examPapers.push(newExamPaper);
+            localStorage.setItem('garden_exam_papers', JSON.stringify(examPapers));
+
+            // 3️⃣ 更新 UI
             if (typeof renderBankList === 'function') renderBankList();
-            alert(`匯入成功！\n名稱：${bankName}\n共 ${newQuestions.length} 題`);
+
+            alert(`匯入成功！\n原始題庫已儲存 (📁 ${bankName})\n並生成考卷：${newExamPaper.name}\n共 ${newQuestions.length} 題`);
         } else {
             alert("檔案格式不符，未能成功解析題目。");
         }
