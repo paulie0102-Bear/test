@@ -1,0 +1,115 @@
+<!DOCTYPE html><html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>題庫匯入器</title>
+<style>
+body { font-family: sans-serif; padding: 20px; }
+textarea { width: 100%; height: 200px; }
+button { margin: 10px 0; padding: 10px; }
+pre { background: #f5f5f5; padding: 10px; overflow: auto; }
+</style>
+</head>
+<body><h2>📥 HTML 題庫匯入</h2><textarea id="htmlInput" placeholder="貼上考題HTML..."></textarea><br>
+<button onclick="convertHTML()">轉換成 JSON</button><h3>📄 JSON 預覽</h3>
+<pre id="output"></pre><button onclick="saveToDB()">💾 存入題庫</button>
+
+<h3>📚 已儲存題庫</h3>
+<button onclick="loadDB()">載入題庫</button>
+<pre id="dbView"></pre><script>
+
+// ====== 工具 ======
+function getBatchInfo() {
+  return {
+    batch: "115-1-藥學(四)",
+    year: 115,
+    subject: "藥學(四)"
+  };
+}
+
+// ====== 核心：HTML → JSON ======
+function convertHTML() {
+  const htmlText = document.getElementById("htmlInput").value;
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlText, "text/html");
+
+  const questions = [];
+
+  const blocks = doc.querySelectorAll('.border-b');
+
+  const info = getBatchInfo();
+
+  blocks.forEach((q, index) => {
+    try {
+      // ===== 答案 =====
+      let answerText = q.querySelector('.text-red-600')?.innerText || '';
+      let answer = answerText.replace(/[()\s]/g, '');
+
+      // ===== 題目全文 =====
+      let fullText = q.querySelector('.break-words p')?.innerText || '';
+
+      // ===== 分離題目與選項 =====
+      let splitIndex = fullText.indexOf('(A)');
+      if (splitIndex === -1) return;
+
+      let questionText = fullText.substring(0, splitIndex).replace(/^\d+\./, '').trim();
+      let optionsText = fullText.substring(splitIndex);
+
+      // ===== 拆選項 =====
+      let optionMatches = optionsText.split(/[A-D]/).filter(x => x.trim() !== '');
+      let optionKeys = optionsText.match(/[A-D]/g);
+
+      let options = optionMatches.map((text, i) => ({
+        key: optionKeys[i].replace(/[()]/g, ''),
+        text: text.trim()
+      }));
+
+      questions.push({
+        id: `${info.batch}-${String(index + 1).padStart(3, '0')}`,
+        batch: info.batch,
+        year: info.year,
+        subject: info.subject,
+        question: { text: questionText },
+        options: options,
+        answer: answer,
+        note: ""
+      });
+
+    } catch (e) {
+      console.error("解析錯誤", e);
+    }
+  });
+
+  window.convertedData = questions;
+
+  document.getElementById("output").textContent =
+    JSON.stringify(questions, null, 2);
+}
+
+// ====== 儲存題庫 ======
+function saveToDB() {
+  if (!window.convertedData) {
+    alert("請先轉換");
+    return;
+  }
+
+  let db = JSON.parse(localStorage.getItem("questionDB") || "[]");
+
+  db = db.concat(window.convertedData);
+
+  localStorage.setItem("questionDB", JSON.stringify(db));
+
+  alert("已存入題庫！");
+}
+
+// ====== 載入題庫 ======
+function loadDB() {
+  let db = JSON.parse(localStorage.getItem("questionDB") || "[]");
+
+  document.getElementById("dbView").textContent =
+    JSON.stringify(db, null, 2);
+}
+
+</script></body>
+</html>
