@@ -388,7 +388,117 @@ function renderBankSelector(){
         container.innerHTML = '<p style="font-size:12px; color:#999;">尚無題庫，請匯入。</p>';
         return;
     }
-    container.inner
+    container.innerHTML = game.banks.map((b,i)=>`<label style="font-size:12px;"><input type="checkbox" value="${i}" checked> ${b.name}</label><br>`).join('');
+}
+
+// 成長 UI
+function updateUI(){
+    document.getElementById('coins').innerText = game.coins;
+    document.getElementById('today-growth').innerText = game.dailyCorrect;
+}
+
+// 切換底部頁面
+function switchView(name){
+    document.querySelectorAll('.view-section').forEach(s=>s.classList.remove('active'));
+    document.getElementById('view-'+name).classList.add('active');
+    document.querySelectorAll('nav .nav-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelector(`nav .nav-btn[onclick="switchView('${name}')"]`).classList.add('active');
+}
+
+// 種子選擇及植物渲染
+function renderQuizInit(){
+    const seedList = document.getElementById('seed-inv-list');
+    seedList.innerHTML = '';
+    const invIds = Object.keys(game.inventory);
+    if(invIds.length === 0){
+        document.getElementById('empty-inv-hint').style.display = 'block';
+    } else {
+        document.getElementById('empty-inv-hint').style.display = 'none';
+        invIds.forEach(id=>{
+            const f = FLOWER_DB.find(x=>x.id===id);
+            const btn = document.createElement('button');
+            btn.innerText = `${f.icon} ${f.name} x${game.inventory[id]}`;
+            btn.onclick = ()=>plantSeed(id);
+            seedList.appendChild(btn);
+        });
+    }
+
+    if(game.currentPlant){
+        document.getElementById('quiz-init').style.display = 'block';
+        document.getElementById('quiz-play').style.display = 'none';
+        updateGrowthUI();
+    } else {
+        document.getElementById('quiz-init').style.display = 'block';
+        document.getElementById('quiz-play').style.display = 'none';
+    }
+}
+
+// 種植植物
+function plantSeed(id){
+    const f = FLOWER_DB.find(f=>f.id===id);
+    if(!f) return alert("種子不存在");
+    if(!game.inventory[id] || game.inventory[id]<=0) return alert("沒有這個種子");
+    game.inventory[id]--;
+    if(game.inventory[id]<=0) delete game.inventory[id];
+    game.currentPlant = {id:id, growth:0};
+    save();
+    renderQuizInit();
+}
+
+// 植物成長
+function applyGrowth(type){
+    if(!game.currentPlant) return alert("尚未種植植物");
+    if(game.dailyCorrect >= 10) return alert("今日成長已達上限");
+    game.currentPlant.growth += 10;
+    game.dailyCorrect++;
+    if(game.currentPlant.growth >= 100){
+        game.currentPlant.growth = 100;
+        unlockPlant(game.currentPlant.id);
+        alert(`🎉 ${FLOWER_DB.find(f=>f.id===game.currentPlant.id).name} 成長完成！`);
+        game.currentPlant = null;
+    }
+    save();
+    updateUI();
+    renderQuizInit();
+    updateGrowthUI();
+}
+
+// 更新進度條
+function updateGrowthUI(){
+    if(!game.currentPlant) return;
+    const f = FLOWER_DB.find(x=>x.id===game.currentPlant.id);
+    document.getElementById('current-planting-name').innerText = `正在培育：${f.name}`;
+    document.getElementById('growth-bar').style.width = game.currentPlant.growth + '%';
+    document.getElementById('growth-text').innerText = game.currentPlant.growth + '%';
+    document.getElementById('task-water').disabled = game.dailyCorrect >= 10;
+    document.getElementById('task-feed').disabled = game.dailyCorrect >= 10;
+    document.getElementById('task-sun').disabled = game.dailyCorrect >= 10;
+    document.getElementById('task-hint').innerText = `今日答對：${game.dailyCorrect} 題`;
+}
+
+// 解鎖植物
+function unlockPlant(id){ if(!game.unlocked.includes(id)) game.unlocked.push(id); }
+
+// 每日重置
+function checkDailyReset(){
+    const today = new Date().toLocaleDateString();
+    if(game.lastDate !== today){
+        game.dailyCorrect = 0;
+        game.lastDate = today;
+        save();
+        updateUI();
+        renderQuizInit();
+    }
+}
+setInterval(checkDailyReset,60000);
+
+// 初始化
+window.onload = function(){
+    updateUI();
+    renderQuizInit();
+    renderShop();
+    renderBankSelector();
+}
 </script>
 </body>
 </html>
