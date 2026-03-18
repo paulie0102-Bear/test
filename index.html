@@ -3,199 +3,378 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>藥師國考藥草園 x 動森管家</title>
+    <title>藥師國考藥草園 v3.0</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
     <style>
-        :root { --main-green: #78ab4e; --sand-yellow: #f1e6b2; }
+        :root { --main-green: #78ab4e; --sand-yellow: #f1e6b2; --bg-card: #f9f9f9; }
         body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--sand-yellow); margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
-        /* 頂部：藥草園畫面 */
-        #garden-area { height: 40%; background: linear-gradient(#87CEEB, #E0F7FA); position: relative; border-bottom: 5px solid #5d4037; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 20px; }
-        .manager-img { width: 100px; height: 100px; z-index: 2; transition: transform 0.3s; }
-        .plant-img { width: 80px; height: 80px; margin-left: 20px; filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.2)); }
-        .status-bar { position: absolute; top: 10px; left: 10px; background: rgba(255,255,255,0.8); padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .weeds { position: absolute; bottom: 20px; width: 40px; opacity: 0.8; }
+        /* 頂部區域 */
+        #garden-area { height: 30%; background: linear-gradient(#87CEEB, #E0F7FA); position: relative; border-bottom: 5px solid #5d4037; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 15px; }
+        .manager-img { width: 80px; height: 80px; z-index: 2; }
+        .plant-img { width: 70px; height: 70px; margin-left: 15px; }
+        .status-bar { position: absolute; top: 10px; left: 10px; background: rgba(255,255,255,0.8); padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; }
 
-        /* 中部：答題與匯入區 */
-        #main-content { flex: 1; padding: 20px; overflow-y: auto; background: white; border-radius: 25px 25px 0 0; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); }
-        .card { background: #f9f9f9; padding: 15px; border-radius: 15px; margin-bottom: 15px; border-left: 5px solid var(--main-green); }
-        textarea { width: 100%; height: 100px; border: 1px solid #ccc; border-radius: 10px; padding: 10px; box-sizing: border-box; }
-        button { background: var(--main-green); color: white; border: none; padding: 12px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; margin: 5px 0; width: 100%; }
+        /* 主內容區 */
+        #main-content { flex: 1; background: white; border-top-left-radius: 25px; border-top-right-radius: 25px; overflow-y: auto; padding: 20px; padding-bottom: 140px; }
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+
+        /* 底部導覽 (一列3個，共兩列) */
+        nav { position: fixed; bottom: 0; width: 100%; background: white; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 60px); border-top: 1px solid #ddd; padding: 5px 0; z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+        .nav-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; color: #555; cursor: pointer; border: none; background: none; }
+        .nav-btn.active { color: var(--main-green); font-weight: bold; }
+        .nav-icon { font-size: 20px; margin-bottom: 2px; }
+
+        /* 元件樣式 */
+        .card { background: var(--bg-card); padding: 15px; border-radius: 15px; margin-bottom: 15px; border-left: 5px solid var(--main-green); }
+        button { background: var(--main-green); color: white; border: none; padding: 10px; border-radius: 20px; font-weight: bold; width: 100%; margin: 5px 0; }
         button.secondary { background: #5c8dcf; }
-
-        /* 答題介面 */
-        .option-btn { background: white; border: 2px solid #ddd; color: #333; text-align: left; margin-bottom: 10px; }
-        .option-btn.correct { background: #d4edda; border-color: #28a745; }
-        .option-btn.wrong { background: #f8d7da; border-color: #dc3545; }
+        textarea, input, select { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ccc; box-sizing: border-box; margin: 5px 0; }
+        .progress-container { width: 100%; background: #eee; height: 10px; border-radius: 5px; margin: 10px 0; }
+        .progress-bar { background: var(--main-green); height: 100%; border-radius: 5px; width: 0%; transition: width 0.3s; }
         
-        #yamol-link { display: none; color: #d9534f; text-decoration: underline; font-weight: bold; text-align: center; margin-top: 10px; cursor: pointer; }
+        /* 圖鑑網格 */
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .album-item { text-align: center; font-size: 11px; padding: 10px; border: 1px solid #eee; border-radius: 10px; }
+        .album-item img { width: 100%; filter: grayscale(1); }
+        .album-item.unlocked img { filter: grayscale(0); }
     </style>
 </head>
 <body>
 
 <div id="garden-area">
-    <div class="status-bar">
-        💰 金幣: <span id="coin-count">0</span> | 🌱 成長度: <span id="growth-level">1</span>
-    </div>
-    <img id="manager-pic" class="manager-img" src="https://acnhapi.com/v1/icons/villagers/1" alt="Manager">
-    <img id="plant-pic" class="plant-img" src="https://img.icons8.com/color/96/sprout.png" alt="Plant">
-    <div id="weeds-container"></div>
+    <div class="status-bar">💰 <span id="coins">0</span> | 🌱 LV.<span id="level">1</span></div>
+    <img id="manager-img" class="manager-img" src="https://acnhapi.com/v1/icons/villagers/1">
+    <img id="plant-img" class="plant-img" src="https://img.icons8.com/color/96/sprout.png">
 </div>
 
 <div id="main-content">
-    <div id="import-section" class="card">
-        <h3>📥 匯入考選部 HTML</h3>
-        <textarea id="htmlInput" placeholder="在此貼上考選部 HTML 原始碼..."></textarea>
-        <button onclick="convertHTML()">開始轉換題庫</button>
+    <div id="view-quiz" class="view-section active">
+        <div id="quiz-init">
+            <h3>📝 生成考卷</h3>
+            <label>選擇題庫範圍：</label>
+            <div id="quiz-bank-selector" style="max-height:150px; overflow-y:auto; border:1px solid #eee; padding:10px; border-radius:10px;"></div>
+            <select id="quiz-mode"><option value="seq">依題目順序</option><option value="rand">打亂順序</option></select>
+            <input type="number" id="quiz-count" placeholder="練習題數" value="10">
+            <button onclick="createExam()">開始建立考卷</button>
+        </div>
+        <div id="quiz-play" style="display:none;">
+            <div class="progress-container"><div id="exam-progress" class="progress-bar"></div></div>
+            <p id="q-text" style="font-weight:bold;"></p>
+            <div id="options-container"></div>
+            <div id="q-feedback" style="margin-top:10px;"></div>
+            <button class="secondary" onclick="nextExamQ()">下一題</button>
+        </div>
     </div>
 
-    <div id="quiz-section" class="card" style="display:none;">
-        <h4 id="q-text">題目載入中...</h4>
-        <div id="options-container"></div>
-        <div id="yamol-link" onclick="openYamol()">🆘 阿摩大神救救我 (看詳解)</div>
-        <button class="secondary" onclick="nextQuestion()" style="margin-top:15px;">下一題</button>
+    <div id="view-album" class="view-section">
+        <h3>🌿 花草圖鑑</h3>
+        <p style="font-size:12px;">成長度達到 100% 即可永久收錄</p>
+        <div id="album-grid" class="grid-3"></div>
     </div>
-    
-    <button class="secondary" onclick="toggleView()">切換 匯入 / 答題 模式</button>
+
+    <div id="view-shop" class="view-section">
+        <h3>🛒 狸克商店</h3>
+        <div class="card">
+            <p>🌻 稀有向日葵種子 (500金幣)</p>
+            <button onclick="buy('sunflower', 500)">購買</button>
+        </div>
+        <div class="card">
+            <p>🐱 雇用隨機管家 (2000金幣)</p>
+            <button onclick="buy('manager', 2000)">購買</button>
+        </div>
+    </div>
+
+    <div id="view-player" class="view-section">
+        <h3>👤 玩家資料</h3>
+        <div class="card">
+            <p>圖鑑解鎖：<span id="st-unlock">0%</span></p>
+            <p>累計答題：<span id="st-total">0</span> 題</p>
+            <p>總答對率：<span id="st-rate">0%</span></p>
+        </div>
+        <h3>💾 雲端/本機存檔</h3>
+        <button onclick="exportSave()">導出存檔 (.garden-save)</button>
+        <button class="secondary" onclick="document.getElementById('importFile').click()">讀取存檔檔案</button>
+        <input type="file" id="importFile" style="display:none" onchange="importSave(event)">
+    </div>
+
+    <div id="view-bank" class="view-section">
+        <h3>🗄️ 題庫管理</h3>
+        <input type="text" id="bank-search" placeholder="搜尋關鍵字..." oninput="renderBankList()">
+        <textarea id="htmlInput" placeholder="在此貼上考選部 HTML 原始碼..."></textarea>
+        <button onclick="importHTML()">匯入新題庫</button>
+        <div id="bank-list"></div>
+    </div>
+
+    <div id="view-history" class="view-section">
+        <h3>📊 答題紀錄</h3>
+        <div id="history-container"></div>
+    </div>
 </div>
 
+<nav>
+    <div class="nav-btn active" onclick="switchView('quiz')"><span class="nav-icon">📝</span>答題</div>
+    <div class="nav-btn" onclick="switchView('album')"><span class="nav-icon">📖</span>圖鑑</div>
+    <div class="nav-btn" onclick="switchView('shop')"><span class="nav-icon">🛒</span>商店</div>
+    <div class="nav-btn" onclick="switchView('bank')"><span class="nav-icon">🗄️</span>題庫</div>
+    <div class="nav-btn" onclick="switchView('history')"><span class="nav-icon">📊</span>紀錄</div>
+    <div class="nav-btn" onclick="switchView('player')"><span class="nav-icon">👤</span>玩家</div>
+</nav>
+
 <script>
-// ====== 遊戲數據紀錄 ======
-let gameState = {
-    coins: parseInt(localStorage.getItem('coins')) || 0,
-    growth: parseInt(localStorage.getItem('growth')) || 0,
-    currentQ: null,
-    db: JSON.parse(localStorage.getItem('questionDB')) || []
+// ====== 數據初始化 ======
+let game = JSON.parse(localStorage.getItem('garden_data')) || {
+    coins: 100,
+    growth: 0,
+    level: 1,
+    banks: [],
+    history: [],
+    unlockedAlbum: [], // 存放已收錄的花草ID
+    currentExam: null
 };
 
-// ====== 初始化動森管家 (隨機一位村民) ======
-async function initManager() {
-    try {
-        const randomId = Math.floor(Math.random() * 391) + 1;
-        document.getElementById('manager-pic').src = `https://acnhapi.com/v1/icons/villagers/${randomId}`;
-    } catch (e) { console.log("API 載入失敗，使用預設圖片"); }
+const FLOWER_TYPES = [
+    { id: 'sprout', name: '幼苗', img: 'https://img.icons8.com/color/96/sprout.png' },
+    { id: 'tulip', name: '鬱金香', img: 'https://img.icons8.com/color/96/tulip.png' },
+    { id: 'sunflower', name: '向日葵', img: 'https://img.icons8.com/color/96/sunflower.png' },
+    { id: 'rose', name: '玫瑰', img: 'https://img.icons8.com/color/96/rose-window.png' }
+];
+
+// ====== 介面切換 ======
+function switchView(viewId) {
+    document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('view-' + viewId).classList.add('active');
+    event.currentTarget.classList.add('active');
+
+    if(viewId === 'bank') renderBankList();
+    if(viewId === 'quiz') renderBankSelector();
+    if(viewId === 'album') renderAlbum();
+    if(viewId === 'player') renderStats();
+    if(viewId === 'history') renderHistory();
 }
 
-// ====== 核心：HTML 轉換邏輯 ======
-function convertHTML() {
-    const htmlText = document.getElementById("htmlInput").value;
+// ====== 題庫管理 ======
+function importHTML() {
+    const html = document.getElementById('htmlInput').value;
     const parser = new DOMParser();
-    const doc = parser.parseFromString(htmlText, "text/html");
-    const blocks = doc.querySelectorAll('.border-b'); // 針對阿摩/考選部格式調整
-    const newQuestions = [];
+    const doc = parser.parseFromString(html, "text/html");
+    const blocks = doc.querySelectorAll('.border-b');
+    
+    const title = prompt("請輸入題庫標題 (例如: 115-1 藥事法規)", "新題庫");
+    if(!title) return;
 
-    blocks.forEach((q, index) => {
-        try {
-            let fullText = q.querySelector('.break-words p')?.innerText || "";
-            let splitIndex = fullText.indexOf('(A)');
-            if (splitIndex === -1) return;
-
-            let questionText = fullText.substring(0, splitIndex).replace(/^\d+\./, '').trim();
-            let optionsText = fullText.substring(splitIndex);
-            let optionMatches = optionsText.split(/\([A-D]\)/).filter(x => x.trim() !== '');
-            
-            let ans = q.querySelector('.text-red-600')?.innerText.replace(/[()\s]/g, '') || "A";
-
-            newQuestions.push({
-                id: Date.now() + index,
-                q: questionText,
-                options: optionMatches.map(t => t.trim()),
-                ans: ans,
-                yamol: `https://yamol.tw/re_search.php?key=${encodeURIComponent(questionText.substring(0,15))}`
-            });
-        } catch (e) { console.error(e); }
+    const questions = [];
+    blocks.forEach((b, i) => {
+        let fullText = b.querySelector('.break-words p')?.innerText || "";
+        let splitIndex = fullText.indexOf('(A)');
+        if(splitIndex === -1) return;
+        questions.push({
+            id: Date.now() + i,
+            q: fullText.substring(0, splitIndex).replace(/^\d+\./, '').trim(),
+            options: fullText.substring(splitIndex).split(/\([A-D]\)/).filter(x => x.trim()).map(t => t.trim()),
+            ans: b.querySelector('.text-red-600')?.innerText.replace(/[()\s]/g, '') || "A",
+            done: false // 標記是否已練習過
+        });
     });
 
-    gameState.db = gameState.db.concat(newQuestions);
-    localStorage.setItem('questionDB', JSON.stringify(gameState.db));
-    alert(`成功匯入 ${newQuestions.length} 題！`);
-    updateUI();
+    game.banks.push({ id: Date.now(), title: title, questions: questions });
+    save();
+    renderBankList();
+    alert(`成功匯入 ${questions.length} 題`);
 }
 
-// ====== 答題邏輯 ======
-function startQuiz() {
-    if (gameState.db.length === 0) return alert("請先匯入題庫！");
-    const randomIndex = Math.floor(Math.random() * gameState.db.length);
-    gameState.currentQ = gameState.db[randomIndex];
+function renderBankList() {
+    const search = document.getElementById('bank-search').value.toLowerCase();
+    const list = document.getElementById('bank-list');
+    list.innerHTML = game.banks
+        .filter(b => b.title.toLowerCase().includes(search))
+        .map(b => `
+            <div class="list-item card">
+                <span>${b.title} (${b.questions.length} 題)</span>
+                <button style="width:60px; background:red; margin-top:0;" onclick="deleteBank(${b.id})">刪除</button>
+            </div>
+        `).join('');
+}
+
+function deleteBank(id) {
+    if(confirm("確定要刪除整個題庫嗎？")) {
+        game.banks = game.banks.filter(b => b.id !== id);
+        save();
+        renderBankList();
+    }
+}
+
+// ====== 考卷系統 ======
+function renderBankSelector() {
+    const container = document.getElementById('quiz-bank-selector');
+    container.innerHTML = game.banks.map(b => `
+        <label style="display:block;"><input type="checkbox" value="${b.id}"> ${b.title}</label>
+    `).join('');
+}
+
+function createExam() {
+    const selectedIds = Array.from(document.querySelectorAll('#quiz-bank-selector input:checked')).map(i => parseInt(i.value));
+    if(selectedIds.length === 0) return alert("請至少選一個題庫");
+
+    let pool = [];
+    game.banks.filter(b => selectedIds.includes(b.id)).forEach(b => {
+        // 僅選取「未答題」的題目
+        b.questions.filter(q => !q.done).forEach(q => pool.push({...q, bankId: b.id}));
+    });
+
+    if(pool.length === 0) return alert("所選題庫的所有題目皆已練習完畢！");
+
+    const count = Math.min(parseInt(document.getElementById('quiz-count').value), pool.length);
+    if(document.getElementById('quiz-mode').value === 'rand') {
+        pool.sort(() => Math.random() - 0.5);
+    }
+
+    game.currentExam = {
+        questions: pool.slice(0, count),
+        index: 0,
+        total: count
+    };
+
+    document.getElementById('quiz-init').style.display = 'none';
+    document.getElementById('quiz-play').style.display = 'block';
+    showExamQ();
+}
+
+function showExamQ() {
+    const q = game.currentExam.questions[game.currentExam.index];
+    const progress = ((game.currentExam.index) / game.currentExam.total) * 100;
+    document.getElementById('exam-progress').style.width = progress + "%";
+    document.getElementById('q-text').innerText = q.q;
     
-    document.getElementById('q-text').innerText = gameState.currentQ.q;
     const container = document.getElementById('options-container');
     container.innerHTML = '';
-    document.getElementById('yamol-link').style.display = 'none';
+    document.getElementById('q-feedback').innerHTML = '';
 
     ['A','B','C','D'].forEach((label, i) => {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
-        btn.innerText = `${label}. ${gameState.currentQ.options[i] || ''}`;
-        btn.onclick = () => checkAnswer(label, btn);
+        btn.style.background = "white"; btn.style.color = "black"; btn.style.border = "1px solid #ddd";
+        btn.innerText = `${label}. ${q.options[i] || ''}`;
+        btn.onclick = () => checkExamAns(label, btn);
         container.appendChild(btn);
     });
 }
 
-function checkAnswer(choice, btn) {
-    if (choice === gameState.currentQ.ans) {
-        btn.classList.add('correct');
-        gameState.coins += 20;
-        gameState.growth += 1;
-        document.getElementById('manager-pic').style.transform = 'scale(1.2) rotate(10deg)';
-        setTimeout(() => document.getElementById('manager-pic').style.transform = 'scale(1)', 300);
+function checkExamAns(choice, btn) {
+    const q = game.currentExam.questions[game.currentExam.index];
+    const isCorrect = choice === q.ans;
+    
+    // 標記題庫中的該題已做過
+    game.banks.find(b => b.id === q.bankId).questions.find(item => item.id === q.id).done = true;
+
+    if(isCorrect) {
+        btn.style.background = "#d4edda";
+        game.coins += 10;
+        game.growth += 2;
     } else {
-        btn.classList.add('wrong');
-        document.getElementById('yamol-link').style.display = 'block';
-        // 答錯生成雜草
-        createWeed();
+        btn.style.background = "#f8d7da";
+        document.getElementById('q-feedback').innerHTML = `<p style="color:red">正確答案是: ${q.ans} <br> <a href="https://yamol.tw/re_search.php?key=${encodeURIComponent(q.q.substring(0,15))}" target="_blank">阿摩詳解</a></p>`;
     }
-    saveGame();
+
+    game.history.push({ q: q.q, ans: q.ans, user: choice, correct: isCorrect, time: new Date().toLocaleString() });
+    
+    if(game.growth >= 100) {
+        const flower = FLOWER_TYPES[Math.floor(Math.random() * FLOWER_TYPES.length)];
+        if(!game.unlockedAlbum.includes(flower.id)) game.unlockedAlbum.push(flower.id);
+        game.growth = 0;
+        alert(`恭喜！植物成熟，收錄進入圖鑑：${flower.name}`);
+    }
+
+    save();
     updateUI();
 }
 
-function createWeed() {
-    const weed = document.createElement('img');
-    weed.src = "https://img.icons8.com/color/48/grass.png";
-    weed.className = "weeds";
-    weed.style.left = Math.random() * 80 + "%";
-    document.getElementById('weeds-container').appendChild(weed);
-}
-
-function openYamol() {
-    window.open(gameState.currentQ.yamol, '_blank');
-}
-
-function nextQuestion() {
-    startQuiz();
-}
-
-function toggleView() {
-    const importSec = document.getElementById('import-section');
-    const quizSec = document.getElementById('quiz-section');
-    if (importSec.style.display === 'none') {
-        importSec.style.display = 'block';
-        quizSec.style.display = 'none';
+function nextExamQ() {
+    game.currentExam.index++;
+    if(game.currentExam.index < game.currentExam.total) {
+        showExamQ();
     } else {
-        importSec.style.display = 'none';
-        quizSec.style.display = 'block';
-        startQuiz();
+        alert("考卷完成！");
+        document.getElementById('quiz-init').style.display = 'block';
+        document.getElementById('quiz-play').style.display = 'none';
     }
+}
+
+// ====== 玩家與系統功能 ======
+function renderStats() {
+    const total = game.history.length;
+    const correct = game.history.filter(h => h.correct).length;
+    document.getElementById('st-total').innerText = total;
+    document.getElementById('st-rate').innerText = total ? Math.round((correct/total)*100) + "%" : "0%";
+    document.getElementById('st-unlock').innerText = Math.round((game.unlockedAlbum.length / FLOWER_TYPES.length)*100) + "%";
+}
+
+function renderAlbum() {
+    const grid = document.getElementById('album-grid');
+    grid.innerHTML = FLOWER_TYPES.map(f => `
+        <div class="album-item ${game.unlockedAlbum.includes(f.id) ? 'unlocked' : ''}">
+            <img src="${f.img}">
+            <p>${f.name}</p>
+        </div>
+    `).join('');
+}
+
+function renderHistory() {
+    const container = document.getElementById('history-container');
+    container.innerHTML = game.history.slice(-30).reverse().map(h => `
+        <div class="card" style="border-left-color: ${h.correct ? 'green' : 'red'}">
+            <p style="font-size:12px; color:gray;">${h.time}</p>
+            <p>${h.q}</p>
+            <p>結果: ${h.correct ? '正確' : '錯誤 (答案:'+h.ans+')'}</p>
+            <a href="https://yamol.tw/re_search.php?key=${encodeURIComponent(h.q.substring(0,10))}" target="_blank">阿摩連結</a>
+        </div>
+    `).join('');
+}
+
+// 存檔與讀取
+function exportSave() {
+    const data = JSON.stringify(game);
+    const blob = new Blob([data], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `my_garden_${new Date().toLocaleDateString()}.garden-save`;
+    a.click();
+}
+
+function importSave(event) {
+    const file = event.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            game = JSON.parse(e.target.result);
+            save();
+            location.reload();
+        } catch(err) { alert("讀取失敗，格式錯誤"); }
+    };
+    reader.readAsText(file);
+}
+
+function save() {
+    localStorage.setItem('garden_data', JSON.stringify(game));
 }
 
 function updateUI() {
-    document.getElementById('coin-count').innerText = gameState.coins;
-    document.getElementById('growth-level').innerText = Math.floor(gameState.growth / 10) + 1;
-    // 成長到一定程度改變植物外觀
-    if (gameState.growth > 50) document.getElementById('plant-pic').src = "https://img.icons8.com/color/96/sunflower.png";
-}
-
-function saveGame() {
-    localStorage.setItem('coins', gameState.coins);
-    localStorage.setItem('growth', gameState.growth);
+    document.getElementById('coins').innerText = game.coins;
+    document.getElementById('level').innerText = Math.floor(game.history.length / 50) + 1;
+    document.getElementById('plant-img').style.transform = `scale(${0.5 + game.growth/200})`;
 }
 
 window.onload = () => {
-    initManager();
     updateUI();
+    // 初始化隨機管家
+    document.getElementById('manager-img').src = `https://acnhapi.com/v1/icons/villagers/${Math.floor(Math.random()*391)+1}`;
 };
 </script>
+
 </body>
 </html>
