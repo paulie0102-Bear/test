@@ -204,7 +204,7 @@ button.danger { background: #e57373; }
 <body>
 <div id="garden-area">
     <div class="status-bar">
-        💰 <span id="coins">0</span> | 🌱 今日成長: <span id="today-growth">0</span>/10%
+        💰 <span id="coins">0</span> | 🌱 今日成長: <span id="today-growth">0</span>/10
     </div>
     <div class="plant-container">
         <div id="plant-bubble" class="bubble"></div>
@@ -263,7 +263,7 @@ button.danger { background: #e57373; }
         </div>
     </div>
 
-<!-- 商店區 -->
+    <!-- 商店區 -->
     <div id="view-shop" class="view-section">
         <h3>🛒 狸克商店</h3>
         <div id="shop-list"></div>
@@ -352,219 +352,17 @@ let game = JSON.parse(localStorage.getItem('garden_v4_2')) || {
     wrongBook: []
 };
 
-// 如果存檔裡有錯題本，就保留
 game.wrongBook = game.wrongBook || [];
 
 const DEFAULT_IMG = "https://cdn-icons-png.flaticon.com/512/766/766212.png";
 
-function save() { localStorage.setItem('garden_v4_2', JSON.stringify(game)); }
+function save(){ localStorage.setItem('garden_v4_2', JSON.stringify(game)); }
 
-// ====== 檔案處理與題庫解析 ======
-function handleFileUpload() {
-    const fileInput = document.getElementById('htmlFileInput');
-    if (!fileInput.files.length) return alert("請先選擇 HTML 檔案");
-
-    const file = fileInput.files[0];
-    const reader = new FileReader();
-
-    reader.onload = function(e) {
-        const content = e.target.result;
-        parseAndStoreHTML(content, file.name.replace('.html', ''));
-    };
-    reader.readAsText(file);
-}
-
-function parseAndStoreHTML(html, fileName) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, "text/html");
-    const blocks = doc.querySelectorAll('.border-b');
-
-    if (!blocks.length) return alert("解析失敗：找不到題目區塊。請確保匯入的是考選部下載的 HTML 格式。");
-
-    const qs = [];
-    blocks.forEach((b, i) => {
-        let txt = b.querySelector('.break-words p')?.innerText || "";
-        let split = txt.indexOf('(A)');
-        if (split === -1) return;
-
-        let questionText = txt.substring(0, split).replace(/^\d+\./, '').trim();
-        let optionsPart = txt.substring(split);
-        let options = optionsPart.split(/[A-D]/).filter(x => x.trim()).map(t => t.trim());
-        let answer = b.querySelector('.text-red-600')?.innerText.replace(/[()\s]/g, '') || "A";
-
-        qs.push({
-            id: Date.now() + i,
-            q: questionText,
-            options: options,
-            ans: answer
-        });
-    });
-
-    if (qs.length === 0) return alert("解析失敗：未偵測到有效題目。");
-
-    game.banks.push({
-        id: Date.now(),
-        title: fileName,
-        questions: qs
-    });
-
-    save();
-    renderBankList();
-    alert(`成功匯入題庫：${fileName}\n共 ${qs.length} 題`);
-}
-
-// ====== 核心遊戲邏輯 ======
-function getYamolUrl(qText) {
-    const keyword = qText.substring(0, 20);
-    return `https://www.google.com/search?q=${encodeURIComponent(keyword + " 阿摩")}`;
-}
-
-// 檢查答案
-function checkExamAns(choice, btn) {
-    const q = game.exam.questions[game.exam.index];
-    const isCorrect = choice === q.ans;
-    const feedback = document.getElementById('q-feedback');
-    const yamolUrl = getYamolUrl(q.q);
-
-    // 鎖定所有選項
-    Array.from(document.getElementById('options-container').children).forEach(b => {
-        b.onclick = null;
-        if(b.innerText.startsWith(q.ans)) b.style.border = "2px solid #78ab4e";
-    });
-
-    if(isCorrect) {
-        game.dailyCorrect++;
-        game.coins += 10;
-        btn.style.background = "#d4edda";
-        feedback.innerHTML = `<span style="color:green; font-weight:bold;">✅ 正確！獲得 10 元。</span><br>
-                              <a class="yamol-link" href="${yamolUrl}" target="_blank">🔍 前往阿摩看詳解</a>`;
-    } else {
-        btn.style.background = "#f8d7da";
-        feedback.innerHTML = `<span style="color:red; font-weight:bold;">❌ 錯誤！正確答案是 (${q.ans})</span><br>
-                              <a class="yamol-link" href="${yamolUrl}" target="_blank">🔍 查看阿摩詳解</a>`;
-        game.wrongBook.push(q); // 錯題本
-    }
-
-    game.history.push({ q: q.q, ans: q.ans, user: choice, correct: isCorrect, time: new Date().toLocaleString() });
-    document.getElementById('next-q-btn').style.display = 'block';
-
-    save();
-    updateUI();
-    if(game.currentPlant) updateGrowthUI();
-}
-
-// 顯示考題
-function showExamQ() {
-    const q = game.exam.questions[game.exam.index];
-    document.getElementById('exam-progress').style.width = (game.exam.index / game.exam.questions.length) * 100 + "%";
-    document.getElementById('q-text').innerText = `${game.exam.index + 1}. ${q.q}`;
-    document.getElementById('next-q-btn').style.display = 'none';
-
-    const container = document.getElementById('options-container');
-    container.innerHTML = '';
-    document.getElementById('q-feedback').innerHTML = '';
-
-    ['A','B','C','D'].forEach((label, i) => {
-        if (!q.options[i]) return;
-        const btn = document.createElement('button');
-        btn.style.cssText = "background:white; color:black; border:1px solid #ddd; text-align:left; padding-left:15px; font-weight:normal;";
-        btn.innerText = `${label}. ${q.options[i]}`;
-        btn.onclick = () => checkExamAns(label, btn);
-        container.appendChild(btn);
-    });
-}
-
-// 下一題
-function nextExamQ() {
-    if(++game.exam.index < game.exam.questions.length) {
-        showExamQ();
-    } else {
-        // 顯示答題結果
-        const correct = game.exam.questions.filter(q=>q.ans===q.user).length || game.dailyCorrect;
-        alert(`完成考卷！\n答對 ${game.dailyCorrect} 題`);
-        document.getElementById('quiz-play').style.display = 'none';
-        document.getElementById('quiz-init').style.display = 'block';
-        switchView('quiz');
-    }
-}
-
-// ====== 更新 UI ======
-function updateUI() {
-    document.getElementById('coins').innerText = game.coins;
-    document.getElementById('today-growth').innerText = `${Math.min(game.dailyCorrect,10)}/10%`;
-}
-
-// ====== 植物成長 ======
-function plantSeed(id) {
-    const f = FLOWER_DB.find(f=>f.id===id);
-    if(!f) return;
-    game.currentPlant = { id, growth: 0 };
-    game.inventory[id]--;
-    if(game.inventory[id]<=0) delete game.inventory[id];
-    save();
-    renderQuizInit();
-}
-
-function applyGrowth(task) {
-    if(!game.currentPlant) return;
-    if(game.dailyCorrect >=10) return alert("今日成長已達上限 10%");
-
-    game.currentPlant.growth += 1;
-    if(game.currentPlant.growth>100) game.currentPlant.growth=100;
-    game.dailyCorrect++;
-    save();
-    updateGrowthUI();
-    updateUI();
-}
-
-function updateGrowthUI() {
-    if(!game.currentPlant) return;
-    const plant = FLOWER_DB.find(f=>f.id===game.currentPlant.id);
-    document.getElementById('growth-text').innerText = `${game.currentPlant.growth}%`;
-    document.getElementById('growth-bar').style.width = `${game.currentPlant.growth}%`;
-    document.getElementById('plant-img').src = plant?.img || DEFAULT_IMG;
-}
-
-// ====== 初始化 ======
-document.addEventListener('DOMContentLoaded', () => {
-    updateUI();
-    renderQuizInit();
-    renderShop();
-    renderAlbum();
-    renderBankList();
-    renderPlayer();
-});
-
-// ====== 底部導覽切換 ======
-function switchView(viewId) {
-    document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('view-' + viewId).classList.add('active');
-}
-
-// ====== 其他 UI 函式 ======
-function toggleAlbumTab() {
-    const album = document.getElementById('album-content');
-    const warehouse = document.getElementById('warehouse-content');
-    const btn = document.getElementById('album-toggle-btn');
-
-    if (album.style.display === 'none') {
-        album.style.display = 'block';
-        warehouse.style.display = 'none';
-        btn.innerText = '查看倉庫';
-    } else {
-        album.style.display = 'none';
-        warehouse.style.display = 'block';
-        btn.innerText = '查看圖鑑';
-    }
-}
-</script>
-
-<script>
-// ====== 商店功能 ======
-function renderShop() {
+// ====== 其餘功能（商店、題庫、答題、歷程、存檔） ======
+// 商店
+function renderShop(){
     const shopList = document.getElementById('shop-list');
-    shopList.innerHTML = FLOWER_DB.map(f => {
+    shopList.innerHTML = FLOWER_DB.map(f=>{
         const count = game.inventory[f.id] || 0;
         return `
         <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
@@ -573,196 +371,24 @@ function renderShop() {
         </div>`;
     }).join('');
 }
-
-function buySeed(id, price) {
+function buySeed(id, price){
     if(game.coins < price) return alert("金幣不足");
     game.coins -= price;
-    game.inventory[id] = (game.inventory[id] || 0) + 1;
+    game.inventory[id] = (game.inventory[id]||0)+1;
     save();
     renderShop();
     updateUI();
     renderQuizInit();
 }
 
-// ====== 題庫選擇與考卷生成 ======
-function renderBankSelector() {
+// 題庫選擇
+function renderBankSelector(){
     const container = document.getElementById('quiz-bank-selector');
     if(!game.banks.length){
         container.innerHTML = '<p style="font-size:12px; color:#999;">尚無題庫，請匯入。</p>';
         return;
     }
-    container.innerHTML = game.banks.map(b => `
-        <div>
-            <input type="checkbox" id="bank-${b.id}" data-id="${b.id}">
-            <label for="bank-${b.id}">${b.title} (${b.questions.length} 題)</label>
-        </div>
-    `).join('');
-}
-
-function createExam() {
-    const checkedBanks = Array.from(document.querySelectorAll('#quiz-bank-selector input:checked'))
-                              .map(cb => parseInt(cb.dataset.id));
-    if(!checkedBanks.length) return alert("請選擇至少一個題庫");
-
-    let selectedQuestions = [];
-    checkedBanks.forEach(id => {
-        const bank = game.banks.find(b => b.id === id);
-        if(bank){
-            selectedQuestions = selectedQuestions.concat(bank.questions.filter(q=>!game.history.some(h=>h.q===q.q)));
-        }
-    });
-
-    if(!selectedQuestions.length) return alert("沒有新題可出，請重置答題歷程或選其他題庫");
-
-    // 打亂
-    selectedQuestions.sort(()=>Math.random()-0.5);
-
-    // 限制每次出題數量 10 題
-    game.exam = {
-        questions: selectedQuestions.slice(0,10).map(q=>({...q, user:null})),
-        index: 0
-    };
-
-    document.getElementById('quiz-init').style.display = 'none';
-    document.getElementById('quiz-play').style.display = 'block';
-
-    showExamQ();
-}
-
-// ====== 歷程 ======
-function renderHistory() {
-    const container = document.getElementById('history-container');
-    if(!game.history.length){
-        container.innerHTML = '<p style="font-size:12px; color:#999;">尚無答題歷程</p>';
-        return;
-    }
-
-    container.innerHTML = game.history.map(h=>`
-        <div class="card" style="font-size:12px;">
-            <div><b>${h.q}</b></div>
-            <div>你的答案: ${h.user} | 正確答案: ${h.ans} | ${h.correct ? '✅' : '❌'}</div>
-            <div style="font-size:10px; color:#666;">${h.time}</div>
-        </div>
-    `).join('');
-}
-
-// ====== 玩家資訊 ======
-function renderPlayer() {
-    document.getElementById('st-correct').innerText = game.history.filter(h=>h.correct).length;
-    document.getElementById('st-unlock').innerText = `${game.unlocked.length}/${FLOWER_DB.length}`;
-}
-
-// ====== 存檔與備份 ======
-function exportSave() {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(game));
-    const a = document.createElement('a');
-    a.setAttribute("href", dataStr);
-    a.setAttribute("download", "garden_backup.json");
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-}
-
-function importSave(event) {
-    const file = event.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e){
-        try{
-            const data = JSON.parse(e.target.result);
-            game = data;
-            save();
-            updateUI();
-            renderQuizInit();
-            renderShop();
-            renderAlbum();
-            renderBankList();
-            renderPlayer();
-            renderHistory();
-            alert("成功匯入存檔！");
-        } catch(err){
-            alert("存檔格式錯誤");
-        }
-    };
-    reader.readAsText(file);
-}
-
-// ====== 重置每日任務 ======
-function checkDailyReset() {
-    const today = new Date().toLocaleDateString();
-    if(game.lastDate !== today){
-        game.dailyCorrect = 0;
-        game.lastDate = today;
-        save();
-        updateUI();
-    }
-}
-
-setInterval(checkDailyReset, 60000); // 每分鐘檢查一次
-</script>
-
-<script>
-// ====== UI 更新 ======
-function updateUI() {
-    document.getElementById('coins').innerText = game.coins;
-    document.getElementById('today-growth').innerText = `${game.dailyCorrect}/10`;
-}
-
-// ====== 植物相關 ======
-function plantSeed(id){
-    const f = FLOWER_DB.find(f => f.id === id);
-    if(!f) return;
-    if(game.inventory[id] <= 0) return alert("沒有這個種子");
-    game.inventory[id]--;
-    game.currentPlant = {id: id, growth: 0};
-    save();
-    renderQuizInit();
-    updateGrowthUI();
-}
-
-function applyGrowth(type){
-    if(!game.currentPlant) return;
-    const inc = 10; // 每次成長 10%
-    game.currentPlant.growth += inc;
-    if(game.currentPlant.growth >= 100){
-        game.currentPlant.growth = 100;
-        unlockPlant(game.currentPlant.id);
-        alert(`🎉 ${FLOWER_DB.find(f=>f.id===game.currentPlant.id).name} 成長完成！`);
-        game.currentPlant = null;
-    }
-    save();
-    updateGrowthUI();
-    renderQuizInit();
-}
-
-function unlockPlant(id){
-    if(!game.unlocked.includes(id)) game.unlocked.push(id);
-}
-
-// ====== 成長條更新 ======
-function updateGrowthUI(){
-    if(!game.currentPlant) return;
-    const f = FLOWER_DB.find(f=>f.id===game.currentPlant.id);
-    document.getElementById('current-planting-name').innerText = `正在培育：${f.name}`;
-    document.getElementById('growth-bar').style.width = game.currentPlant.growth + '%';
-    document.getElementById('growth-text').innerText = game.currentPlant.growth + '%';
-    // 啟用每日任務按鈕
-    document.getElementById('task-water').disabled = game.dailyCorrect >= 10;
-    document.getElementById('task-feed').disabled = game.dailyCorrect >= 10;
-    document.getElementById('task-sun').disabled = game.dailyCorrect >= 10;
-    document.getElementById('task-hint').innerText = `今日答對：${game.dailyCorrect} 題`;
-}
-
-// ====== 初始化 ======
-window.onload = function(){
-    updateUI();
-    renderQuizInit();
-    renderShop();
-    renderAlbum();
-    renderBankList();
-    renderPlayer();
-    renderHistory();
-}
+    container.inner
 </script>
 </body>
 </html>
