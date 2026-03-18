@@ -240,7 +240,14 @@ body, html {
 </div>
     <script>
 
-// 10 種種子資料 (使用 PokeAPI 的道具圖案作為素材)
+// 1. 初始化玩家數據 (移動到最上方確保所有函數都讀得到)
+let gameState = {
+    coins: 50,
+    lvl: 1,
+    currentPlant: null
+};
+
+// 10 種種子資料
 const seedsData = [
     { id: 1, name: "太陽花種子", price: 10, imgId: 1 },
     { id: 2, name: "月光草種子", price: 20, imgId: 2 },
@@ -254,19 +261,35 @@ const seedsData = [
     { id: 10, name: "神秘遺產", price: 200, imgId: 10 },
 ];
 
-// 開啟商店
+// 2. 標籤切換與功能觸發 (合併後的版本)
+function switchTab(tabName) {
+    console.log("切換至：" + tabName);
+    
+    // 震動回饋
+    if (navigator.vibrate) {
+        navigator.vibrate(10);
+    }
+
+    // 判斷點擊的是哪一個標籤
+    if (tabName === 'shop') {
+        openShop();
+    } else {
+        // 其他標籤的功能未來可以在這裡擴充
+        // alert("功能開發中：" + tabName);
+    }
+}
+
+// 3. 商店相關功能
 function openShop() {
     document.getElementById('shop-modal').style.display = 'flex';
     document.getElementById('modal-coins').innerText = gameState.coins;
     renderSeeds();
 }
 
-// 關閉商店
 function closeShop() {
     document.getElementById('shop-modal').style.display = 'none';
 }
 
-// 渲染種子列表
 function renderSeeds() {
     const list = document.getElementById('seed-list');
     list.innerHTML = '';
@@ -274,7 +297,6 @@ function renderSeeds() {
     seedsData.forEach(seed => {
         const item = document.createElement('div');
         item.className = 'seed-item';
-        // 使用 PokeAPI 的道具圖示作為免費素材範例
         const imgUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/berry/${seed.imgId}.png`;
         
         item.innerHTML = `
@@ -288,55 +310,28 @@ function renderSeeds() {
     });
 }
 
-// 購買邏輯
 function buySeed(id, price) {
     if (gameState.coins >= price) {
         gameState.coins -= price;
         updateUI();
-        alert("購買成功！");
-        renderSeeds(); // 重新渲染按鈕狀態
+        // 更新彈窗內的金幣顯示
         document.getElementById('modal-coins').innerText = gameState.coins;
+        alert("購買成功！");
+        renderSeeds(); // 重新整理購買按鈕狀態
+    } else {
+        alert("金幣不足！");
     }
 }
 
-// 更新全域 UI
+// 4. UI 更新功能
 function updateUI() {
     document.getElementById('player-lvl').innerText = gameState.lvl;
     document.getElementById('player-coins').innerText = gameState.coins;
 }
 
-// 修改原有的 switchTab，讓點擊商店時觸控彈窗
-function switchTab(tabName) {
-    if (tabName === 'shop') {
-        openShop();
-    } else {
-        console.log("切換至：" + tabName);
-    }
-    if (navigator.vibrate) navigator.vibrate(10);
-}
-        
-        // 初始化玩家數據
-let gameState = {
-    coins: 50,
-    lvl: 1,
-    currentPlant: null
-};
-
-// 標籤切換功能
-function switchTab(tabName) {
-    console.log("切換至：" + tabName);
-    // 未來在這裡實作開啟彈窗或切換頁面的邏輯
-    
-    // 簡單的點擊回饋：震動 (僅 Android 支援)
-    if (navigator.vibrate) {
-        navigator.vibrate(10);
-    }
-}
-
-// 初始化畫面
+// 5. 頁面加載初始化
 window.onload = () => {
-    document.getElementById('player-lvl').innerText = gameState.lvl;
-    document.getElementById('player-coins').innerText = gameState.coins;
+    updateUI();
 };
     </script>
 </body>
