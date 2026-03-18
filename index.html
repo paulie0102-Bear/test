@@ -25,16 +25,25 @@ body, html {
     overflow: hidden; /* 防止橡皮筋回彈影響體驗 */
 }
 
-        /* 1. 頂部資訊列優化：避開上方瀏海與狀態列 */
-.top-info {
+      .top-info {
     position: absolute;
     top: 0;
     width: 100%;
-    padding-top: env(safe-area-inset-top); /* 避開上方遮擋 */
+    padding-top: calc(env(safe-area-inset-top) + 10px);
     display: flex;
-    justify-content: space-around;
-    padding-bottom: 10px;
-    background: linear-gradient(to bottom, rgba(255,255,255,0.8), transparent);
+    justify-content: center; /* 置中顯示 */
+    pointer-events: none; /* 確保不干擾點擊 */
+}
+
+.coin-display {
+    background: rgba(0, 0, 0, 0.6);
+    color: #FFD700;
+    padding: 8px 20px;
+    border-radius: 30px;
+    font-size: 20px;
+    font-weight: bold;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
 /* 2. 花盆區域微調 */
@@ -198,18 +207,19 @@ body, html {
 </head>
 <body>
     <section class="game-screen">
-        <div class="top-info">
-            <span>等級: <b id="player-lvl">1</b></span>
-            <span>金幣: <b id="player-coins">0</b></span>
-        </div>
+       <section class="game-screen">
+    <div class="top-info">
+        <div class="coin-display">💰 <b id="player-coins">0</b></div>
+    </div>
 
-        <div class="garden-stage">
-            <div id="flower-pot" class="pot-container">
-                <div class="pot"></div>
-                <div id="plant-status" class="plant-empty">準備播種</div>
-            </div>
+    <div class="garden-stage">
+        <div id="flower-pot" class="pot-container">
+            <div id="plant-display" class="plant-gone"></div>
+            <div class="soil"></div>
         </div>
-    </section>
+        <button id="plant-btn" class="action-btn" onclick="openPlantingPanel()">開始種植</button>
+    </div>
+</section>
 
     <nav class="main-nav">
         <div class="nav-row primary-row">
@@ -240,20 +250,20 @@ body, html {
 </div>
     <script>
 
-// 1. 初始化玩家數據 (移動到最上方確保所有函數都讀得到)
+// --- 1. 初始化玩家數據 (包含背包與當前植物) ---
 let gameState = {
-    coins: 50,
-    lvl: 1,
-    currentPlant: null
+    coins: 100, 
+    currentPlant: null, // 格式: { name, img }
+    inventory: {} // 格式: { 種子ID: 數量 }
 };
 
-// 更換穩定路徑的素材，並手動處理空格 (%20)
+// 10 種種子資料 (穩定連結版)
 const seedsData = [
     { id: 1, name: "向日葵", price: 10, img: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Sunflower/3D/sunflower_3d.png" },
     { id: 2, name: "鬱金香", price: 20, img: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Tulip/3D/tulip_3d.png" },
     { id: 3, name: "玫瑰花", price: 30, img: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Rose/3D/rose_3d.png" },
     { id: 4, name: "櫻花", price: 40, img: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Cherry%20blossom/3D/cherry_blossom_3d.png" },
-    { id: 5, name: "風信子", price: 50, img: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Herb/3D/herb_3d.png" }, // 換成 Herb
+    { id: 5, name: "風信子", price: 50, img: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Herb/3D/herb_3d.png" },
     { id: 6, name: "小雛菊", price: 60, img: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Blossom/3D/blossom_3d.png" },
     { id: 7, name: "幸運草", price: 70, img: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Four%20leaf%20clover/3D/four_leaf_clover_3d.png" },
     { id: 8, name: "仙人掌", price: 100, img: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Cactus/3D/cactus_3d.png" },
@@ -261,25 +271,20 @@ const seedsData = [
     { id: 10, name: "楓葉", price: 200, img: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Maple%20leaf/3D/maple_leaf_3d.png" },
 ];
 
-// 2. 標籤切換與功能觸發 (合併後的版本)
-function switchTab(tabName) {
-    console.log("切換至：" + tabName);
-    
-    // 震動回饋
-    if (navigator.vibrate) {
-        navigator.vibrate(10);
-    }
+// 輔助工具：找種子資料
+const getSeedById = (id) => seedsData.find(s => s.id === id);
 
-    // 判斷點擊的是哪一個標籤
+// --- 2. 導覽與標籤切換 ---
+function switchTab(tabName) {
     if (tabName === 'shop') {
         openShop();
     } else {
-        // 其他標籤的功能未來可以在這裡擴充
-        // alert("功能開發中：" + tabName);
+        console.log("切換至：" + tabName);
     }
+    if (navigator.vibrate) navigator.vibrate(10);
 }
 
-// 3. 商店相關功能
+// --- 3. 商店功能 ---
 function openShop() {
     document.getElementById('shop-modal').style.display = 'flex';
     document.getElementById('modal-coins').innerText = gameState.coins;
@@ -293,14 +298,10 @@ function closeShop() {
 function renderSeeds() {
     const list = document.getElementById('seed-list');
     list.innerHTML = '';
-    
     seedsData.forEach(seed => {
         const item = document.createElement('div');
         item.className = 'seed-item';
-        
-        // 使用 .replace(/ /g, '%20') 自動處理可能存在的空格問題
         const safeImgUrl = seed.img.replace(/ /g, '%20');
-        
         item.innerHTML = `
             <img src="${safeImgUrl}" alt="${seed.name}" style="width: 70px; height: 70px; object-fit: contain;">
             <div style="font-size:14px; font-weight: bold; margin:5px 0;">${seed.name}</div>
@@ -315,23 +316,79 @@ function renderSeeds() {
 function buySeed(id, price) {
     if (gameState.coins >= price) {
         gameState.coins -= price;
+        // 放入背包
+        gameState.inventory[id] = (gameState.inventory[id] || 0) + 1;
         updateUI();
-        // 更新彈窗內的金幣顯示
+        renderSeeds(); 
         document.getElementById('modal-coins').innerText = gameState.coins;
-        alert("購買成功！");
-        renderSeeds(); // 重新整理購買按鈕狀態
+        alert(`購買成功！${getSeedById(id).name}已放入背包。`);
     } else {
         alert("金幣不足！");
     }
 }
 
-// 4. UI 更新功能
-function updateUI() {
-    document.getElementById('player-lvl').innerText = gameState.lvl;
-    document.getElementById('player-coins').innerText = gameState.coins;
+// --- 4. 種植系統 (主畫面按鈕觸發) ---
+function openPlantingPanel() {
+    const hasSeeds = Object.values(gameState.inventory).some(count => count > 0);
+    if (!hasSeeds) {
+        alert("你目前沒有種子喔！先去商店逛逛吧。");
+        return;
+    }
+    document.getElementById('planting-modal').style.display = 'flex';
+    renderInventory();
 }
 
-// 5. 頁面加載初始化
+function renderInventory() {
+    const list = document.getElementById('inventory-seed-list');
+    list.innerHTML = '';
+    
+    for (const [seedId, count] of Object.entries(gameState.inventory)) {
+        if (count <= 0) continue;
+        const seed = getSeedById(parseInt(seedId));
+        const item = document.createElement('div');
+        item.className = 'inventory-item';
+        const safeImgUrl = seed.img.replace(/ /g, '%20');
+        
+        item.innerHTML = `
+            <div style="position:relative;">
+                <img src="${safeImgUrl}" alt="${seed.name}">
+                <span class="seed-count-badge">${count}</span>
+            </div>
+            <div style="font-size:12px; font-weight:bold; margin-top:5px;">${seed.name}</div>
+        `;
+        item.onclick = () => plantSeed(seed.id);
+        list.appendChild(item);
+    }
+}
+
+function plantSeed(seedId) {
+    gameState.inventory[seedId] -= 1;
+    const seed = getSeedById(seedId);
+    gameState.currentPlant = { name: seed.name, img: seed.img };
+    document.getElementById('planting-modal').style.display = 'none';
+    updateUI();
+}
+
+// --- 5. UI 更新同步 ---
+function updateUI() {
+    document.getElementById('player-coins').innerText = gameState.coins;
+    
+    const plantDisp = document.getElementById('plant-display');
+    const plantBtn = document.getElementById('plant-btn');
+    
+    if (gameState.currentPlant) {
+        // 有植物時
+        plantDisp.style.backgroundImage = `url(${gameState.currentPlant.img.replace(/ /g, '%20')})`;
+        plantDisp.classList.remove('plant-gone');
+        plantBtn.style.display = 'none';
+    } else {
+        // 沒植物時
+        plantDisp.classList.add('plant-gone');
+        plantDisp.style.backgroundImage = 'none';
+        plantBtn.style.display = 'block';
+    }
+}
+
 window.onload = () => {
     updateUI();
 };
