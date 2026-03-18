@@ -334,9 +334,11 @@ button.danger { background: #e57373; }
 
     <!-- 答題歷程區 -->
     <div id="view-history" class="view-section">
-        <h3>📊 答題歷程</h3>
-        <div id="history-container"></div>
+    <h3>📊 答題歷程</h3>
+    <div id="history-container">
+        <p style="text-align:center; color:#999; padding:20px;">暫無紀錄</p>
     </div>
+</div>
 
     <!-- 系統與備份 -->
     <div id="view-player" class="view-section">
@@ -429,10 +431,28 @@ function updateUI(){
 
 // 切換底部頁面
 function switchView(name){
-    document.querySelectorAll('.view-section').forEach(s=>s.classList.remove('active'));
-    document.getElementById('view-'+name).classList.add('active');
-    document.querySelectorAll('nav .nav-btn').forEach(b=>b.classList.remove('active'));
-    document.querySelector(`nav .nav-btn[onclick="switchView('${name}')"]`).classList.add('active');
+    // 1. 隱藏所有主分頁
+    document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+    
+    // 2. 顯示點選的分頁
+    const targetView = document.getElementById('view-' + name);
+    if (targetView) {
+        targetView.classList.add('active');
+    }
+
+    // 3. 如果是切換回「答題 (quiz)」分頁，確保子畫面正確
+    if (name === 'quiz') {
+        // 如果沒有正在進行的測驗，顯示選擇種子與初始畫面
+        if (document.getElementById('quiz-play').style.display !== 'block') {
+            document.getElementById('quiz-seed-select').style.display = 'block';
+            document.getElementById('quiz-init').style.display = 'block';
+        }
+    }
+
+    // 4. 更新導覽列按鈕樣式
+    document.querySelectorAll('nav .nav-btn').forEach(b => b.classList.remove('active'));
+    const activeBtn = document.querySelector(`nav .nav-btn[onclick*="${name}"]`);
+    if (activeBtn) activeBtn.classList.add('active');
 }
 
 // 種子選擇及植物渲染
@@ -472,15 +492,41 @@ function plantSeed(id){
 // 植物成長
 function applyGrowth(type){
     if(!game.currentPlant) return alert("尚未種植植物");
-    if(game.dailyCorrect >= 10) return alert("今日成長已達上限");
-    game.currentPlant.growth += 10;
-    game.dailyCorrect++;
+
+    let growthAmount = 0;
+
+    // 解鎖條件 + 成長數值
+    if(type === 'water'){
+        if(game.dailyCorrect < 1) return alert("至少答對1題才能澆水 💧");
+        growthAmount = 3;
+    }
+
+    if(type === 'feed'){
+        if(game.dailyCorrect < 3) return alert("至少答對3題才能施肥 💩");
+        growthAmount = 3;
+    }
+
+    if(type === 'sun'){
+        if(game.dailyCorrect < 5) return alert("至少答對5題才能照光 ☀️");
+        growthAmount = 4;
+    }
+
+    // ⭐ 每日上限 10%
+    if(game.dailyGrowth + growthAmount > 10){
+        return alert("今日成長已達上限 🌱");
+    }
+
+    // 成長
+    game.currentPlant.growth += growthAmount;
+    game.dailyGrowth += growthAmount;
+
     if(game.currentPlant.growth >= 100){
         game.currentPlant.growth = 100;
         unlockPlant(game.currentPlant.id);
-        alert(`🎉 ${FLOWER_DB.find(f=>f.id===game.currentPlant.id).name} 成長完成！`);
+        alert(`🎉 成長完成！`);
         game.currentPlant = null;
     }
+
     save();
     updateUI();
     renderQuizInit();
@@ -505,10 +551,12 @@ function unlockPlant(id){ if(!game.unlocked.includes(id)) game.unlocked.push(id)
 
 // 每日重置
 function checkDailyReset(){
+    
     const today = new Date().toLocaleDateString();
     if(game.lastDate !== today){
         game.dailyCorrect = 0;
         game.lastDate = today;
+        game.dailyGrowth = 0;
         save();
         updateUI();
         renderQuizInit();
@@ -710,9 +758,13 @@ function submitExam() {
         const isCorrect = userAns === q.ans;
 
         if(isCorrect) {
-            currentExam.score++;
-            earnedCoins += 10; // ⭐ 累加金幣（不要直接加 game.coins）
-        }
+    currentExam.score++;
+    earnedCoins += 10;
+
+    if(game.dailyCorrect < 10){
+        game.dailyCorrect++; // ⭐ 答題累積每日次數
+    }
+}
 
         const searchKeyword = encodeURIComponent(q.title.substring(0, 15));
         const yamolSearchUrl = `https://yamol.tw/re_search.php?key=${searchKeyword}`;
