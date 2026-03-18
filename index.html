@@ -297,7 +297,11 @@ function nextExamQ() {
         showExamQ();
     } else {
         alert("完成一輪練習！恭喜。");
-        switchView('quiz');
+
+document.getElementById('quiz-play').style.display = 'none';
+document.getElementById('quiz-init').style.display = 'block';
+
+switchView('quiz');
     }
 }
 
@@ -315,6 +319,54 @@ function switchView(viewId) {
     if(viewId === 'history') renderHistory();
 }
 
+function renderAlbum() {
+    const albumGrid = document.getElementById('album-grid');
+    const warehouseList = document.getElementById('warehouse-list');
+
+    // 圖鑑
+    albumGrid.innerHTML = FLOWER_DB.map(f => {
+        const unlocked = game.unlocked.includes(f.id);
+        return `
+        <div class="album-item ${unlocked ? 'unlocked' : ''}">
+            <img src="${f.img}">
+            <div>${unlocked ? f.name : '？？？'}</div>
+        </div>
+        `;
+    }).join('');
+
+    // 倉庫
+    const items = Object.entries(game.warehouse);
+
+    if (!items.length) {
+        warehouseList.innerHTML = '<p style="color:#999; font-size:12px;">倉庫是空的</p>';
+    } else {
+        warehouseList.innerHTML = items.map(([id, count]) => {
+            const f = FLOWER_DB.find(x => x.id === id);
+            return `
+                <div style="display:flex; justify-content:space-between; padding:5px 0;">
+                    <span>${f.icon} ${f.name}</span>
+                    <span>x${count}</span>
+                </div>
+            `;
+        }).join('');
+    }
+}
+    
+function toggleAlbumTab() {
+    const album = document.getElementById('album-content');
+    const warehouse = document.getElementById('warehouse-content');
+    const btn = document.getElementById('album-toggle-btn');
+
+    if (album.style.display === 'none') {
+        album.style.display = 'block';
+        warehouse.style.display = 'none';
+        btn.innerText = '查看倉庫';
+    } else {
+        album.style.display = 'none';
+        warehouse.style.display = 'block';
+        btn.innerText = '查看圖鑑';
+    }
+}  
 function renderBankList() {
     const list = document.getElementById('bank-list');
     list.innerHTML = game.banks.length ? game.banks.map(b => `
@@ -386,7 +438,7 @@ function createExam() {
 // (其餘互動功能如 applyGrowth, plantSeed, updateUI 等與原版邏輯一致)
 function plantSeed(id) {
     game.inventory[id]--;
-    game.currentPlant = { id: id, growth: 0, dailyTasks: [] };
+    game.currentPlant = { id: id, growth: 0, dailyTasks: [], harvested: false };
     save();
     renderQuizInit();
     showBubble("🌱 我會努力長大的！");
@@ -405,16 +457,36 @@ function applyGrowth(type) {
 function updateGrowthUI() {
     const p = game.currentPlant;
     if(!p) return;
+
     document.getElementById('growth-bar').style.width = p.growth + "%";
     document.getElementById('growth-text').innerText = p.growth + "%";
+
     const img = document.getElementById('plant-img');
+
+    // 成長動畫
     img.style.transform = `scale(${0.6 + p.growth/180})`;
-    img.src = p.growth >= 100 ? FLOWER_DB.find(x=>x.id===p.id).img : 'https://img.icons8.com/color/96/sprout.png';
-    
+
+    // 成熟判定
+    if (p.growth >= 100) {
+        img.src = FLOWER_DB.find(x=>x.id===p.id).img;
+
+        // 👉 自動收成（只觸發一次）
+        if (!p.harvested) {
+            p.harvested = true;
+            setTimeout(() => {
+                harvestPlant();
+            }, 800);
+        }
+    } else {
+        img.src = 'https://img.icons8.com/color/96/sprout.png';
+    }
+
     const tasks = p.dailyTasks || [];
+
     document.getElementById('task-water').disabled = tasks.includes('water') || game.dailyCorrect < 1;
     document.getElementById('task-feed').disabled = tasks.includes('feed') || game.dailyCorrect < 3;
     document.getElementById('task-sun').disabled = tasks.includes('sun') || game.dailyCorrect < 5;
+
     document.getElementById('task-hint').innerText = `今日已答對：${game.dailyCorrect} 題`;
 }
 
@@ -478,6 +550,38 @@ window.onload = () => {
     document.getElementById('manager-img').src = `https://acnhapi.com/v1/icons/villagers/${randomVillager}`;
     renderQuizInit();
 };
+
+function harvestPlant() {
+    const plant = game.currentPlant;
+    if (!plant) return;
+
+    const flower = FLOWER_DB.find(f => f.id === plant.id);
+
+    // 加入倉庫
+    game.warehouse[plant.id] = (game.warehouse[plant.id] || 0) + 1;
+
+    // 解鎖圖鑑
+    if (!game.unlocked.includes(plant.id)) {
+        game.unlocked.push(plant.id);
+    }
+
+    // 清空目前植物
+    game.currentPlant = null;
+    game.dailyCorrect = 0;
+
+    save();
+    updateUI();
+
+   showBubble(`🎉 收成！${flower.name}！`);
+setTimeout(() => {
+    showBubble(`📦 已放入倉庫`);
+}, 1200);
+
+    renderQuizInit();
+    renderAlbum();
+}
+
+
 </script>
 </body>
 </html>
