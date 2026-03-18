@@ -20,7 +20,15 @@
         .status-bar { position: absolute; top: 10px; left: 10px; background: rgba(255,255,255,0.8); padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; z-index: 5; }
 
         /* 主內容區 */
-        #main-content { flex: 1; background: white; border-top-left-radius: 25px; border-top-right-radius: 25px; overflow-y: auto; padding: 20px; padding-bottom: calc(135px + env(safe-area-inset-bottom)); }
+        #main-content {
+    flex: 1;
+    background: white;
+    border-top-left-radius: 25px;
+    border-top-right-radius: 25px;
+    overflow-y: auto;
+    padding: 20px;
+    padding-bottom: calc(180px + env(safe-area-inset-bottom)); /* 🔥加大 */
+}
         .view-section { display: none; }
         .view-section.active { display: block; }
 
@@ -177,6 +185,8 @@ let game = JSON.parse(localStorage.getItem('garden_v4_2')) || {
     lastDate: new Date().toLocaleDateString()
 };
 
+const DEFAULT_IMG = "https://cdn-icons-png.flaticon.com/512/766/766212.png";
+    
 function save() { localStorage.setItem('garden_v4_2', JSON.stringify(game)); }
 
 // ====== 檔案處理與題庫解析 ======
@@ -235,9 +245,8 @@ function parseAndStoreHTML(html, fileName) {
 
 // ====== 核心遊戲邏輯 ======
 function getYamolUrl(qText) {
-    // 取得題目關鍵字進行搜尋（取前15個字）
-    const keyword = qText.substring(0, 15);
-    return `https://yamol.tw/re_search.php?key=${encodeURIComponent(keyword)}`;
+    const keyword = qText.substring(0, 20);
+    return `https://www.google.com/search?q=${encodeURIComponent(keyword + " 阿摩")}`;
 }
 
 function checkExamAns(choice, btn) {
@@ -328,7 +337,7 @@ function renderAlbum() {
         const unlocked = game.unlocked.includes(f.id);
         return `
         <div class="album-item ${unlocked ? 'unlocked' : ''}">
-            <img src="${f.img}">
+            <img src="${f.img}" onerror="this.src='${DEFAULT_IMG}'">
             <div>${unlocked ? f.name : '？？？'}</div>
         </div>
         `;
@@ -395,7 +404,7 @@ function renderQuizInit() {
         list.innerHTML = items.map(([id, count]) => {
             const f = FLOWER_DB.find(x => x.id === id);
             return `<div class="album-item unlocked" onclick="plantSeed('${id}')">
-                <img src="${f.img}"><br>${f.name}<br>(剩${count})</div>`;
+                <img src="${f.img}" onerror="this.src='${DEFAULT_IMG}'"><br>${f.name}<br>(剩${count})</div>`;
         }).join('');
     } else {
         document.getElementById('quiz-seed-select').style.display = 'none';
@@ -468,7 +477,8 @@ function updateGrowthUI() {
 
     // 成熟判定
     if (p.growth >= 100) {
-        img.src = FLOWER_DB.find(x=>x.id===p.id).img;
+        const flower = FLOWER_DB.find(x=>x.id===p.id);
+img.src = flower?.img || DEFAULT_IMG;
 
         // 👉 自動收成（只觸發一次）
         if (!p.harvested) {
@@ -556,6 +566,7 @@ function harvestPlant() {
     if (!plant) return;
 
     const flower = FLOWER_DB.find(f => f.id === plant.id);
+    if (!flower) return;
 
     // 加入倉庫
     game.warehouse[plant.id] = (game.warehouse[plant.id] || 0) + 1;
@@ -581,6 +592,25 @@ setTimeout(() => {
     renderAlbum();
 }
 
+function renderHistory() {
+    const list = document.getElementById('history-container');
+    if (!list) return;
+
+    if (!game.history.length) {
+        list.innerHTML = '<p style="color:#999;">尚無紀錄</p>';
+        return;
+    }
+
+    list.innerHTML = game.history.slice().reverse().map(h => `
+        <div class="card">
+            <div style="font-size:13px; margin-bottom:5px;">${h.q}</div>
+            <div style="font-size:12px; color:${h.correct ? 'green' : 'red'};">
+                你的答案：${h.user}｜正確：${h.ans}
+            </div>
+            <div style="font-size:10px; color:#999;">${h.time}</div>
+        </div>
+    `).join('');
+}
 
 </script>
 </body>
