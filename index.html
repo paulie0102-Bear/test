@@ -247,18 +247,18 @@ let gameState = {
     currentPlant: null
 };
 
-// 使用 Fluent Emoji 的可愛花卉素材 (GitHub 託管素材)
+// 更換穩定路徑的素材，並手動處理空格 (%20)
 const seedsData = [
     { id: 1, name: "向日葵", price: 10, img: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Sunflower/3D/sunflower_3d.png" },
     { id: 2, name: "鬱金香", price: 20, img: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Tulip/3D/tulip_3d.png" },
     { id: 3, name: "玫瑰花", price: 30, img: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Rose/3D/rose_3d.png" },
-    { id: 4, name: "盛開櫻", price: 40, img: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Cherry%20blossom/3D/cherry_blossom_3d.png" },
-    { id: 5, name: "薰衣草", price: 50, img: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Blooming%20flower/3D/blooming_flower_3d.png" },
+    { id: 4, name: "櫻花", price: 40, img: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Cherry%20blossom/3D/cherry_blossom_3d.png" },
+    { id: 5, name: "風信子", price: 50, img: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Herb/3D/herb_3d.png" }, // 換成 Herb
     { id: 6, name: "小雛菊", price: 60, img: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Blossom/3D/blossom_3d.png" },
     { id: 7, name: "幸運草", price: 70, img: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Four%20leaf%20clover/3D/four_leaf_clover_3d.png" },
     { id: 8, name: "仙人掌", price: 100, img: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Cactus/3D/cactus_3d.png" },
-    { id: 9, name: "蝴蝶蘭", price: 150, img: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Hibiscus/3D/hibiscus_3d.png" },
-    { id: 10, name: "楓葉種", price: 200, img: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Maple%20leaf/3D/maple_leaf_3d.png" },
+    { id: 9, name: "扶桑花", price: 150, img: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Hibiscus/3D/hibiscus_3d.png" },
+    { id: 10, name: "楓葉", price: 200, img: "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Maple%20leaf/3D/maple_leaf_3d.png" },
 ];
 
 // 2. 標籤切換與功能觸發 (合併後的版本)
@@ -298,9 +298,11 @@ function renderSeeds() {
         const item = document.createElement('div');
         item.className = 'seed-item';
         
-        // 注意：這裡將 imgUrl 改為直接讀取 seed.img
+        // 使用 .replace(/ /g, '%20') 自動處理可能存在的空格問題
+        const safeImgUrl = seed.img.replace(/ /g, '%20');
+        
         item.innerHTML = `
-            <img src="${seed.img}" alt="${seed.name}" style="width: 70px; height: 70px; object-fit: contain;">
+            <img src="${safeImgUrl}" alt="${seed.name}" style="width: 70px; height: 70px; object-fit: contain;">
             <div style="font-size:14px; font-weight: bold; margin:5px 0;">${seed.name}</div>
             <div style="color:#FF9800; font-weight:bold; margin-bottom: 8px;">💰 ${seed.price}</div>
             <button class="buy-btn" ${gameState.coins < seed.price ? 'disabled' : ''} 
