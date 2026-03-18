@@ -225,42 +225,62 @@ button.danger { background: #e57373; }
         </div>
 
         <!-- 種植與每日任務 -->
-        <div id="quiz-init" style="display:none;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 id="current-planting-name" style="margin:0;">-</h3>
-                <span id="growth-text" style="font-size:14px; font-weight:bold; color:var(--main-green);">0%</span>
-            </div>
-            <div class="progress-outer">
-                <div id="growth-bar" class="progress-inner"></div>
-            </div>
+       <div id="quiz-init" style="display:none;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 id="current-planting-name" style="margin:0;">-</h3>
+        <span id="growth-text" style="font-size:14px; font-weight:bold; color:var(--main-green);">0%</span>
+    </div>
+    <div class="progress-outer">
+        <div id="growth-bar" class="progress-inner"></div>
+    </div>
 
-            <div class="card" style="background:#e8f5e9;">
-                <p style="margin:0 0 8px 0; font-size:12px;">🌿 每日養護 (答題解鎖)</p>
-                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:5px;">
-                    <button id="task-water" style="font-size:11px;" onclick="applyGrowth('water')" disabled>💧 澆水</button>
-                    <button id="task-feed" style="font-size:11px;" onclick="applyGrowth('feed')" disabled>💩 施肥</button>
-                    <button id="task-sun" style="font-size:11px;" onclick="applyGrowth('sun')" disabled>☀️ 照光</button>
-                </div>
-                <p id="task-hint" style="font-size:11px; margin-top:8px; color:#555; text-align:center;">
-                    今日答對：0 題
-                </p>
-            </div>
-
-            <label style="font-size:13px; font-weight:bold;">📚 選擇今日題庫：</label>
-            <div id="quiz-bank-selector" style="max-height:120px; overflow-y:auto; border:1px solid #eee; padding:10px; border-radius:10px; margin:5px 0 15px 0;"></div>
-            <button onclick="createExam()">開始今日練習 (10題)</button>
+    <div class="card" style="background:#e8f5e9;">
+        <p style="margin:0 0 8px 0; font-size:12px;">🌿 每日養護 (答題解鎖)</p>
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:5px;">
+            <button id="task-water" style="font-size:11px;" onclick="applyGrowth('water')" disabled>💧 澆水</button>
+            <button id="task-feed" style="font-size:11px;" onclick="applyGrowth('feed')" disabled>💩 施肥</button>
+            <button id="task-sun" style="font-size:11px;" onclick="applyGrowth('sun')" disabled>☀️ 照光</button>
         </div>
+        <p id="task-hint" style="font-size:11px; margin-top:8px; color:#555; text-align:center;">今日答對：0 題</p>
+    </div>
+
+    <div class="card" style="background:#f0f7ff; border-left-color:#2196f3;">
+        <p style="margin:0 0 10px 0; font-weight:bold; color:#1976d2;">📝 考卷自訂設定</p>
+        
+        <label style="font-size:13px; font-weight:bold;">📚 選擇要混合的題庫：</label>
+        <div id="quiz-bank-selector" style="max-height:100px; overflow-y:auto; border:1px solid #ddd; padding:8px; border-radius:10px; margin:5px 0 12px 0; background:white;"></div>
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:12px;">
+            <div>
+                <label style="font-size:12px; display:block; margin-bottom:4px;">練習題數：</label>
+                <input type="number" id="setup-q-count" value="10" min="1" style="width:100%; padding:6px; border-radius:5px; border:1px solid #ccc; box-sizing: border-box;">
+            </div>
+            <div style="display:flex; align-items:flex-end; padding-bottom:6px;">
+                <label style="font-size:12px; cursor:pointer;">
+                    <input type="checkbox" id="setup-shuffle" checked> 隨機打亂題目
+                </label>
+            </div>
+        </div>
+        
+        <button onclick="createCustomExam()" style="background:#2196f3;">生成混合考卷並開始</button>
+        
+        <p id="pool-info" style="font-size:11px; color:#666; margin-top:8px; text-align:center; background:#fff; padding:4px; border-radius:4px;">
+            剩餘未練習題目：0 題
+        </p>
+    </div>
+</div>
 
         <!-- 答題區 -->
         <div id="quiz-play" style="display:none;">
-            <div class="progress-outer">
-                <div id="exam-progress" class="progress-inner" style="background:#5c8dcf;"></div>
-            </div>
-            <p id="q-text" style="font-weight:bold; min-height:60px; font-size:15px;"></p>
-            <div id="options-container"></div>
-            <div id="q-feedback" style="min-height:60px; margin-top:10px;"></div>
-            <button id="next-q-btn" class="secondary" onclick="nextExamQ()" style="display:none;">下一題</button>
-        </div>
+    <div class="progress-outer">
+        <div id="exam-progress" class="progress-inner" style="background:#5c8dcf;"></div>
+    </div>
+    <div id="q-image-container" style="text-align:center; margin-bottom:10px; display:none;"></div>
+    <p id="q-text" style="font-weight:bold; min-height:60px; font-size:15px;"></p>
+    <div id="options-container"></div>
+    <div id="q-feedback" style="min-height:60px; margin-top:10px;"></div>
+    <button id="next-q-btn" class="secondary" onclick="nextExamQ()" style="display:none;">下一題</button>
+</div>
     </div>
 
     <!-- 商店區 -->
@@ -283,16 +303,14 @@ button.danger { background: #e57373; }
         </div>
     </div>
 
-    <!-- 題庫管理區 -->
     <div id="view-bank" class="view-section">
-        <h3>🗄️ 題庫管理</h3>
-        <div class="card" style="background:#fff3e0; border-left-color:#ff9800;">
-            <p style="font-size:13px; margin-top:0;"><b>📥 匯入考選部 HTML</b></p>
-            <input type="file" id="htmlFileInput" accept=".html,.htm" style="font-size:12px; margin-bottom:10px;">
-            <button onclick="handleFileUpload()">讀取並匯入題庫</button>
-        </div>
-        <div id="bank-list"></div>
+    <h3>🗄️ 題庫管理</h3>
+    <div class="card" style="background:#fff3e0; border-left-color:#ff9800;">
+        <p style="font-size:13px; margin-top:0;"><b>📥 匯入阿摩 HTML</b></p>
+        <input type="file" id="file-input" accept=".html,.htm" style="font-size:12px; margin-bottom:10px;">
+        <button onclick="importHTML()">讀取並匯入題庫</button>
     </div>
+    <div id="bank-list"></div> </div>
 
     <!-- 答題歷程區 -->
     <div id="view-history" class="view-section">
@@ -382,14 +400,6 @@ function buySeed(id, price){
 }
 
 // 題庫選擇
-function renderBankSelector(){
-    const container = document.getElementById('quiz-bank-selector');
-    if(!game.banks.length){
-        container.innerHTML = '<p style="font-size:12px; color:#999;">尚無題庫，請匯入。</p>';
-        return;
-    }
-    container.innerHTML = game.banks.map((b,i)=>`<label style="font-size:12px;"><input type="checkbox" value="${i}" checked> ${b.name}</label><br>`).join('');
-}
 
 // 成長 UI
 function updateUI(){
@@ -497,8 +507,301 @@ window.onload = function(){
     updateUI();
     renderQuizInit();
     renderShop();
-    renderBankSelector();
+    renderBankSelector(); // 顯示答題頁面的勾選單
+    if(typeof renderBankList === 'function') renderBankList(); // 顯示管理頁面的清單
 }
+
+
+// ====== 強化版阿摩解析器 ======
+async function importHTML() {
+    const fileInput = document.getElementById('file-input');
+    const file = fileInput.files[0];
+    if(!file) return alert("請先選擇阿摩 HTML 檔案");
+
+    const text = await file.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(text, 'text/html');
+    
+    // 1. 智慧標題解析 (提取年度與科目)
+    const rawTitle = doc.querySelector('.MuiTypography-pageTitleSmall')?.innerText || 
+                     doc.querySelector('title')?.innerText || "";
+    
+    let bankName = "";
+    const yearMatch = rawTitle.match(/(\d+年)/); 
+    const examMatch = rawTitle.match(/專技高考_([^：#]+)/);
+    const subjectMatch = rawTitle.match(/：([^#]+)/);
+
+    if (yearMatch && examMatch) {
+        const subjectShort = subjectMatch ? subjectMatch[1].split('(')[0] : ""; 
+        bankName = `[${yearMatch[1]}] ${examMatch[1]} - ${subjectShort}`;
+    } else {
+        bankName = rawTitle.replace('考試名稱：', '').split('#')[0].trim() || file.name.replace('.html','');
+    }
+
+    // 2. 解析題目
+    const items = doc.querySelectorAll('.border-b.border-gray-200');
+    const questions = [];
+
+    items.forEach(item => {
+        const ansContainer = item.querySelector('.text-red-600');
+        const ans = ansContainer ? ansContainer.innerText.replace(/[()（）\s]/g, '') : "A";
+        const imgTag = item.querySelector('img');
+        const imgSrc = imgTag ? imgTag.getAttribute('src') : null;
+        const contentArea = item.querySelector('.break-words');
+
+        if (contentArea) {
+            const fullText = contentArea.innerText.trim();
+            const parts = fullText.split(/\s*\(([A-D])\)\s*/);
+            
+            if (parts.length >= 8) {
+                questions.push({
+                    title: parts[0].replace(/^\d+[\s.、]*/, '').trim(), 
+                    img: imgSrc,
+                    options: {
+                        A: parts[2]?.trim(),
+                        B: parts[4]?.trim(),
+                        C: parts[6]?.trim(),
+                        D: parts[8]?.trim()
+                    },
+                    ans: ans,
+                    bankSource: bankName
+                });
+            }
+        }
+    });
+
+    if(questions.length > 0) {
+        // 儲存至 game 物件 (注意你的變數名稱是 game)
+        game.banks.push({
+            id: Date.now(),
+            name: bankName,
+            count: questions.length,
+            data: questions
+        });
+        save();
+        alert(`🎉 匯入成功！\n名稱：${bankName}\n總計：${questions.length} 題`);
+        renderBankList(); 
+        renderBankSelector(); // 同步更新答題頁面的勾選單
+        fileInput.value = ""; 
+    } else {
+        alert("無法解析題目，請確認檔案格式。");
+    }
+}
+
+// 顯示已匯入題庫清單
+function renderBankList() {
+    const listDiv = document.getElementById('bank-list');
+    if(!game.banks || game.banks.length === 0) {
+        listDiv.innerHTML = '<p style="text-align:center; color:#999; padding:20px;">尚無題庫</p>';
+        return;
+    }
+    listDiv.innerHTML = game.banks.map((b, i) => `
+        <div class="card" style="display:flex; justify-content:space-between; align-items:center; border-left:4px solid #ff9800;">
+            <div style="flex:1;">
+                <strong style="font-size:14px;">${b.name}</strong><br>
+                <small style="color:#666;">${b.count} 題</small>
+            </div>
+            <button onclick="deleteBank(${i})" style="width:60px; background:#ff5252; font-size:11px; padding:5px;">刪除</button>
+        </div>
+    `).join('');
+}
+
+function deleteBank(index) {
+    if(confirm("確定要刪除此題庫嗎？")) {
+        game.banks.splice(index, 1);
+        save();
+        renderBankList();
+        renderBankSelector();
+    }
+}
+// --- 答題系統變數 ---
+let currentExam = {
+    questions: [],
+    currentIndex: 0,
+    score: 0
+};
+
+// A. 開始測驗 (從勾選的題庫中抽 10 題)
+// 全域變數，用來存放目前「混合後且尚未做過」的題目
+let examPool = []; 
+
+// 修改後的唯一版本：題庫選擇器生成
+function renderBankSelector(){
+    const container = document.getElementById('quiz-bank-selector');
+    
+    // 檢查 game.banks 是否存在且有資料
+    if(!game.banks || !game.banks.length){
+        container.innerHTML = '<p style="font-size:12px; color:#999; text-align:center;">尚無題庫，請先匯入 HTML 檔案。</p>';
+        return;
+    }
+
+    // 生成勾選清單
+    container.innerHTML = game.banks.map((b, i) => `
+        <label style="font-size:12.5px; display:block; margin-bottom:6px; cursor:pointer;">
+            <input type="checkbox" class="bank-checkbox" value="${i}" checked onchange="resetPool()"> 
+            ${b.name} <span style="color:#888;">(${b.count}題)</span>
+        </label>
+    `).join('');
+
+    // 初始化時先重置一次題目池
+    resetPool();
+}
+// 當勾選變更時，清空現有題池
+function resetPool() {
+    examPool = [];
+    updatePoolInfo();
+}
+
+function updatePoolInfo() {
+    const info = document.getElementById('pool-info');
+    if (examPool.length > 0) {
+        info.innerText = `目前考卷剩餘：${examPool.length} 題未練習`;
+    } else {
+        info.innerText = `請點擊上方按鈕生成新考卷`;
+    }
+}
+
+// 2. 生成混合考卷的核心邏輯
+function createCustomExam() {
+    const checkedBoxes = document.querySelectorAll('.bank-checkbox:checked');
+    const selectedIndices = Array.from(checkedBoxes).map(cb => parseInt(cb.value));
+    const countInput = document.getElementById('setup-q-count');
+    const isShuffle = document.getElementById('setup-shuffle').checked;
+    const requestedCount = parseInt(countInput.value) || 10;
+
+    if (selectedIndices.length === 0) return alert("請至少勾選一個題庫！");
+
+    // A. 如果池子是空的，代表是新的一輪，重新從勾選的題庫抓題目
+    if (examPool.length === 0) {
+        selectedIndices.forEach(idx => {
+            // 使用深拷貝 JSON.parse(JSON.stringify(...)) 避免污染原始題庫
+            const bankData = JSON.parse(JSON.stringify(game.banks[idx].data));
+            examPool = examPool.concat(bankData);
+        });
+
+        // 如果選擇打亂
+        if (isShuffle) {
+            examPool.sort(() => 0.5 - Math.random());
+        }
+    }
+
+    if (examPool.length === 0) return alert("所選題庫中沒有題目。");
+
+    // B. 從池子中「剪下」題目 (splice 會直接改變 examPool)
+    // 這樣做完的題目就不會再出現在剩下的題目之中
+    const currentBatch = examPool.splice(0, Math.min(requestedCount, examPool.length));
+
+    // C. 將剪下的題目交給測驗系統 (currentExam 是你原本的測驗變數)
+    currentExam.questions = currentBatch;
+    currentExam.currentIndex = 0;
+    currentExam.score = 0;
+
+    // 更新介面剩餘數量
+    updatePoolInfo();
+
+    // 切換 UI 進入答題模式
+    document.getElementById('quiz-init').style.display = 'none';
+    document.getElementById('quiz-seed-select').style.display = 'none';
+    document.getElementById('quiz-play').style.display = 'block';
+
+    renderQuestion(); // 呼叫顯示第一題的函式
+}
+
+// B. 渲染題目 (包含圖片處理)
+function renderQuestion() {
+    const q = currentExam.questions[currentExam.currentIndex];
+    const qText = document.getElementById('q-text');
+    const qImgContainer = document.getElementById('q-image-container');
+    const optContainer = document.getElementById('options-container');
+    const feedback = document.getElementById('q-feedback');
+    const nextBtn = document.getElementById('next-q-btn');
+
+    // 重置介面
+    feedback.innerHTML = "";
+    nextBtn.style.display = "none";
+    
+    // 顯示進度
+    document.getElementById('exam-progress').style.width = ((currentExam.currentIndex + 1) / currentExam.questions.length * 100) + "%";
+
+    // 1. 顯示題目文字
+    qText.innerText = `${currentExam.currentIndex + 1}. ${q.title}`;
+
+    // 2. 顯示圖片 (關鍵修改！)
+    if (q.img) {
+        qImgContainer.innerHTML = `<img src="${q.img}" style="max-width:100%; border-radius:8px; border:1px solid #ddd; margin-top:10px;">`;
+        qImgContainer.style.display = "block";
+    } else {
+        qImgContainer.innerHTML = "";
+        qImgContainer.style.display = "none";
+    }
+
+    // 3. 顯示選項按鈕
+    optContainer.innerHTML = "";
+    ["A", "B", "C", "D"].forEach(key => {
+        if (q.options[key]) {
+            const btn = document.createElement('button');
+            btn.className = "secondary";
+            btn.style.textAlign = "left";
+            btn.style.padding = "12px";
+            btn.style.fontWeight = "normal";
+            btn.innerHTML = `(${key}) ${q.options[key]}`;
+            btn.onclick = () => checkAnswer(key);
+            optContainer.appendChild(btn);
+        }
+    });
+}
+
+// C. 檢查答案
+function checkAnswer(userAns) {
+    const q = currentExam.questions[currentExam.currentIndex];
+    const feedback = document.getElementById('q-feedback');
+    const nextBtn = document.getElementById('next-q-btn');
+    const optBtns = document.querySelectorAll('#options-container button');
+
+    // 禁用所有按鈕防止重複點擊
+    optBtns.forEach(b => b.disabled = true);
+
+    if (userAns === q.ans) {
+        feedback.innerHTML = `<div style="color:#4caf50; font-weight:bold; padding:10px;">✨ 正確！成長值 +1</div>`;
+        currentExam.score++;
+        // 增加成長值 (調用您原有的邏輯)
+        if(game.currentPlant && game.dailyCorrect < 10) {
+            game.currentPlant.growth += 10;
+            game.dailyCorrect++;
+            if(game.currentPlant.growth >= 100) {
+                game.currentPlant.growth = 100;
+                unlockPlant(game.currentPlant.id);
+                alert(`🎉 ${FLOWER_DB.find(f=>f.id===game.currentPlant.id).name} 成長完成！`);
+                game.currentPlant = null;
+            }
+            save();
+            updateUI();
+            updateGrowthUI();
+        }
+    } else {
+        feedback.innerHTML = `<div style="color:#f44336; font-weight:bold; padding:10px;">❌ 錯誤！正確答案是 (${q.ans})</div>`;
+        // 加入錯題本 (可選)
+        game.wrongBook.push(q);
+        save();
+    }
+
+    nextBtn.style.display = "block";
+}
+
+// D. 下一題或結束
+function nextExamQ() {
+    currentExam.currentIndex++;
+    if (currentExam.currentIndex < currentExam.questions.length) {
+        renderQuestion();
+    } else {
+        alert(`測驗結束！您答對了 ${currentExam.score} 題。`);
+        // 回到初始畫面
+        document.getElementById('quiz-play').style.display = 'none';
+        document.getElementById('quiz-init').style.display = 'block';
+        document.getElementById('quiz-seed-select').style.display = 'block';
+    }
+}
+    
 </script>
 </body>
 </html>
