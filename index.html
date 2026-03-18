@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>藥師國考藥草園 v4.3 - 完整修復版</title>
+    <title>藥師國考藥草園 v4.3 - 穩定修復版</title>
     <style>
         :root {
             --main-green: #78ab4e;
@@ -11,7 +11,7 @@
             --bg-card: #f9f9f9;
         }
         body {
-            font-family: "PingFang TC", sans-serif;
+            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
             background-color: var(--sand-yellow);
             margin: 0; padding: 0;
             display: flex; flex-direction: column;
@@ -34,7 +34,7 @@
             font-weight: bold; font-size: 12px; z-index: 5;
         }
 
-        /* 主內容區 */
+        /* 主內容區：修正滾動與遮擋 */
         #main-content {
             flex: 1;
             background: white;
@@ -42,33 +42,39 @@
             overflow-y: auto;
             padding: 20px;
             padding-bottom: 220px; /* 確保不被導航遮擋 */
+            -webkit-overflow-scrolling: touch;
         }
 
-        /* 分頁核心 CSS */
-        .view-section { display: none !important; }
-        .view-section.active { display: block !important; }
+        /* 分頁核心：強制切換邏輯 */
+        .view-section { 
+            display: none !important; 
+        }
+        .view-section.active { 
+            display: block !important; 
+        }
 
-        .card { background: var(--bg-card); padding: 15px; border-radius: 15px; margin-bottom: 12px; border-left: 5px solid var(--main-green); }
-        button { background: var(--main-green); color: white; border: none; padding: 10px; border-radius: 20px; font-weight: bold; width: 100%; cursor: pointer; margin: 5px 0; }
+        .card { background: var(--bg-card); padding: 15px; border-radius: 15px; margin-bottom: 12px; border-left: 5px solid var(--main-green); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        button { background: var(--main-green); color: white; border: none; padding: 10px; border-radius: 20px; font-weight: bold; width: 100%; cursor: pointer; margin: 5px 0; font-size: 14px; }
         button:disabled { background: #ccc; cursor: not-allowed; }
         .secondary { background: #5c8dcf; }
         .danger { background: #e57373; }
 
-        .progress-outer { width: 100%; background: #eee; height: 12px; border-radius: 6px; overflow: hidden; margin: 10px 0; }
-        .progress-inner { height: 100%; background: var(--main-green); width: 0%; transition: width 0.5s; }
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .yamol-link { display: inline-block; margin-top: 8px; font-size: 12px; color: #5c8dcf; text-decoration: none; font-weight: bold; }
-
+        /* 導覽列 */
         nav {
             position: fixed; bottom: 0; width: 100%;
             background: white; display: grid;
             grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(2, 55px);
+            grid-template-rows: repeat(2, 60px);
             border-top: 1px solid #ddd;
-            z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000; box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            padding-bottom: env(safe-area-inset-bottom);
         }
-        .nav-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: #555; cursor: pointer; }
+        .nav-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; color: #555; cursor: pointer; }
         .nav-btn.active { color: var(--main-green); font-weight: bold; }
+
+        .progress-outer { width: 100%; background: #eee; height: 12px; border-radius: 6px; overflow: hidden; margin: 10px 0; }
+        .progress-inner { height: 100%; background: var(--main-green); width: 0%; transition: width 0.5s; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
     </style>
 </head>
 <body>
@@ -78,7 +84,7 @@
         💰 <span id="coins">0</span> | 🌱 今日成長: <span id="today-growth">0</span>/10
     </div>
     <div class="plant-container">
-        <img id="plant-img-display" style="width:65px;" src="https://img.icons8.com/color/96/seed.png">
+        <img id="plant-img-display" style="width:70px;" src="https://img.icons8.com/color/96/seed.png">
     </div>
 </div>
 
@@ -91,30 +97,29 @@
 
         <div id="quiz-init" style="display:none;">
             <div class="card" style="background:#e8f5e9;">
-                <h4 id="current-planting-name">-</h4>
+                <h4 id="current-planting-name">正在培育：-</h4>
                 <div class="progress-outer"><div id="growth-bar" class="progress-inner"></div></div>
                 <div class="grid-3">
-                    <button id="task-water" onclick="applyGrowth('water')">💧 澆水</button>
-                    <button id="task-feed" onclick="applyGrowth('feed')">💩 施肥</button>
-                    <button id="task-sun" onclick="applyGrowth('sun')">☀️ 照光</button>
+                    <button onclick="applyGrowth('water')">💧澆水</button>
+                    <button onclick="applyGrowth('feed')">💩施肥</button>
+                    <button onclick="applyGrowth('sun')">☀️照光</button>
                 </div>
-                <p id="task-hint" style="font-size:11px; text-align:center;">今日答對：0 題</p>
+                <p id="task-hint" style="font-size:12px; text-align:center; color:#666; margin-top:10px;">今日答對：0 題</p>
             </div>
-
-            <div class="card" style="background:#f0f7ff;">
-                <p><b>📝 混合考卷設定</b></p>
-                <div id="quiz-bank-selector" style="max-height:100px; overflow-y:auto; border:1px solid #ddd; padding:8px; background:white; margin-bottom:10px;"></div>
-                <button class="secondary" onclick="createCustomExam()">生成考卷並開始</button>
-                <p id="pool-info" style="font-size:11px; text-align:center; color:#666;">剩餘：0 題</p>
+            
+            <div class="card">
+                <h4>📝 生成混合考卷</h4>
+                <div id="quiz-bank-selector" style="max-height:120px; overflow-y:auto; border:1px solid #ddd; padding:8px; margin-bottom:10px; background:white;"></div>
+                <button class="secondary" onclick="createCustomExam()">開始測驗</button>
             </div>
         </div>
 
         <div id="quiz-play" style="display:none;">
             <div class="progress-outer"><div id="exam-progress" class="progress-inner" style="background:#5c8dcf;"></div></div>
-            <div id="q-image-container" style="text-align:center; display:none;"></div>
-            <p id="q-text" style="font-weight:bold;"></p>
+            <div id="q-image-container" style="text-align:center; margin-bottom:10px; display:none;"></div>
+            <p id="q-text" style="font-weight:bold; font-size:16px; line-height:1.5;"></p>
             <div id="options-container"></div>
-            <button id="submit-exam-btn" class="danger" style="display:none;" onclick="submitExam()">🏁 交卷批改</button>
+            <button id="submit-exam-btn" class="danger" style="display:none; margin-top:20px;" onclick="submitExam()">🏁 交卷批改</button>
         </div>
 
         <div id="quiz-result-report" style="display:none;">
@@ -136,10 +141,10 @@
 
     <div id="view-bank" class="view-section">
         <h3>🗄️ 題庫管理</h3>
-        <div class="card" style="background:#fff3e0;">
+        <div class="card">
             <p><b>📥 匯入阿摩 HTML</b></p>
             <input type="file" id="file-input" accept=".html,.htm">
-            <button onclick="importHTML()">讀取並匯入</button>
+            <button onclick="importHTML()" style="margin-top:10px;">讀取並匯入</button>
         </div>
         <div id="bank-list"></div>
     </div>
@@ -150,12 +155,12 @@
     </div>
 
     <div id="view-player" class="view-section">
-        <h3>👤 系統與備份</h3>
+        <h3>👤 系統設定</h3>
         <div class="card">
-            <p>累計正確：<span id="st-correct">0</span></p>
-            <p>圖鑑進度：<span id="st-unlock">0/10</span></p>
+            <p>累積正確：<span id="st-correct">0</span></p>
+            <p>解鎖進度：<span id="st-unlock">0/10</span></p>
         </div>
-        <button class="danger" onclick="if(confirm('確定清除？')){localStorage.clear(); location.reload();}">🧨 清除資料</button>
+        <button class="danger" onclick="if(confirm('確定清除所有資料？')){localStorage.clear(); location.reload();}">🧨 清除所有資料</button>
     </div>
 </div>
 
@@ -169,7 +174,7 @@
 </nav>
 
 <script>
-// ====== 基礎資料與初始化 ======
+// --- 資料庫與初始化 ---
 const FLOWER_DB = [
     { id: 'f1', name: '向日葵', icon: '🌻', img: 'https://img.icons8.com/color/96/sunflower.png', price: 120 },
     { id: 'f2', name: '玫瑰', icon: '🌹', img: 'https://img.icons8.com/color/96/rose-window.png', price: 150 },
@@ -177,22 +182,32 @@ const FLOWER_DB = [
 ];
 
 let game = JSON.parse(localStorage.getItem('garden_v4_3')) || {
-    coins: 150, inventory: {}, unlocked: [], banks: [], history: [], currentPlant: null, dailyCorrect: 0, lastDate: new Date().toLocaleDateString()
+    coins: 200, inventory: {}, unlocked: [], banks: [], history: [],
+    currentPlant: null, dailyCorrect: 0, lastDate: new Date().toLocaleDateString()
 };
 
 function save() { localStorage.setItem('garden_v4_3', JSON.stringify(game)); }
 
-// ====== 分頁切換 (修復重點) ======
+// --- 分頁切換核心 (重點修正) ---
 function switchView(name) {
+    // 1. 隱藏所有分頁
     document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+    
+    // 2. 顯示目標分頁
     const target = document.getElementById('view-' + name);
-    if(target) target.classList.add('active');
+    if(target) {
+        target.classList.add('active');
+    } else {
+        console.error("找不到 ID: view-" + name);
+    }
 
+    // 3. 更新導覽按鈕
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    const btn = document.querySelector(`nav .nav-btn[onclick*="${name}"]`);
+    const btn = document.querySelector(`nav .nav-btn[onclick*="'${name}'"]`) || 
+                document.querySelector(`nav .nav-btn[onclick*="${name}"]`);
     if(btn) btn.classList.add('active');
 
-    // 切換時渲染對應內容
+    // 4. 根據分頁觸發渲染
     if(name === 'shop') renderShop();
     if(name === 'bank') renderBankList();
     if(name === 'album') renderAlbum();
@@ -206,29 +221,7 @@ function switchView(name) {
     }
 }
 
-// ====== 商店與圖鑑 ======
-function renderShop() {
-    document.getElementById('shop-list').innerHTML = FLOWER_DB.map(f => `
-        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-            <div>${f.icon} ${f.name} - ${f.price}元<br><small>擁有: ${game.inventory[f.id]||0}</small></div>
-            <button style="width:80px;" onclick="buySeed('${f.id}', ${f.price})">購買</button>
-        </div>
-    `).join('');
-}
-function buySeed(id, price) {
-    if(game.coins < price) return alert("金幣不足");
-    game.coins -= price; game.inventory[id] = (game.inventory[id]||0)+1;
-    save(); updateUI(); renderShop();
-}
-function renderAlbum() {
-    document.getElementById('album-grid').innerHTML = FLOWER_DB.map(f => `
-        <div class="card" style="text-align:center; filter:${game.unlocked.includes(f.id)?'none':'grayscale(1)'}">
-            <img src="${f.img}" style="width:40px;"><br>${f.name}
-        </div>
-    `).join('');
-}
-
-// ====== 強化解析器 (你原本的核心代碼) ======
+// --- 強化版阿摩解析器 (復原你的原始代碼) ---
 async function importHTML() {
     const file = document.getElementById('file-input').files[0];
     if(!file) return;
@@ -246,46 +239,50 @@ async function importHTML() {
         if (content) {
             const parts = content.innerText.trim().split(/\s*\(([A-D])\)\s*/);
             if (parts.length >= 8) {
-                questions.push({ title: parts[0].replace(/^\d+[\s.、]*/, '').trim(), img, options: { A: parts[2], B: parts[4], C: parts[6], D: parts[8] }, ans });
+                questions.push({
+                    title: parts[0].replace(/^\d+[\s.、]*/, '').trim(),
+                    img: img,
+                    options: { A: parts[2], B: parts[4], C: parts[6], D: parts[8] },
+                    ans: ans
+                });
             }
         }
     });
 
     if(questions.length > 0) {
         game.banks.push({ id: Date.now(), name: bankName, count: questions.length, data: questions });
-        save(); alert(`成功匯入 ${questions.length} 題`); renderBankList();
+        save(); alert(`匯入成功！共 ${questions.length} 題`); renderBankList();
+    } else {
+        alert("找不到題目，請確認是否為阿摩下載的 HTML 檔案");
     }
 }
 
-function renderBankList() {
-    document.getElementById('bank-list').innerHTML = game.banks.map((b, i) => `
-        <div class="card" style="display:flex; justify-content:space-between;">
-            <div><b>${b.name}</b><br><small>${b.count} 題</small></div>
-            <button style="width:60px;" class="danger" onclick="game.banks.splice(${i},1);save();renderBankList();">刪除</button>
-        </div>
-    `).join('');
-}
-
-// ====== 測驗系統與混合題庫 ======
-let examPool = [];
+// --- 混合測驗系統 ---
 let currentExam = { questions: [], idx: 0, userAns: [] };
 
 function renderBankSelector() {
     const container = document.getElementById('quiz-bank-selector');
     if(!game.banks.length) { container.innerHTML = "尚未匯入題庫"; return; }
-    container.innerHTML = game.banks.map((b, i) => `<label style="display:block;"><input type="checkbox" class="bank-checkbox" value="${i}" checked> ${b.name}</label>`).join('');
+    container.innerHTML = game.banks.map((b, i) => `
+        <label style="display:block; margin:5px 0;">
+            <input type="checkbox" class="bank-checkbox" value="${i}" checked> ${b.name} (${b.count}題)
+        </label>
+    `).join('');
 }
 
 function createCustomExam() {
     const checked = document.querySelectorAll('.bank-checkbox:checked');
-    if(!checked.length) return alert("請勾選題庫");
+    if(!checked.length) return alert("請勾選至少一個題庫");
     
     let pool = [];
-    checked.forEach(cb => { pool = pool.concat(JSON.parse(JSON.stringify(game.banks[cb.value].data))); });
+    checked.forEach(cb => {
+        pool = pool.concat(game.banks[cb.value].data);
+    });
     pool.sort(() => 0.5 - Math.random());
     
     currentExam.questions = pool.slice(0, 10);
-    currentExam.idx = 0; currentExam.userAns = [];
+    currentExam.idx = 0;
+    currentExam.userAns = [];
     
     document.getElementById('quiz-init').style.display = 'none';
     document.getElementById('quiz-seed-select').style.display = 'none';
@@ -296,46 +293,81 @@ function createCustomExam() {
 function renderQuestion() {
     const q = currentExam.questions[currentExam.idx];
     document.getElementById('q-text').innerText = `${currentExam.idx+1}. ${q.title}`;
+    
     const imgBox = document.getElementById('q-image-container');
-    if(q.img) { imgBox.innerHTML = `<img src="${q.img}" style="max-width:100%;">`; imgBox.style.display="block"; } else { imgBox.style.display="none"; }
+    if(q.img) {
+        imgBox.innerHTML = `<img src="${q.img}" style="max-width:100%; border-radius:10px;">`;
+        imgBox.style.display = "block";
+    } else {
+        imgBox.style.display = "none";
+    }
     
     const opts = document.getElementById('options-container');
     opts.innerHTML = ["A","B","C","D"].map(k => `
-        <button class="${currentExam.userAns[currentExam.idx]===k?'':'secondary'}" onclick="pickAns('${k}')">(${k}) ${q.options[k]}</button>
+        <button class="${currentExam.userAns[currentExam.idx]===k?'':'secondary'}" onclick="pickAns('${k}')">
+            (${k}) ${q.options[k]}
+        </button>
     `).join('');
     
-    document.getElementById('exam-progress').style.width = ((currentExam.idx+1)/currentExam.questions.length*100)+'%';
+    document.getElementById('exam-progress').style.width = ((currentExam.idx+1)/10*100)+'%';
     document.getElementById('submit-exam-btn').style.display = (currentExam.idx === 9) ? 'block' : 'none';
 }
 
 function pickAns(k) { 
     currentExam.userAns[currentExam.idx] = k; 
-    if(currentExam.idx < 9) { currentExam.idx++; renderQuestion(); } else { renderQuestion(); }
+    if(currentExam.idx < 9) {
+        currentExam.idx++;
+        renderQuestion();
+    } else {
+        renderQuestion();
+    }
 }
 
 function submitExam() {
     let score = 0;
-    const report = document.getElementById('result-list'); report.innerHTML = "";
+    const report = document.getElementById('result-list');
+    report.innerHTML = "";
     
     currentExam.questions.forEach((q, i) => {
         const isCorrect = currentExam.userAns[i] === q.ans;
         if(isCorrect) score++;
-        report.innerHTML += `<div class="card" style="border-left-color:${isCorrect?'#4caf50':'#f44336'}">
-            <p>${i+1}. ${isCorrect?'✅':'❌'} ${q.title}<br><small>你的答案: ${currentExam.userAns[i]||'未答'} | 正確: ${q.ans}</small></p>
-        </div>`;
+        report.innerHTML += `
+            <div class="card" style="border-left-color:${isCorrect?'#4caf50':'#f44336'}">
+                <p><b>Q${i+1}:</b> ${q.title}</p>
+                <p style="color:${isCorrect?'#4caf50':'#f44336'}">
+                    您的答案: ${currentExam.userAns[i]||'未答'} | 正確: ${q.ans}
+                </p>
+            </div>`;
     });
 
-    let earned = score * 10;
-    game.coins += earned; game.dailyCorrect += score;
-    game.history.unshift({ date: new Date().toLocaleString(), score, total: 10 });
+    let reward = score * 10;
+    game.coins += reward;
+    game.dailyCorrect += score;
+    game.history.unshift({ date: new Date().toLocaleString(), score: score, total: 10 });
     save(); updateUI();
     
-    document.getElementById('result-score').innerText = `得分：${score} / 10 (獲得 ${earned} 元)`;
+    document.getElementById('result-score').innerText = `得分：${score} / 10 (獲得 ${reward} 元)`;
     document.getElementById('quiz-play').style.display = 'none';
     document.getElementById('quiz-result-report').style.display = 'block';
 }
 
-// ====== 成長與初始化 ======
+// --- 商店、種植與更新 ---
+function renderShop() {
+    document.getElementById('shop-list').innerHTML = FLOWER_DB.map(f => `
+        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+            <div><b>${f.icon} ${f.name}</b><br><small>價格: ${f.price} | 擁有: ${game.inventory[f.id]||0}</small></div>
+            <button style="width:80px;" onclick="buySeed('${f.id}', ${f.price})">購買</button>
+        </div>
+    `).join('');
+}
+
+function buySeed(id, price) {
+    if(game.coins < price) return alert("金幣不足！");
+    game.coins -= price;
+    game.inventory[id] = (game.inventory[id] || 0) + 1;
+    save(); updateUI(); renderShop();
+}
+
 function renderQuizInit() {
     const list = document.getElementById('seed-inv-list');
     list.innerHTML = Object.keys(game.inventory).map(id => {
@@ -348,35 +380,59 @@ function renderQuizInit() {
         document.getElementById('current-planting-name').innerText = `正在培育：${f.name}`;
         document.getElementById('growth-bar').style.width = game.currentPlant.growth + '%';
         document.getElementById('plant-img-display').src = f.img;
-        document.getElementById('task-hint').innerText = `今日答對：${game.dailyCorrect} 題`;
+        document.getElementById('task-hint').innerText = `今日累積答對：${game.dailyCorrect} 題`;
+    } else {
+        document.getElementById('plant-img-display').src = "https://img.icons8.com/color/96/seed.png";
     }
     renderBankSelector();
 }
 
 function plantSeed(id) {
-    if(game.currentPlant) return alert("已有植物");
-    game.inventory[id]--; if(game.inventory[id]<=0) delete game.inventory[id];
-    game.currentPlant = { id, growth: 0 }; save(); switchView('quiz');
+    if(game.currentPlant) return alert("已有植物正在生長中！");
+    game.inventory[id]--;
+    if(game.inventory[id] <= 0) delete game.inventory[id];
+    game.currentPlant = { id: id, growth: 0 };
+    save(); switchView('quiz');
 }
 
 function applyGrowth(type) {
     if(!game.currentPlant) return;
     let amount = 0;
-    if(type==='water' && game.dailyCorrect>=1) amount=5;
-    if(type==='feed' && game.dailyCorrect>=3) amount=10;
-    if(type==='sun' && game.dailyCorrect>=5) amount=15;
+    if(type==='water' && game.dailyCorrect >= 1) amount = 5;
+    if(type==='feed' && game.dailyCorrect >= 3) amount = 10;
+    if(type==='sun' && game.dailyCorrect >= 5) amount = 15;
     
-    if(amount===0) return alert("條件未達成");
+    if(amount === 0) return alert("今日答對題數不足！");
     game.currentPlant.growth = Math.min(100, game.currentPlant.growth + amount);
     if(game.currentPlant.growth >= 100) {
         if(!game.unlocked.includes(game.currentPlant.id)) game.unlocked.push(game.currentPlant.id);
-        alert("成長完成！"); game.currentPlant = null;
+        alert("植物已成熟收割！");
+        game.currentPlant = null;
     }
     save(); renderQuizInit();
 }
 
+function renderAlbum() {
+    document.getElementById('album-grid').innerHTML = FLOWER_DB.map(f => `
+        <div class="card" style="text-align:center; filter:${game.unlocked.includes(f.id)?'none':'grayscale(1)'}">
+            <img src="${f.img}" style="width:40px;"><br>${f.name}
+        </div>
+    `).join('');
+}
+
+function renderBankList() {
+    document.getElementById('bank-list').innerHTML = game.banks.map((b, i) => `
+        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+            <div><b>${b.name}</b><br><small>${b.count} 題</small></div>
+            <button class="danger" style="width:60px;" onclick="game.banks.splice(${i},1);save();renderBankList();">刪除</button>
+        </div>
+    `).join('');
+}
+
 function renderHistory() {
-    document.getElementById('history-container').innerHTML = game.history.map(h => `<div class="card"><small>${h.date}</small><br>得分: ${h.score}/${h.total}</div>`).join('') || "尚無紀錄";
+    document.getElementById('history-container').innerHTML = game.history.map(h => `
+        <div class="card"><small>${h.date}</small><br>得分：${h.score} / ${h.total}</div>
+    `).join('') || "尚無紀錄";
 }
 
 function updateUI() {
