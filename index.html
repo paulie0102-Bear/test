@@ -430,28 +430,48 @@ function updateUI(){
 }
 
 // 切換底部頁面
-function switchView(name){
-    // 1. 隱藏所有主分頁
-    document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-    
+function switchView(name) {
+    // 1. 隱藏所有主分頁（移除 active）
+    document.querySelectorAll('.view-section').forEach(s => {
+        s.classList.remove('active');
+        // 額外保險：直接操作 style 避免 CSS 權重問題
+        s.style.display = 'none'; 
+    });
+
     // 2. 顯示點選的分頁
     const targetView = document.getElementById('view-' + name);
     if (targetView) {
         targetView.classList.add('active');
+        targetView.style.display = 'block'; // 強制顯示
     }
 
-    // 3. 如果是切換回「答題 (quiz)」分頁，確保子畫面正確
+    // 3. 核心修正：切換時「主動渲染」該分頁內容
+    // 這樣可以解決「切換過去卻沒東西」的問題
     if (name === 'quiz') {
-        // 如果沒有正在進行的測驗，顯示選擇種子與初始畫面
+        // 如果沒有正在進行測驗，重置回初始選單
         if (document.getElementById('quiz-play').style.display !== 'block') {
             document.getElementById('quiz-seed-select').style.display = 'block';
             document.getElementById('quiz-init').style.display = 'block';
+            renderQuizInit(); // 刷新種子列表
         }
+    } else if (name === 'shop') {
+        renderShop(); // 切換到商店時強制重新畫出商品列表
+    } else if (name === 'bank') {
+        renderBankList(); // 切換到題庫時刷新清單
+        renderBankSelector();
+    } else if (name === 'album') {
+        // 如果你有寫 renderAlbum，要在這裡呼叫
+        if (typeof renderAlbum === 'function') renderAlbum(); 
+    } else if (name === 'history') {
+        // 如果有歷程渲染，也要在這裡呼叫
+        if (typeof renderHistory === 'function') renderHistory();
     }
 
     // 4. 更新導覽列按鈕樣式
     document.querySelectorAll('nav .nav-btn').forEach(b => b.classList.remove('active'));
-    const activeBtn = document.querySelector(`nav .nav-btn[onclick*="${name}"]`);
+    // 修正選擇器，確保能精準抓到 onclick 屬性包含該名稱的按鈕
+    const activeBtn = document.querySelector(`nav .nav-btn[onclick*="'${name}'"]`) || 
+                      document.querySelector(`nav .nav-btn[onclick*="${name}"]`);
     if (activeBtn) activeBtn.classList.add('active');
 }
 
@@ -564,14 +584,25 @@ function checkDailyReset(){
 }
 setInterval(checkDailyReset,60000);
 
-// 初始化
-window.onload = function(){
+window.onload = function() {
+    // 初始化 game 物件，防止 null 報錯
+    game.banks = game.banks || [];
+    game.inventory = game.inventory || {};
+    game.unlocked = game.unlocked || [];
+    game.coins = (game.coins === undefined) ? 150 : game.coins;
+
+    // 執行一次性渲染
     updateUI();
     renderQuizInit();
     renderShop();
-    renderBankSelector(); // 顯示答題頁面的勾選單
-    if(typeof renderBankList === 'function') renderBankList(); // 顯示管理頁面的清單
-}
+    renderBankSelector();
+    
+    // 預設跳轉到答題頁
+    switchView('quiz');
+    
+    // 啟動每日重置檢查
+    checkDailyReset();
+};
 
 
 // ====== 強化版阿摩解析器 ======
