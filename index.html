@@ -586,7 +586,7 @@ button.danger { background: #e57373; }
 
         <div style="display:flex; justify-content:space-between; align-items:center;">
 
-            <h3>📖 收藏清單</h3>
+            <h3>📖 圖鑑</h3>
 
             <button onclick="toggleAlbumTab()" id="album-toggle-btn" style="width:100px; font-size:11px; background:#666;">查看倉庫</button>
 
@@ -1604,7 +1604,160 @@ function nextExamQ() {
 
 }
 
+    // ====== 補全與優化後的邏輯 ======
+
+// 1. 更新植物顯示 (在 garden-area 渲染)
+function updatePlantDisplay() {
+    const plantImg = document.getElementById('plant-img');
+    const bubble = document.getElementById('plant-bubble');
     
+    if (!game.currentPlant) {
+        plantImg.src = "https://img.icons8.com/color/96/seed.png"; // 預設種子
+        plantImg.style.opacity = "0.3";
+        bubble.style.display = "none";
+        return;
+    }
+
+    const f = FLOWER_DB.find(x => x.id === game.currentPlant.id);
+    plantImg.style.opacity = "1";
+
+    // 根據成長度更換外觀
+    if (game.currentPlant.growth < 30) {
+        plantImg.src = "https://img.icons8.com/color/96/seed.png"; // 種子階段
+    } else if (game.currentPlant.growth < 70) {
+        plantImg.src = "https://img.icons8.com/color/96/sprout.png"; // 幼苗階段
+    } else {
+        plantImg.src = f.img; // 成型階段
+    }
+
+    // 隨機對話泡泡
+    const messages = ["努力讀書中...", "感覺快要升級了！", "國考加油！", "多喝水沒事...", "記得複習生藥學。"];
+    if (Math.random() > 0.7) {
+        bubble.innerText = messages[Math.floor(Math.random() * messages.length)];
+        bubble.style.display = "block";
+        setTimeout(() => { bubble.style.display = "none"; }, 3000);
+    }
+}
+
+// 2. 完善收藏圖鑑渲染
+function renderAlbum() {
+    const grid = document.getElementById('album-grid');
+    grid.innerHTML = FLOWER_DB.map(f => {
+        const isUnlocked = game.unlocked.includes(f.id);
+        return `
+            <div class="album-item ${isUnlocked ? 'unlocked' : ''}">
+                <img src="${f.img}" alt="${f.name}">
+                <div>${isUnlocked ? f.name : '???'}</div>
+            </div>
+        `;
+    }).join('');
+
+    // 更新系統頁面統計
+    document.getElementById('st-correct').innerText = game.history.length; // 這裡可依需求改為累計正確數
+    document.getElementById('st-unlock').innerText = `${game.unlocked.length}/${FLOWER_DB.length}`;
+}
+
+// 3. 倉庫切換邏輯
+let isAlbumTab = true;
+function toggleAlbumTab() {
+    isAlbumTab = !isAlbumTab;
+    const albumContent = document.getElementById('album-content');
+    const warehouseContent = document.getElementById('warehouse-content');
+    const btn = document.getElementById('album-toggle-btn');
+
+    if (isAlbumTab) {
+        albumContent.style.display = "block";
+        warehouseContent.style.display = "none";
+        btn.innerText = "查看倉庫";
+        renderAlbum();
+    } else {
+        albumContent.style.display = "none";
+        warehouseContent.style.display = "block";
+        btn.innerText = "查看圖鑑";
+        renderWarehouse();
+    }
+}
+
+function renderWarehouse() {
+    const list = document.getElementById('warehouse-list');
+    const invIds = Object.keys(game.inventory);
+    if (invIds.length === 0) {
+        list.innerHTML = '<p style="color:#999; text-align:center;">倉庫空空如也</p>';
+        return;
+    }
+    list.innerHTML = invIds.map(id => {
+        const f = FLOWER_DB.find(x => x.id === id);
+        return `<div style="padding:10px; border-bottom:1px solid #eee;">${f.icon} ${f.name} x${game.inventory[id]}</div>`;
+    }).join('');
+}
+
+// 4. 修改答題結束邏輯 (加入獎勵與統計)
+function nextExamQ() {
+    currentExam.currentIndex++;
+    if (currentExam.currentIndex < currentExam.questions.length) {
+        renderQuestion();
+    } else {
+        const reward = currentExam.score * 10; // 每對一題給 10 元
+        game.coins += reward;
+        // 紀錄到歷程
+        game.history.push({
+            date: new Date().toLocaleString(),
+            score: `${currentExam.score}/${currentExam.questions.length}`,
+            reward: reward
+        });
+        
+        alert(`测驗結束！\n✅ 答對：${currentExam.score} 題\n💰 獲得獎勵：${reward} 元`);
+        
+        save();
+        updateUI();
+        
+        // 回到初始畫面
+        document.getElementById('quiz-play').style.display = 'none';
+        document.getElementById('quiz-init').style.display = 'block';
+        document.getElementById('quiz-seed-select').style.display = 'block';
+        renderQuizInit();
+    }
+}
+
+// 5. 備份功能實作
+function exportSave() {
+    const data = JSON.stringify(game);
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `pharmacist_garden_backup_${new Date().getTime()}.json`;
+    a.click();
+}
+
+function importSave(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const imported = JSON.parse(e.target.result);
+            if (imported.coins !== undefined) {
+                game = imported;
+                save();
+                location.reload();
+            }
+        } catch (err) {
+            alert("檔案格式錯誤");
+        }
+    };
+    reader.readAsText(file);
+}
+
+// 6. 覆蓋初始化的 window.onload
+const originOnload = window.onload;
+window.onload = function() {
+    originOnload();
+    updatePlantDisplay();
+    renderAlbum();
+    // 每一分鐘隨機晃動植物增加生動感
+    setInterval(updatePlantDisplay, 30000);
+};
 
 </script>
 
