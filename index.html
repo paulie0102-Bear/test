@@ -182,8 +182,12 @@ let game = JSON.parse(localStorage.getItem('garden_v4_2')) || {
     history: [],
     currentPlant: null,
     dailyCorrect: 0,
-    lastDate: new Date().toLocaleDateString()
+    lastDate: new Date().toLocaleDateString(),
+    wrongBook: [] // ✅ 初始化錯題本
 };
+
+// 如果存檔裡有錯題本，就保留
+game.wrongBook = game.wrongBook || [];
 
 const DEFAULT_IMG = "https://cdn-icons-png.flaticon.com/512/766/766212.png";
     
@@ -612,6 +616,137 @@ function renderHistory() {
     `).join('');
 }
 
+<script>
+// ===== 初始化錯題本 =====
+game.wrongBook = game.wrongBook || [];
+
+// ===== 渲染歷程頁 + 錯題本按鈕 =====
+function renderHistory() {
+    const list = document.getElementById('history-container');
+    if (!list) return;
+
+    let html = `<div style="display:flex; gap:10px; margin-bottom:10px;">
+        <button onclick="showWrongBookPanel()">📖 錯題本</button>
+        <button onclick="showAllHistory()">🗂️ 全部紀錄</button>
+    </div>`;
+
+    const view = list.dataset.view || "all";
+    const data = view === "wrongPanel" ? [] : view === "wrong" ? game.wrongBook : game.history;
+
+    if (!data || !data.length) {
+        html += '<p style="color:#999;">尚無紀錄</p>';
+    } else {
+        html += data.slice().reverse().map(h => `
+            <div class="card">
+                <div style="font-size:13px; margin-bottom:5px;">${h.q}</div>
+                <div style="font-size:12px; color:${h.correct ? 'green' : 'red'};">
+                    你的答案：${h.user}｜正確：${h.ans || h.ans}
+                </div>
+                <div style="font-size:10px; color:#999;">${h.time}</div>
+            </div>
+        `).join('');
+    }
+
+    list.innerHTML = html;
+    list.dataset.view = list.dataset.view || "all";
+}
+
+// 顯示全部紀錄
+function showAllHistory() {
+    const list = document.getElementById('history-container');
+    list.dataset.view = "all";
+    renderHistory();
+}
+
+// ===== 顯示錯題本設定面板 =====
+function showWrongBookPanel() {
+    const container = document.getElementById('history-container');
+    const wrongDates = [...new Set(game.wrongBook.map(w => w.time.split(' ')[0]))].sort((a,b)=>b.localeCompare(a));
+    
+    let html = `<div class="card" style="margin-bottom:10px;">
+        <p>📅 選擇日期（可不選代表全部）：</p>
+        <select id="wb-date-select" style="width:100%; margin-bottom:10px;">
+            <option value="">全部日期</option>
+            ${wrongDates.map(d => `<option value="${d}">${d}</option>`).join('')}
+        </select>
+        <p>🔢 選擇題數：</p>
+        <input id="wb-count" type="number" min="1" max="${game.wrongBook.length}" value="${Math.min(10, game.wrongBook.length)}" style="width:100%; margin-bottom:10px;">
+        <button onclick="createExamFromWrongBookPanel()">🎯 生成考卷</button>
+        <button onclick="renderHistory()">❌ 取消</button>
+    </div>`;
+
+    container.innerHTML = html;
+    container.dataset.view = "wrongPanel";
+}
+
+// 從錯題本面板生成考卷
+function createExamFromWrongBookPanel() {
+    const date = document.getElementById('wb-date-select').value;
+    let count = parseInt(document.getElementById('wb-count').value);
+
+    // 篩選題目
+    let pool = game.wrongBook.filter(w => !date || w.time.startsWith(date));
+    if(pool.length === 0) return alert("沒有符合日期的題目！");
+
+    count = Math.min(count, pool.length);
+
+    // 隨機挑選題目
+    pool = pool.sort(() => Math.random() - 0.5).slice(0, count);
+    game.exam = { questions: pool.map(q => ({...q})), index: 0 };
+
+    document.getElementById('quiz-init').style.display = 'none';
+    document.getElementById('quiz-play').style.display = 'block';
+    showExamQ();
+}
+
+// ===== 修改 checkExamAns 以自動剔除答對題目 =====
+function checkExamAns(choice, btn) {
+    const q = game.exam.questions[game.exam.index];
+    const isCorrect = choice === q.ans;
+    const feedback = document.getElementById('q-feedback');
+    const yamolUrl = getYamolUrl(q.q);
+
+    Array.from(document.getElementById('options-container').children).forEach(b => {
+        b.onclick = null;
+        if(b.innerText.startsWith(q.ans)) b.style.border = "2px solid #78ab4e";
+    });
+
+    if(isCorrect) {
+        game.dailyCorrect++;
+        game.coins += 10;
+        btn.style.background = "#d4edda";
+        feedback.innerHTML = `<span style="color:green; font-weight:bold;">✅ 正確！獲得 10 元。</span><br>
+                              <a class="yamol-link" href="${yamolUrl}" target="_blank">🔍 前往阿摩看詳解</a>`;
+
+        // ✅ 從錯題本剔除答對題目
+        const idx = game.wrongBook.findIndex(w => w.q === q.q);
+        if(idx !== -1) game.wrongBook.splice(idx, 1);
+
+    } else {
+        btn.style.background = "#f8d7da";
+        feedback.innerHTML = `<span style="color:red; font-weight:bold;">❌ 錯誤！正確答案是 (${q.ans})</span><br>
+                              <a class="yamol-link" href="${yamolUrl}" target="_blank">🔍 查看阿摩詳解</a>`;
+
+        // ⚡ 新增到錯題本（去重）
+        if (!game.wrongBook.some(w => w.q === q.q)) {
+            game.wrongBook.push({
+                q: q.q,
+                options: q.options,
+                ans: q.ans,
+                time: new Date().toLocaleString()
+            });
+        }
+    }
+
+    game.history.push({ q: q.q, ans: q.ans, user: choice, correct: isCorrect, time: new Date().toLocaleString() });
+    document.getElementById('next-q-btn').style.display = 'block';
+
+    save();
+    updateUI();
+    if(game.currentPlant) updateGrowthUI();
+}
+
+</script>
 </script>
 </body>
 </html>
