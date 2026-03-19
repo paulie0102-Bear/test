@@ -443,10 +443,16 @@ function renderPlayerInfo() {
 
 // 執行開始測驗的橋樑
 function handleStartExam() {
+    console.log("🎯 當前選擇考卷ID:", examSession.selectedPaperId);
+
+    if (!examSession.selectedPaperId) {
+        alert("⚠️ 尚未選擇考卷！");
+        return;
+    }
+
     const countVal = document.getElementById('setup-count').value;
     const count = (countVal === "0") ? 'all' : parseInt(countVal);
-    
-    // 從你定義好的全域變數中讀取設定 (由 setMode/setOrder 更新)
+
     startExam(count, examSession.mode, examSession.order);
 }
 
@@ -495,6 +501,7 @@ function startExam(count, mode, order) {
     // 7. 進入畫面
     openModalById('modal-quiz');
     renderQuestion();
+    document.getElementById('quiz-options').innerHTML = '';
 }
 
 function setOrder(order) {
@@ -897,10 +904,11 @@ function renderQuestion() {
 }
 
 function openQuizSelect() {
-    // 1. 先開啟「選擇考卷」的彈窗
     openModalById('modal-quiz-select');
-    // 2. 叫 renderBankList 去填滿 quiz-selection-area
-    renderBankList();
+
+    setTimeout(() => {
+        renderBankList();
+    }, 50);
 }
 
 // 選擇選項
@@ -1330,44 +1338,37 @@ function renderAllZones() {
 
 
 function openQuizSetup(paperId) {
-    // 1. 改從 examPapers 尋找這份考卷
     const paper = examPapers.find(p => p.id === paperId);
-    
-    // 2. 安全檢查：如果找不到考卷則報錯並退出
     if (!paper) {
-        console.error("找不到 ID 為 " + paperId + " 的考卷");
+        console.error("找不到考卷");
         return;
     }
 
-    // 3. 將資訊存入全域的測驗暫存器 (examSession)
+    // 🔥 先設定
     examSession.selectedPaperId = paperId;
     examSession.currentBankName = paper.name;
-    
-    // 4. 更新測驗設定彈窗的顯示資訊
+    examSession.mode = 'new';
+    examSession.order = 'rand';
+
+    console.log("✅ 已選擇考卷:", paperId, paper.name);
+
     const setupTitle = document.getElementById('setup-bank-name');
     if (setupTitle) setupTitle.innerText = paper.name;
 
-    // 5. 顯示設定彈窗 (這裡建議統一用你的 openModalById)
-    openModalById('quiz-setup-modal'); 
-    
-    // 6. 續測按鈕邏輯：檢查該考卷是否有已完成的題目紀錄 (solvedIds)
+    openModalById('quiz-setup-modal');
+
     const contBtn = document.getElementById('mode-cont');
     if (contBtn) {
         const hasProgress = paper.solvedIds && paper.solvedIds.length > 0;
         const totalQuestions = paper.data.length;
-        
-        // 如果題目已經全數做完，也應該禁用續測（或是讓使用者知道已完成）
         const isAllDone = hasProgress && paper.solvedIds.length >= totalQuestions;
 
         contBtn.disabled = !hasProgress || isAllDone;
         contBtn.style.opacity = (hasProgress && !isAllDone) ? "1" : "0.5";
-        
-        // 可選：在按鈕上顯示進度
-        if (hasProgress) {
-            contBtn.innerText = `續測 (已完成 ${paper.solvedIds.length}/${totalQuestions})`;
-        } else {
-            contBtn.innerText = `續測 (無進度)`;
-        }
+
+        contBtn.innerText = hasProgress
+            ? `續測 (${paper.solvedIds.length}/${totalQuestions})`
+            : `續測 (無進度)`;
     }
 }
 
