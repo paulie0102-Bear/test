@@ -72,6 +72,9 @@
         /* 隱藏的檔案選擇器 */
         #import-input { display: none; }
         textarea { width: 100%; height: 100px; padding: 10px; border-radius: 10px; border: 1px solid #ddd; resize: none; font-family: inherit; }
+        
+        /* 儲存容量進度條專用樣式 */
+        .storage-progress-area { background: #f9f9f9; padding: 15px; border-radius: 15px; margin-bottom: 15px; text-align: left; border: 1px solid #eee; }
     </style>
 </head>
 <body class="day">
@@ -126,16 +129,25 @@
     <div id="save-modal" class="modal">
         <div class="modal-content">
             <h3>資料管理中心</h3>
-            <p style="font-size: 12px; color: #888; margin-bottom: 20px;">備份存檔可讓妳在更換裝置時恢復花園。</p>
+            <p style="font-size: 11px; color: #888; margin-bottom: 15px;">監控本地容量，建議定期匯出備份避免數據丟失。</p>
             
-            <button style="background: #4caf50; color:white; width: 100%; margin-bottom: 12px; padding: 14px; border-radius: 12px;" onclick="manualSave()">💾 立即完成本地存檔</button>
+            <div class="storage-progress-area">
+                <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 5px;">
+                    <span style="font-weight:bold;">存檔空間佔用</span>
+                    <span id="storage-usage-text">0%</span>
+                </div>
+                <div class="progress-container" style="height: 8px; background: #ddd;">
+                    <div id="storage-bar" style="width: 0%; height: 100%; background: #4caf50; transition: width 0.5s;"></div>
+                </div>
+                <p id="storage-kb-info" style="font-size: 10px; color: #999; margin-top: 6px; margin-bottom:0;">已使用: 0 KB / 5120 KB</p>
+            </div>
             
             <button style="background: #2196f3; color:white; width: 100%; margin-bottom: 12px; padding: 14px; border-radius: 12px;" onclick="exportSaveFile()">📤 匯出備份 (JSON)</button>
             
             <button style="background: #9c27b0; color:white; width: 100%; margin-bottom: 12px; padding: 14px; border-radius: 12px;" onclick="triggerImport()">📥 匯入備份 (JSON)</button>
             <input type="file" id="import-input" accept=".json" onchange="importSaveFile(event)">
 
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
             
             <button style="background: #ff5252; color:white; width: 100%; padding: 10px; border-radius: 12px; font-size: 12px;" onclick="clearData()">🔥 重置所有進度 (不可還原)</button>
             
@@ -144,6 +156,24 @@
     </div>
 
     <script>
+        // ==========================================
+        // 🛠️ 開發者自定義區 (可根據需求調整)
+        // ==========================================
+        const GROWTH_TIME_LIMIT = 10; // 成長倒數秒數
+        
+        const WORDS_LOW = [
+            "妳辛苦了，給自己一點掌聲吧。", 
+            "深呼吸，情緒只是路過的雲。", 
+            "今天的妳也值得被好好對待。"
+        ];
+        const WORDS_HIGH = [
+            "心靈的花園因為妳的誠實而繁茂。", 
+            "擁抱每一種情緒，那是妳獨一無二的色彩。", 
+            "無論是風雨還是晴天，妳都在茁壯成長。", 
+            "智慧不在於沒有情緒，而在於如何與它共處。"
+        ];
+        // ==========================================
+
         const STORAGE_KEY = 'myGardenGame_v3';
         const ASSETS = {
             soil: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1fab4.png',
@@ -158,9 +188,6 @@
             }
         };
 
-        const WORDS_LOW = ["妳辛苦了，給自己一點掌聲吧。", "深呼吸，情緒只是路過的雲。", "今天的妳也值得被好好對待。"];
-        const WORDS_HIGH = ["心靈的花園因為妳的誠實而繁茂。", "擁抱每一種情緒，那是妳獨一無二的色彩。", "無論是風雨還是晴天，妳都在茁壯成長。", "智慧不在於沒有情緒，而在於如何與它共處。"];
-
         let gameState = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
             points: 0, gardenLv: 1, plantStatus: 'idle', 
             growStartTime: 0, currentFlowerId: "", currentFlowerName: "", currentFlowerImg: "",
@@ -174,7 +201,28 @@
             setInterval(updateTheme, 60000);
         }
 
-        // --- 存檔的核心邏輯 ---
+        // --- 存檔與容量監控邏輯 ---
+        function updateStorageProgress() {
+            const limit = 5120; // 5MB 的 KB 數
+            let total = 0;
+            for (let x in localStorage) {
+                if (!localStorage.hasOwnProperty(x)) continue;
+                total += ((localStorage[x].length + x.length) * 2) / 1024;
+            }
+            const percentage = Math.min((total / limit) * 100, 100).toFixed(1);
+            
+            const bar = document.getElementById('storage-bar');
+            const text = document.getElementById('storage-usage-text');
+            const info = document.getElementById('storage-kb-info');
+            
+            if(bar && text && info) {
+                bar.style.width = percentage + "%";
+                text.innerText = percentage + "%";
+                info.innerText = `已使用: ${total.toFixed(1)} KB / ${limit} KB`;
+                bar.style.background = percentage > 80 ? '#f44336' : '#4caf50';
+            }
+        }
+
         function exportSaveFile() {
             const dataStr = JSON.stringify(gameState, null, 2);
             const blob = new Blob([dataStr], { type: "application/json" });
@@ -197,7 +245,6 @@
             reader.onload = function(e) {
                 try {
                     const imported = JSON.parse(e.target.result);
-                    // 基礎格式檢查
                     if (imported.gardenLv && Array.isArray(imported.flowerAlbum)) {
                         gameState = imported;
                         autoSave();
@@ -210,7 +257,10 @@
         }
 
         function manualSave() { autoSave(); showBubble("花園進度已儲存。"); }
-        function autoSave() { localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState)); }
+        function autoSave() { 
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState));
+            if(document.getElementById('save-modal').style.display === 'flex') updateStorageProgress();
+        }
         function clearData() { if(confirm("確定要重置嗎？所有心情紀錄都會消失。")) { localStorage.removeItem(STORAGE_KEY); location.reload(); } }
 
         // --- 遊戲邏輯 ---
@@ -276,8 +326,12 @@
         function checkGrowth() {
             if (gameState.plantStatus === 'growing') {
                 const elapsed = Math.floor((Date.now() - gameState.growStartTime) / 1000);
-                if (elapsed >= 10) { gameState.plantStatus = 'ready'; document.getElementById('growth-timer').innerText = ""; updateUI(); }
-                else document.getElementById('growth-timer').innerText = `收成倒數 ${10 - elapsed}s`;
+                if (elapsed >= GROWTH_TIME_LIMIT) { 
+                    gameState.plantStatus = 'ready'; 
+                    document.getElementById('growth-timer').innerText = ""; 
+                    updateUI(); 
+                }
+                else document.getElementById('growth-timer').innerText = `收成倒數 ${GROWTH_TIME_LIMIT - elapsed}s`;
             }
         }
 
@@ -319,7 +373,10 @@
         }
         function deleteLetter(id) { if(confirm("確定刪除？")) { gameState.futureLetters = gameState.futureLetters.filter(l => l.id !== id); autoSave(); toggleLetters(); } }
 
-        function openSaveMenu() { document.getElementById('save-modal').style.display = 'flex'; }
+        function openSaveMenu() { 
+            updateStorageProgress();
+            document.getElementById('save-modal').style.display = 'flex'; 
+        }
         function updateTheme() { const hr = new Date().getHours(); document.body.className = (hr > 6 && hr < 18) ? 'day' : 'night'; }
         function showBubble(text) { const b = document.getElementById('message-bubble'); b.innerText = text; b.style.opacity = 1; setTimeout(() => b.style.opacity = 0, 5000); }
         function closeModal() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
