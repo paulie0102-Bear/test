@@ -27,7 +27,7 @@
         /* 花園與氣泡 */
         #game-container { position: relative; flex: 1; width: 100%; display: flex; justify-content: center; align-items: center; flex-direction: column; }
         #flower-pot { width: 180px; height: 180px; cursor: pointer; transition: transform 0.3s; position: relative; z-index: 5; }
-        #flower-img { width: 100%; height: 100%; object-fit: contain; filter: hue-rotate(0deg); transition: filter 1s; }
+        #flower-img { width: 100%; height: 100%; object-fit: contain; transition: filter 1s; }
         #growth-timer { position: absolute; top: -30px; width: 100%; text-align: center; font-weight: bold; font-size: 18px; }
 
         #message-bubble {
@@ -58,12 +58,12 @@
         .modal-content { background: white; color: #333; padding: 20px; border-radius: 20px; width: 88%; max-width: 380px; text-align: center; max-height: 85vh; display: flex; flex-direction: column; }
         textarea { width: 100%; height: 80px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; padding: 10px; font-size: 16px; }
         
-        /* 列表樣式 (圖鑑與信箱) */
+        /* 列表樣式 */
         .scroll-list { overflow-y: auto; display: grid; grid-template-columns: repeat(1, 1fr); gap: 10px; padding: 10px 0; }
         .album-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
         
         .item-card { background: #f9f9f9; padding: 12px; border-radius: 12px; border: 1px solid #eee; text-align: center; position: relative; }
-        .item-card img { width: 50px; height: 50px; margin-bottom: 5px; }
+        .item-card img { width: 60px; height: 60px; margin-bottom: 5px; }
         .item-card p { font-size: 13px; margin: 5px 0; color: #555; word-break: break-all; }
         .delete-btn { background: #ff8a80; color: white; border-radius: 5px; padding: 2px 8px; font-size: 11px; margin-top: 5px; }
 
@@ -88,7 +88,7 @@
     <div id="game-container">
         <div id="flower-pot" onclick="handlePlantClick()">
             <div id="growth-timer"></div>
-            <img id="flower-img" src="https://cdn-icons-png.flaticon.com/512/628/628283.png" alt="soil">
+            <img id="flower-img" src="" alt="soil">
         </div>
         <p id="hint-text" style="font-size: 14px;">點擊土壤播種情緒</p>
         <p id="flower-name-display" style="font-weight: bold; color: var(--primary-flower); margin-top: 5px; min-height: 20px;"></p>
@@ -150,17 +150,25 @@
     </div>
 
     <script>
-        const FLOWER_TYPES = [
-            { id: 'soil', img: 'https://cdn-icons-png.flaticon.com/512/628/628283.png' },
-            { id: 'sprout', img: 'https://cdn-icons-png.flaticon.com/512/824/824207.png' },
-            { id: 'mature', img: 'https://cdn-icons-png.flaticon.com/512/2950/2950660.png' }
-        ];
+        // 素材資源定義
+        const ASSETS = {
+            soil: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1fab4.png',
+            sprout: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f331.png',
+            flowers: {
+                happy: { name: '向日葵', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f33b.png' },
+                angry: { name: '仙人掌', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f335.png' },
+                worry: { name: '蒲公英', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f33c.png' },
+                sad: { name: '繡球花', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1fabb.png' },
+                hope: { name: '櫻花', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f338.png' },
+                balanced: { name: '鬱金香', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f337.png' }
+            }
+        };
 
         const ENCOURAGEMENTS = ["妳辛勤的照顧，讓美好綻放了。", "就像這朵花一樣，妳也在慢慢變好。", "謝謝妳沒有放棄，今天也很棒喔！", "所有的等待，都是為了最美的收成。"];
 
         let gameState = JSON.parse(localStorage.getItem('myGardenGame')) || {
             points: 0, gardenLv: 1, plantStatus: 'idle', 
-            growStartTime: 0, currentFlowerName: "", currentHue: 0,
+            growStartTime: 0, currentFlowerType: "happy",
             futureLetters: [], 
             flowerAlbum: [] 
         };
@@ -172,7 +180,6 @@
             setInterval(updateTheme, 60000);
         }
 
-        // --- 情緒邏輯 ---
         function validateEmotions() {
             const h = parseInt(document.getElementById('emo-happy').value), 
                   a = parseInt(document.getElementById('emo-angry').value),
@@ -186,7 +193,6 @@
             document.getElementById('plant-btn').disabled = (total !== 100);
         }
 
-        // 修復：點選播下情緒時開啟彈窗
         function openPlantModal() {
             if (gameState.plantStatus === 'idle') {
                 document.getElementById('plant-modal').style.display = 'flex';
@@ -197,15 +203,28 @@
         }
 
         function confirmPlanting() {
-            const h = parseInt(document.getElementById('emo-happy').value), a = parseInt(document.getElementById('emo-angry').value);
-            const w = parseInt(document.getElementById('emo-worry').value), s = parseInt(document.getElementById('emo-sad').value), hp = parseInt(document.getElementById('emo-hope').value);
+            const h = parseInt(document.getElementById('emo-happy').value), 
+                  a = parseInt(document.getElementById('emo-angry').value),
+                  w = parseInt(document.getElementById('emo-worry').value), 
+                  s = parseInt(document.getElementById('emo-sad').value), 
+                  hp = parseInt(document.getElementById('emo-hope').value);
             
-            const maxVal = Math.max(h, a, w, s, hp);
-            let prefix = a === maxVal ? "憤怒中帶有" : h === maxVal ? "喜悅中帶有" : w === maxVal ? "憂慮中帶有" : s === maxVal ? "哀傷中帶有" : "平靜中帶有";
-            let suffix = hp === maxVal ? "嚮往的花朵" : h === maxVal ? "明媚的小花" : a === maxVal ? "刺人的紅蕊" : s === maxVal ? "帶露的垂櫻" : "霧氣般的芬芳";
+            // 判定最高的情緒
+            const emotions = { happy: h, angry: a, worry: w, sad: s, hope: hp };
+            let maxType = 'happy';
+            let maxVal = -1;
+            
+            for (let type in emotions) {
+                if (emotions[type] > maxVal) {
+                    maxVal = emotions[type];
+                    maxType = type;
+                }
+            }
 
-            gameState.currentFlowerName = prefix + suffix;
-            gameState.currentHue = (h * 50 + a * 0 + w * 220 + s * 180 + hp * 300) / 100;
+            // 如果情緒非常平均(最高不超過30)，給予鬱金香
+            if (maxVal <= 30) maxType = 'balanced';
+
+            gameState.currentFlowerType = maxType;
             gameState.plantStatus = 'growing';
             gameState.growStartTime = Date.now();
             showBubble("種下了此刻的心情...");
@@ -214,7 +233,6 @@
             autoSave();
         }
 
-        // --- 天燈與信箱系統 ---
         let currentLanternMode = '';
         function openLantern(mode) {
             currentLanternMode = mode;
@@ -229,7 +247,6 @@
             const date = document.getElementById('lantern-date').value;
             if(!text) return;
 
-            // 修改：只有「給未來」的信件會進入信箱
             if (currentLanternMode === 'future') {
                 const newLetter = {
                     id: Date.now(),
@@ -241,7 +258,6 @@
                 gameState.futureLetters.push(newLetter);
             }
 
-            // 動畫
             const lan = document.createElement('div');
             lan.className = 'sky-lantern'; lan.innerText = text.substring(0,6)+'...';
             if(currentLanternMode === 'worry') lan.style.background = '#95a5a6';
@@ -286,7 +302,6 @@
             }
         }
 
-        // --- 圖鑑系統 ---
         function toggleAlbum() {
             const container = document.getElementById('list-container');
             document.getElementById('list-title').innerText = "心情花卉圖鑑";
@@ -297,11 +312,12 @@
                 container.innerHTML = "<p style='grid-column: 1/-1; color:#999;'>還沒有收集到花卉...</p>";
             } else {
                 gameState.flowerAlbum.forEach(item => {
+                    const flowerData = ASSETS.flowers[item.type];
                     const card = document.createElement('div');
                     card.className = 'item-card';
                     card.innerHTML = `
-                        <img src="${FLOWER_TYPES[2].img}" style="filter: hue-rotate(${item.hue}deg)">
-                        <p>${item.name}</p>
+                        <img src="${flowerData.img}">
+                        <p>${flowerData.name}</p>
                     `;
                     container.appendChild(card);
                 });
@@ -309,7 +325,6 @@
             document.getElementById('list-modal').style.display = 'flex';
         }
 
-        // --- 核心系統 ---
         function updateUI() {
             const nextLevel = gameState.gardenLv * 10;
             document.getElementById('progress-bar').style.width = (gameState.points / nextLevel * 100) + "%";
@@ -317,15 +332,17 @@
             document.getElementById('garden-name').innerText = `Lv.${gameState.gardenLv} 的花園`;
             
             const img = document.getElementById('flower-img'), hint = document.getElementById('hint-text'), nameDisp = document.getElementById('flower-name-display');
+            
             if (gameState.plantStatus === 'idle') {
-                img.src = FLOWER_TYPES[0].img; img.style.filter = "hue-rotate(0deg)";
+                img.src = ASSETS.soil;
                 hint.innerText = "點擊土壤播種情緒"; nameDisp.innerText = "";
             } else if (gameState.plantStatus === 'growing') {
-                img.src = FLOWER_TYPES[1].img; img.style.filter = `hue-rotate(${gameState.currentHue}deg)`;
-                hint.innerText = "情緒正在萌芽中..."; nameDisp.innerText = "正在養育：" + gameState.currentFlowerName;
+                img.src = ASSETS.sprout;
+                hint.innerText = "情緒正在萌芽中..."; nameDisp.innerText = "正在養育情緒之花";
             } else {
-                img.src = FLOWER_TYPES[2].img; img.style.filter = `hue-rotate(${gameState.currentHue}deg)`;
-                hint.innerText = "收成這份心情"; nameDisp.innerText = "盛開中：" + gameState.currentFlowerName;
+                const flower = ASSETS.flowers[gameState.currentFlowerType];
+                img.src = flower.img;
+                hint.innerText = "收成這份心情"; nameDisp.innerText = "盛開中：" + flower.name;
             }
         }
 
@@ -349,12 +366,13 @@
         }
 
         function harvest() {
-            const isNew = !gameState.flowerAlbum.find(f => f.name === gameState.currentFlowerName);
+            const flower = ASSETS.flowers[gameState.currentFlowerType];
+            const isNew = !gameState.flowerAlbum.find(f => f.type === gameState.currentFlowerType);
             if (isNew) {
-                gameState.flowerAlbum.push({ name: gameState.currentFlowerName, hue: gameState.currentHue });
+                gameState.flowerAlbum.push({ type: gameState.currentFlowerType });
             }
             gameState.points += 2;
-            showBubble(`${isNew ? '🌟 新發現！' : ''}【${gameState.currentFlowerName}】已收成：${ENCOURAGEMENTS[Math.floor(Math.random() * ENCOURAGEMENTS.length)]}`);
+            showBubble(`${isNew ? '🌟 新發現！' : ''}【${flower.name}】已收成：${ENCOURAGEMENTS[Math.floor(Math.random() * ENCOURAGEMENTS.length)]}`);
             gameState.plantStatus = 'idle';
             if (gameState.points >= gameState.gardenLv * 10) gameState.gardenLv++;
             updateUI(); autoSave();
