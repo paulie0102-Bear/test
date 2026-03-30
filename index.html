@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>小星靈的暖心花園 - 情緒信箱版</title>
+    <title>小星靈的暖心花園 - 溫柔療癒存檔版</title>
     <style>
         :root {
             --bg-day: #e8f5e9; --bg-night: #1a2a1a;
@@ -15,62 +15,62 @@
             transition: background 1s; overflow: hidden;
             display: flex; flex-direction: column; align-items: center; height: 100vh;
         }
+        /* 背景裝飾 */
         .day { background: var(--bg-day); color: #2e7d32; }
         .night { background: var(--bg-night); color: #a5d6a7; }
+        
+        /* 高等級背景特效 */
+        .lvl-high.day::after { content: "🌸"; position: absolute; top: 10%; right: 10%; opacity: 0.3; font-size: 40px; filter: blur(1px); }
+        .lvl-high.night::after { content: "✨"; position: absolute; top: 15%; left: 15%; opacity: 0.5; font-size: 30px; animation: blink 2s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.8; } }
 
         /* 進度條 */
-        #top-bar { width: 100%; padding: 15px 20px 5px; max-width: 400px; }
+        #top-bar { width: 100%; padding: 15px 20px 5px; max-width: 400px; z-index: 10; }
         .progress-container { width: 100%; height: 12px; background: rgba(0,0,0,0.1); border-radius: 6px; overflow: hidden; }
         #progress-bar { width: 0%; height: 100%; background: var(--primary-green); transition: width 0.5s; }
-        .level-text { font-size: 12px; margin-top: 5px; display: flex; justify-content: space-between; }
+        .level-text { font-size: 12px; margin-top: 5px; display: flex; justify-content: space-between; font-weight: bold; }
 
-        /* 花園與氣泡 */
+        /* 核心遊戲區 */
         #game-container { position: relative; flex: 1; width: 100%; display: flex; justify-content: center; align-items: center; flex-direction: column; }
-        #flower-pot { width: 180px; height: 180px; cursor: pointer; transition: transform 0.3s; position: relative; z-index: 5; }
-        #flower-img { width: 100%; height: 100%; object-fit: contain; transition: filter 1s; }
-        #growth-timer { position: absolute; top: -30px; width: 100%; text-align: center; font-weight: bold; font-size: 18px; }
+        #flower-pot { width: 200px; height: 200px; cursor: pointer; transition: transform 0.3s; position: relative; z-index: 5; }
+        #flower-pot:active { transform: scale(0.95); }
+        #flower-img { width: 100%; height: 100%; object-fit: contain; }
+        #growth-timer { position: absolute; top: -35px; width: 100%; text-align: center; font-weight: bold; font-size: 20px; color: #ff8a80; }
 
         #message-bubble {
-            position: absolute; top: 12%; background: white; color: #333; padding: 15px;
-            border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            max-width: 80%; opacity: 0; transition: opacity 0.5s; pointer-events: none; z-index: 10;
+            position: absolute; top: 10%; background: white; color: #333; padding: 18px;
+            border-radius: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            max-width: 85%; opacity: 0; transition: opacity 0.5s; pointer-events: none; z-index: 20; line-height: 1.5;
         }
 
-        /* 天燈動畫 */
+        /* 天燈 */
         .sky-lantern {
             position: absolute; bottom: -100px; width: 60px; height: 80px;
             background: #ff6b6b; border-radius: 10px 10px 5px 5px;
             animation: flyUp 8s forwards linear; color: white; font-size: 10px; text-align: center; padding: 10px 5px; z-index: 1;
-            box-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
         }
-        @keyframes flyUp { 
-            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(-120vh) translateX(50px) rotate(10deg); opacity: 0; } 
-        }
+        @keyframes flyUp { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(-120vh) translateX(50px) rotate(10deg); opacity: 0; } }
 
-        /* 控制區 */
+        /* 控制按鈕 */
         .controls { padding: 10px 20px 30px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 400px; }
-        button { border: none; padding: 12px; border-radius: 15px; font-weight: bold; box-shadow: 0 4px 0 rgba(0,0,0,0.1); cursor: pointer; font-size: 14px; }
-        button:active { transform: translateY(2px); box-shadow: none; }
+        button { border: none; padding: 12px; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        button:active { transform: translateY(2px); filter: brightness(0.9); }
 
-        /* 彈窗基礎 */
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 100; }
-        .modal-content { background: white; color: #333; padding: 20px; border-radius: 20px; width: 88%; max-width: 380px; text-align: center; max-height: 85vh; display: flex; flex-direction: column; }
-        textarea { width: 100%; height: 80px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; padding: 10px; font-size: 16px; }
+        /* 彈窗 */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
+        .modal-content { background: white; color: #333; padding: 20px; border-radius: 25px; width: 100%; max-width: 380px; text-align: center; max-height: 90vh; overflow-y: auto; }
         
-        /* 列表樣式 */
-        .scroll-list { overflow-y: auto; display: grid; grid-template-columns: repeat(1, 1fr); gap: 10px; padding: 10px 0; }
-        .album-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .scroll-list { display: grid; grid-template-columns: repeat(1, 1fr); gap: 10px; margin-top: 15px; }
+        .album-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .item-card { background: #fdfdfd; padding: 15px; border-radius: 18px; border: 1px solid #f0f0f0; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .item-card img { width: 65px; height: 65px; }
         
-        .item-card { background: #f9f9f9; padding: 12px; border-radius: 12px; border: 1px solid #eee; text-align: center; position: relative; }
-        .item-card img { width: 60px; height: 60px; margin-bottom: 5px; }
-        .item-card p { font-size: 13px; margin: 5px 0; color: #555; word-break: break-all; }
-        .delete-btn { background: #ff8a80; color: white; border-radius: 5px; padding: 2px 8px; font-size: 11px; margin-top: 5px; }
-
-        .emotion-input-group { margin: 8px 0; display: flex; align-items: center; justify-content: space-between; }
-        .emotion-input-group label { font-size: 14px; width: 60px; text-align: left; }
-        .storage-container { width: 100%; height: 8px; background: #eee; border-radius: 4px; overflow: hidden; margin: 10px 0; }
-        #storage-bar { width: 0%; height: 100%; background: #4caf50; }
+        .emotion-input-group { margin: 12px 0; display: flex; align-items: center; }
+        .emotion-input-group label { font-size: 14px; width: 70px; text-align: left; }
+        input[type=range] { flex: 1; accent-color: var(--primary-green); }
+        
+        /* 隱藏的檔案選擇器 */
+        #import-input { display: none; }
     </style>
 </head>
 <body class="day">
@@ -78,7 +78,7 @@
     <div id="top-bar">
         <div class="progress-container"><div id="progress-bar"></div></div>
         <div class="level-text">
-            <span id="garden-name">新手花園</span>
+            <span id="garden-name">載入中...</span>
             <span id="points-display">0 / 10</span>
         </div>
     </div>
@@ -88,89 +88,73 @@
     <div id="game-container">
         <div id="flower-pot" onclick="handlePlantClick()">
             <div id="growth-timer"></div>
-            <img id="flower-img" src="" alt="soil">
+            <img id="flower-img" src="" alt="plant">
         </div>
-        <p id="hint-text" style="font-size: 14px;">點擊土壤播種情緒</p>
-        <p id="flower-name-display" style="font-weight: bold; color: var(--primary-flower); margin-top: 5px; min-height: 20px;"></p>
+        <p id="hint-text" style="font-size: 14px; margin-top: 15px;">點擊土壤播下此刻的心情</p>
+        <p id="flower-name-display" style="font-weight: bold; color: #e91e63; margin-top: 5px;"></p>
     </div>
 
     <div class="controls">
-        <button style="background: #aed581;" onclick="openPlantModal()">播下情緒</button>
-        <button style="background: #81d4fa;" onclick="openLantern('future')">寫給未來</button>
-        <button style="background: #90a4ae;" onclick="openLantern('worry')">煩惱飛走</button>
-        <button style="background: #ce93d8;" onclick="toggleLetters()">往日信箱</button>
-        <button style="background: #ffcc80;" onclick="toggleAlbum()">花卉圖鑑</button>
-        <button style="background: #ddd;" onclick="openSaveMenu()">存檔/讀取</button>
+        <button style="background: #aed581; color: #33691e;" onclick="openPlantModal()">播下情緒</button>
+        <button style="background: #81d4fa; color: #01579b;" onclick="openLantern('future')">寫給未來</button>
+        <button style="background: #cfd8dc; color: #37474f;" onclick="openLantern('worry')">煩惱飛走</button>
+        <button style="background: #f8bbd0; color: #880e4f;" onclick="toggleLetters()">往日信箱</button>
+        <button style="background: #ffe0b2; color: #e65100;" onclick="toggleAlbum()">花卉圖鑑</button>
+        <button style="background: #eeeeee;" onclick="openSaveMenu()">系統設定</button>
     </div>
 
     <div id="plant-modal" class="modal">
         <div class="modal-content">
             <h3>調配種子情緒</h3>
+            <p style="font-size: 12px; color: #888; margin-bottom: 15px;">將此刻的情緒比例分配完畢 (總和100)</p>
             <div class="emotion-input-group"><label>😊 開心</label><input type="range" id="emo-happy" min="0" max="100" value="20" oninput="validateEmotions()"></div>
             <div class="emotion-input-group"><label>😡 生氣</label><input type="range" id="emo-angry" min="0" max="100" value="20" oninput="validateEmotions()"></div>
             <div class="emotion-input-group"><label>😟 煩惱</label><input type="range" id="emo-worry" min="0" max="100" value="20" oninput="validateEmotions()"></div>
             <div class="emotion-input-group"><label>😢 難過</label><input type="range" id="emo-sad" min="0" max="100" value="20" oninput="validateEmotions()"></div>
             <div class="emotion-input-group"><label>✨ 嚮往</label><input type="range" id="emo-hope" min="0" max="100" value="20" oninput="validateEmotions()"></div>
-            <div id="total-check">總和: 100 / 100</div>
-            <button id="plant-btn" style="background: #aed581; width: 100%; margin-top: 15px;" onclick="confirmPlanting()">開始種植</button>
-            <p style="font-size: 12px; margin-top: 10px; color: #888;" onclick="closeModal()">取消</p>
+            <div id="total-check" style="font-weight: bold; margin: 10px 0;">總和: 100 / 100</div>
+            <button id="plant-btn" style="background: #aed581; width: 100%; padding: 15px; border-radius: 15px;" onclick="confirmPlanting()">開始種植</button>
+            <p style="font-size: 13px; margin-top: 15px; color: #999; cursor: pointer;" onclick="closeModal()">先不種了</p>
         </div>
     </div>
 
-    <div id="lantern-modal" class="modal">
-        <div class="modal-content">
-            <h3 id="lantern-title">寫下你的心願</h3>
-            <textarea id="lantern-text" placeholder="想對未來的自己說什麼？"></textarea>
-            <div id="date-picker-area">
-                <p style="font-size: 14px;">預計抵達日期：</p>
-                <input type="date" id="lantern-date" style="width:100%; padding:10px; margin-bottom:10px; border-radius:10px; border:1px solid #ddd;">
-            </div>
-            <button style="background: #ff6b6b; color: white; width: 100%;" onclick="launchLantern()">釋放天燈</button>
-            <p style="font-size: 12px; margin-top: 10px; color: #888;" onclick="closeModal()">取消</p>
-        </div>
-    </div>
-
-    <div id="list-modal" class="modal">
-        <div class="modal-content">
-            <h3 id="list-title">清單</h3>
-            <div id="list-container" class="scroll-list"></div>
-            <button style="background: #eee; width: 100%; margin-top: 15px;" onclick="closeModal()">返回花園</button>
-        </div>
-    </div>
+    <div id="list-modal" class="modal"><div class="modal-content"><h3 id="list-title">清單</h3><div id="list-container" class="scroll-list"></div><button style="background: #eee; width: 100%; margin-top: 20px; padding: 12px;" onclick="closeModal()">返回花園</button></div></div>
+    
+    <div id="lantern-modal" class="modal"><div class="modal-content"><h3 id="lantern-title">寫下你的心願</h3><textarea id="lantern-text" placeholder="寫點什麼吧..." style="width:100%; height:100px; padding:10px; border-radius:10px; border:1px solid #ddd;"></textarea><div id="date-picker-area"><p style="font-size: 14px;">預計抵達日期：</p><input type="date" id="lantern-date" style="width:100%; padding:10px; margin-bottom:10px; border-radius:10px; border:1px solid #ddd;"></div><button style="background: #ff6b6b; color: white; width: 100%; padding: 15px; border-radius: 15px;" onclick="launchLantern()">釋放天燈</button><p style="font-size: 12px; margin-top: 15px; color: #888;" onclick="closeModal()">取消</p></div></div>
 
     <div id="save-modal" class="modal">
         <div class="modal-content">
             <h3>資料管理</h3>
-            <div class="storage-container"><div id="storage-bar"></div></div>
-            <button style="background: #4caf50; color:white; width: 100%; margin-bottom: 10px;" onclick="manualSave()">立即存檔</button>
-            <button style="background: #2196f3; color:white; width: 100%; margin-bottom: 10px;" onclick="manualLoad()">讀取存檔</button>
-            <button style="background: #eee; width: 100%;" onclick="clearData()">重置所有進度</button>
+            <button style="background: #4caf50; color:white; width: 100%; margin-bottom: 10px; padding: 12px; border-radius: 12px;" onclick="manualSave()">立即存檔</button>
+            <button style="background: #2196f3; color:white; width: 100%; margin-bottom: 10px; padding: 12px; border-radius: 12px;" onclick="exportData()">📤 匯出備份 (JSON)</button>
+            <button style="background: #9c27b0; color:white; width: 100%; margin-bottom: 10px; padding: 12px; border-radius: 12px;" onclick="document.getElementById('import-input').click()">📥 匯入備份 (JSON)</button>
+            <input type="file" id="import-input" accept=".json" onchange="importData(event)">
+            <button style="background: #eee; width: 100%; padding: 12px; border-radius: 12px;" onclick="clearData()">🔥 重置所有進度</button>
             <p style="font-size: 12px; margin-top: 15px; color: #888;" onclick="closeModal()">返回</p>
         </div>
     </div>
 
     <script>
-        // 素材資源定義
         const ASSETS = {
             soil: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1fab4.png',
             sprout: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f331.png',
             flowers: {
-                happy: { name: '向日葵', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f33b.png' },
-                angry: { name: '仙人掌', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f335.png' },
-                worry: { name: '蒲公英', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f33c.png' },
-                sad: { name: '繡球花', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1fabb.png' },
-                hope: { name: '櫻花', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f338.png' },
-                balanced: { name: '鬱金香', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f337.png' }
+                happy: [{ id: 'sunflower', name: '向日葵', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f33b.png' }, { id: 'blossom', name: '萬壽菊', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f33c.png' }],
+                angry: [{ id: 'cactus', name: '仙人掌', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f335.png' }, { id: 'herb', name: '刺草', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f33f.png' }],
+                worry: [{ id: 'dandelion', name: '蒲公英', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f337.png' }, { id: 'leaf', name: '落葉', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f342.png' }],
+                sad: [{ id: 'hydrangea', name: '藍繡球花', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1fabb.png' }, { id: 'weeping', name: '垂櫻花', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f338.png' }],
+                hope: [{ id: 'sakura', name: '櫻花', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f338.png' }, { id: 'clover', name: '四葉草', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f340.png' }],
+                balanced: [{ id: 'tulip', name: '鬱金香', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f337.png' }, { id: 'rose', name: '玫瑰', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f339.png' }]
             }
         };
 
-        const ENCOURAGEMENTS = ["妳辛勤的照顧，讓美好綻放了。", "就像這朵花一樣，妳也在慢慢變好。", "謝謝妳沒有放棄，今天也很棒喔！", "所有的等待，都是為了最美的收成。"];
+        const WORDS_LOW = ["妳辛苦了，給自己一點掌聲吧。", "深呼吸，情緒只是路過的雲。", "今天的妳也值得被好好對待。"];
+        const WORDS_HIGH = ["心靈的花園因為妳的誠實而繁茂。", "擁抱每一種情緒，那是妳獨一無二的色彩。", "無論是風雨還是晴天，妳都在茁壯成長。", "智慧不在於沒有情緒，而在於如何與它共處。"];
 
-        let gameState = JSON.parse(localStorage.getItem('myGardenGame')) || {
+        let gameState = JSON.parse(localStorage.getItem('myGardenGame_v3')) || {
             points: 0, gardenLv: 1, plantStatus: 'idle', 
-            growStartTime: 0, currentFlowerType: "happy",
-            futureLetters: [], 
-            flowerAlbum: [] 
+            growStartTime: 0, currentFlowerId: "", currentFlowerName: "", currentFlowerImg: "",
+            futureLetters: [], flowerAlbum: [] 
         };
 
         function init() {
@@ -181,10 +165,8 @@
         }
 
         function validateEmotions() {
-            const h = parseInt(document.getElementById('emo-happy').value), 
-                  a = parseInt(document.getElementById('emo-angry').value),
-                  w = parseInt(document.getElementById('emo-worry').value), 
-                  s = parseInt(document.getElementById('emo-sad').value),
+            const h = parseInt(document.getElementById('emo-happy').value), a = parseInt(document.getElementById('emo-angry').value),
+                  w = parseInt(document.getElementById('emo-worry').value), s = parseInt(document.getElementById('emo-sad').value),
                   hp = parseInt(document.getElementById('emo-hope').value);
             const total = h + a + w + s + hp;
             const display = document.getElementById('total-check');
@@ -193,212 +175,117 @@
             document.getElementById('plant-btn').disabled = (total !== 100);
         }
 
-        function openPlantModal() {
-            if (gameState.plantStatus === 'idle') {
-                document.getElementById('plant-modal').style.display = 'flex';
-                validateEmotions();
-            } else {
-                showBubble("花朵正在成長中，請耐心等待收成喔！");
-            }
-        }
+        function openPlantModal() { if (gameState.plantStatus === 'idle') { document.getElementById('plant-modal').style.display = 'flex'; validateEmotions(); } else showBubble("有一顆心靈正在萌芽..."); }
 
         function confirmPlanting() {
-            const h = parseInt(document.getElementById('emo-happy').value), 
-                  a = parseInt(document.getElementById('emo-angry').value),
-                  w = parseInt(document.getElementById('emo-worry').value), 
-                  s = parseInt(document.getElementById('emo-sad').value), 
-                  hp = parseInt(document.getElementById('emo-hope').value);
-            
-            // 判定最高的情緒
+            const h = parseInt(document.getElementById('emo-happy').value), a = parseInt(document.getElementById('emo-angry').value),
+                  w = parseInt(document.getElementById('emo-worry').value), s = parseInt(document.getElementById('emo-sad').value), hp = parseInt(document.getElementById('emo-hope').value);
             const emotions = { happy: h, angry: a, worry: w, sad: s, hope: hp };
-            let maxType = 'happy';
-            let maxVal = -1;
-            
-            for (let type in emotions) {
-                if (emotions[type] > maxVal) {
-                    maxVal = emotions[type];
-                    maxType = type;
-                }
-            }
-
-            // 如果情緒非常平均(最高不超過30)，給予鬱金香
+            let maxType = 'happy', maxVal = -1;
+            for (let t in emotions) { if (emotions[t] > maxVal) { maxVal = emotions[t]; maxType = t; } }
             if (maxVal <= 30) maxType = 'balanced';
-
-            gameState.currentFlowerType = maxType;
-            gameState.plantStatus = 'growing';
-            gameState.growStartTime = Date.now();
-            showBubble("種下了此刻的心情...");
-            closeModal();
-            updateUI();
-            autoSave();
+            const pool = ASSETS.flowers[maxType];
+            const flower = (gameState.gardenLv >= 5) ? pool[Math.floor(Math.random() * pool.length)] : pool[0];
+            gameState.currentFlowerId = flower.id; gameState.currentFlowerName = flower.name; gameState.currentFlowerImg = flower.img;
+            gameState.plantStatus = 'growing'; gameState.growStartTime = Date.now();
+            closeModal(); updateUI(); autoSave();
         }
 
-        let currentLanternMode = '';
-        function openLantern(mode) {
-            currentLanternMode = mode;
-            document.getElementById('lantern-title').innerText = mode === 'future' ? '給未來的自己' : '煩惱隨風飄散';
-            document.getElementById('date-picker-area').style.display = mode === 'future' ? 'block' : 'none';
-            document.getElementById('lantern-date').valueAsDate = new Date(Date.now() + 86400000);
-            document.getElementById('lantern-modal').style.display = 'flex';
+        function harvest() {
+            const isNew = !gameState.flowerAlbum.find(f => f.id === gameState.currentFlowerId);
+            if (isNew) gameState.flowerAlbum.push({ id: gameState.currentFlowerId, name: gameState.currentFlowerName, img: gameState.currentFlowerImg });
+            gameState.points += 2;
+            const words = (gameState.gardenLv >= 5) ? WORDS_HIGH : WORDS_LOW;
+            showBubble(`${isNew ? '🌟 新發現！' : ''}【${gameState.currentFlowerName}】開花了。${words[Math.floor(Math.random() * words.length)]}`);
+            gameState.plantStatus = 'idle';
+            checkLevelUp(); updateUI(); autoSave();
         }
 
-        function launchLantern() {
-            const text = document.getElementById('lantern-text').value;
-            const date = document.getElementById('lantern-date').value;
-            if(!text) return;
-
-            if (currentLanternMode === 'future') {
-                const newLetter = {
-                    id: Date.now(),
-                    content: text,
-                    mode: currentLanternMode,
-                    date: date,
-                    timestamp: new Date().toLocaleDateString()
-                };
-                gameState.futureLetters.push(newLetter);
+        function checkLevelUp() {
+            const threshold = gameState.gardenLv * 10;
+            if (gameState.points >= threshold && gameState.gardenLv < 10) {
+                gameState.gardenLv++; gameState.points = 0;
+                showBubble(`🎊 花園升級了！目前等級：Lv.${gameState.gardenLv}`);
             }
-
-            const lan = document.createElement('div');
-            lan.className = 'sky-lantern'; lan.innerText = text.substring(0,6)+'...';
-            if(currentLanternMode === 'worry') lan.style.background = '#95a5a6';
-            document.getElementById('game-container').appendChild(lan);
-            
-            closeModal();
-            document.getElementById('lantern-text').value = '';
-            autoSave();
-            setTimeout(() => lan.remove(), 8000);
-        }
-
-        function toggleLetters() {
-            const container = document.getElementById('list-container');
-            document.getElementById('list-title').innerText = "往日信箱";
-            container.className = "scroll-list";
-            container.innerHTML = "";
-            
-            if (gameState.futureLetters.length === 0) {
-                container.innerHTML = "<p style='color:#999;'>信箱空空的...</p>";
-            } else {
-                const today = new Date().toISOString().split('T')[0];
-                gameState.futureLetters.forEach(letter => {
-                    const isReady = letter.date <= today;
-                    const card = document.createElement('div');
-                    card.className = 'item-card';
-                    card.innerHTML = `
-                        <p style="font-size:10px; color:#aaa;">${letter.timestamp} 寄出</p>
-                        <p>${isReady ? letter.content : '⏳ 傳送中...<br>(預計 ' + letter.date + ' 抵達)'}</p>
-                        <button class="delete-btn" onclick="deleteLetter(${letter.id})">刪除</button>
-                    `;
-                    container.appendChild(card);
-                });
-            }
-            document.getElementById('list-modal').style.display = 'flex';
-        }
-
-        function deleteLetter(id) {
-            if(confirm("要讓這段回憶消失嗎？")) {
-                gameState.futureLetters = gameState.futureLetters.filter(l => l.id !== id);
-                autoSave();
-                toggleLetters();
-            }
-        }
-
-        function toggleAlbum() {
-            const container = document.getElementById('list-container');
-            document.getElementById('list-title').innerText = "心情花卉圖鑑";
-            container.className = "scroll-list album-grid";
-            container.innerHTML = "";
-            
-            if (gameState.flowerAlbum.length === 0) {
-                container.innerHTML = "<p style='grid-column: 1/-1; color:#999;'>還沒有收集到花卉...</p>";
-            } else {
-                gameState.flowerAlbum.forEach(item => {
-                    const flowerData = ASSETS.flowers[item.type];
-                    const card = document.createElement('div');
-                    card.className = 'item-card';
-                    card.innerHTML = `
-                        <img src="${flowerData.img}">
-                        <p>${flowerData.name}</p>
-                    `;
-                    container.appendChild(card);
-                });
-            }
-            document.getElementById('list-modal').style.display = 'flex';
         }
 
         function updateUI() {
-            const nextLevel = gameState.gardenLv * 10;
-            document.getElementById('progress-bar').style.width = (gameState.points / nextLevel * 100) + "%";
-            document.getElementById('points-display').innerText = `${gameState.points} / ${nextLevel}`;
-            document.getElementById('garden-name').innerText = `Lv.${gameState.gardenLv} 的花園`;
-            
-            const img = document.getElementById('flower-img'), hint = document.getElementById('hint-text'), nameDisp = document.getElementById('flower-name-display');
-            
-            if (gameState.plantStatus === 'idle') {
-                img.src = ASSETS.soil;
-                hint.innerText = "點擊土壤播種情緒"; nameDisp.innerText = "";
-            } else if (gameState.plantStatus === 'growing') {
-                img.src = ASSETS.sprout;
-                hint.innerText = "情緒正在萌芽中..."; nameDisp.innerText = "正在養育情緒之花";
-            } else {
-                const flower = ASSETS.flowers[gameState.currentFlowerType];
-                img.src = flower.img;
-                hint.innerText = "收成這份心情"; nameDisp.innerText = "盛開中：" + flower.name;
-            }
+            const threshold = gameState.gardenLv * 10;
+            document.getElementById('progress-bar').style.width = (gameState.points / threshold * 100) + "%";
+            document.getElementById('points-display').innerText = `${gameState.points} / ${threshold}`;
+            document.getElementById('garden-name').innerText = `Lv.${gameState.gardenLv} ${gameState.gardenLv >= 5 ? '繁盛花園' : '新手花園'}`;
+            document.body.classList.toggle('lvl-high', gameState.gardenLv >= 5);
+            const img = document.getElementById('flower-img');
+            if (gameState.plantStatus === 'idle') img.src = ASSETS.soil;
+            else if (gameState.plantStatus === 'growing') img.src = ASSETS.sprout;
+            else img.src = gameState.currentFlowerImg;
         }
 
         function checkGrowth() {
             if (gameState.plantStatus === 'growing') {
                 const elapsed = Math.floor((Date.now() - gameState.growStartTime) / 1000);
-                const target = 10; 
-                if (elapsed >= target) {
-                    gameState.plantStatus = 'ready';
-                    document.getElementById('growth-timer').innerText = "";
-                    updateUI();
-                } else {
-                    document.getElementById('growth-timer').innerText = `倒數 ${target - elapsed}s`;
-                }
+                if (elapsed >= 10) { gameState.plantStatus = 'ready'; document.getElementById('growth-timer').innerText = ""; updateUI(); }
+                else document.getElementById('growth-timer').innerText = `收成倒數 ${10 - elapsed}s`;
             }
         }
 
-        function handlePlantClick() {
-            if (gameState.plantStatus === 'ready') harvest();
-            else if (gameState.plantStatus === 'idle') openPlantModal();
+        function handlePlantClick() { if (gameState.plantStatus === 'ready') harvest(); else if (gameState.plantStatus === 'idle') openPlantModal(); }
+
+        function toggleAlbum() {
+            const container = document.getElementById('list-container');
+            document.getElementById('list-title').innerText = "花卉圖鑑";
+            container.className = "scroll-list album-grid";
+            container.innerHTML = gameState.flowerAlbum.length === 0 ? "<p>圖鑑空空的...</p>" : "";
+            gameState.flowerAlbum.forEach(item => {
+                const card = document.createElement('div'); card.className = 'item-card';
+                card.innerHTML = `<img src="${item.img}"><p>${item.name}</p>`;
+                container.appendChild(card);
+            });
+            document.getElementById('list-modal').style.display = 'flex';
         }
 
-        function harvest() {
-            const flower = ASSETS.flowers[gameState.currentFlowerType];
-            const isNew = !gameState.flowerAlbum.find(f => f.type === gameState.currentFlowerType);
-            if (isNew) {
-                gameState.flowerAlbum.push({ type: gameState.currentFlowerType });
-            }
-            gameState.points += 2;
-            showBubble(`${isNew ? '🌟 新發現！' : ''}【${flower.name}】已收成：${ENCOURAGEMENTS[Math.floor(Math.random() * ENCOURAGEMENTS.length)]}`);
-            gameState.plantStatus = 'idle';
-            if (gameState.points >= gameState.gardenLv * 10) gameState.gardenLv++;
-            updateUI(); autoSave();
+        let currentLanternMode = '';
+        function openLantern(mode) { currentLanternMode = mode; document.getElementById('lantern-title').innerText = mode === 'future' ? '給未來的自己' : '煩惱隨風飄散'; document.getElementById('date-picker-area').style.display = mode === 'future' ? 'block' : 'none'; document.getElementById('lantern-date').valueAsDate = new Date(Date.now() + 86400000); document.getElementById('lantern-modal').style.display = 'flex'; }
+        function launchLantern() { const text = document.getElementById('lantern-text').value; if(!text) return; if (currentLanternMode === 'future') gameState.futureLetters.push({ id: Date.now(), content: text, date: document.getElementById('lantern-date').value, timestamp: new Date().toLocaleDateString() }); const lan = document.createElement('div'); lan.className = 'sky-lantern'; lan.innerText = text.substring(0,5)+'...'; if(currentLanternMode === 'worry') lan.style.background = '#90a4ae'; document.getElementById('game-container').appendChild(lan); closeModal(); document.getElementById('lantern-text').value = ''; autoSave(); setTimeout(() => lan.remove(), 8000); }
+        function toggleLetters() { const container = document.getElementById('list-container'); document.getElementById('list-title').innerText = "往日信箱"; container.className = "scroll-list"; container.innerHTML = gameState.futureLetters.length === 0 ? "<p>信箱空空的...</p>" : ""; gameState.futureLetters.forEach(l => { const isReady = l.date <= new Date().toISOString().split('T')[0]; const card = document.createElement('div'); card.className = 'item-card'; card.innerHTML = `<p style='font-size:10px; color:#999'>${l.timestamp} 寄出</p><p>${isReady ? l.content : '⏳ 傳送中...'}</p><button onclick='deleteLetter(${l.id})' style='font-size:10px; background:#ff8a80; color:white; border:none; padding:3px 8px; border-radius:5px;'>刪除</button>`; container.appendChild(card); }); document.getElementById('list-modal').style.display = 'flex'; }
+        function deleteLetter(id) { if(confirm("確定刪除？")) { gameState.futureLetters = gameState.futureLetters.filter(l => l.id !== id); autoSave(); toggleLetters(); } }
+
+        function openSaveMenu() { document.getElementById('save-modal').style.display = 'flex'; }
+        function manualSave() { autoSave(); showBubble("存檔成功！"); }
+        function autoSave() { localStorage.setItem('myGardenGame_v3', JSON.stringify(gameState)); }
+        function clearData() { if(confirm("重置所有進度？")) { localStorage.removeItem('myGardenGame_v3'); location.reload(); } }
+        
+        function exportData() {
+            const dataStr = JSON.stringify(gameState);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `garden_backup_${new Date().toLocaleDateString()}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
         }
 
-        function openSaveMenu() {
-            const len = JSON.stringify(gameState).length;
-            document.getElementById('storage-bar').style.width = (len / (5*1024*1024) * 100) + "%";
-            document.getElementById('save-modal').style.display = 'flex';
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.gardenLv) {
+                        gameState = data;
+                        autoSave();
+                        alert("匯入成功！");
+                        location.reload();
+                    }
+                } catch(err) { alert("無效的存檔檔案"); }
+            };
+            reader.readAsText(file);
         }
-        function manualSave() { autoSave(); alert("存檔成功！"); }
-        function manualLoad() {
-            const saved = localStorage.getItem('myGardenGame');
-            if (saved) { gameState = JSON.parse(saved); updateUI(); alert("讀取存檔成功！"); closeModal(); }
-        }
-        function autoSave() { localStorage.setItem('myGardenGame', JSON.stringify(gameState)); }
-        function clearData() { if(confirm("重置進度？")) { localStorage.removeItem('myGardenGame'); location.reload(); } }
-        function showBubble(text) {
-            const b = document.getElementById('message-bubble');
-            b.innerText = text; b.style.opacity = 1;
-            setTimeout(() => b.style.opacity = 0, 5000);
-        }
-        function updateTheme() {
-            const hour = new Date().getHours();
-            document.body.className = (hour > 6 && hour < 18) ? 'day' : 'night';
-        }
+
+        function updateTheme() { const hr = new Date().getHours(); document.body.className = (hr > 6 && hr < 18) ? 'day' : 'night'; }
+        function showBubble(text) { const b = document.getElementById('message-bubble'); b.innerText = text; b.style.opacity = 1; setTimeout(() => b.style.opacity = 0, 5000); }
         function closeModal() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
 
         init();
