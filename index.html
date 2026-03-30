@@ -161,7 +161,7 @@
         let gameState = JSON.parse(localStorage.getItem('myGardenGame')) || {
             points: 0, gardenLv: 1, plantStatus: 'idle', 
             growStartTime: 0, currentFlowerName: "", currentHue: 0,
-            futureLetters: [], // 包含天燈信件
+            futureLetters: [], 
             flowerAlbum: [] 
         };
 
@@ -172,7 +172,7 @@
             setInterval(updateTheme, 60000);
         }
 
-        // --- 情緒邏輯 (新增難過) ---
+        // --- 情緒邏輯 ---
         function validateEmotions() {
             const h = parseInt(document.getElementById('emo-happy').value), 
                   a = parseInt(document.getElementById('emo-angry').value),
@@ -186,6 +186,16 @@
             document.getElementById('plant-btn').disabled = (total !== 100);
         }
 
+        // 修復：點選播下情緒時開啟彈窗
+        function openPlantModal() {
+            if (gameState.plantStatus === 'idle') {
+                document.getElementById('plant-modal').style.display = 'flex';
+                validateEmotions();
+            } else {
+                showBubble("花朵正在成長中，請耐心等待收成喔！");
+            }
+        }
+
         function confirmPlanting() {
             const h = parseInt(document.getElementById('emo-happy').value), a = parseInt(document.getElementById('emo-angry').value);
             const w = parseInt(document.getElementById('emo-worry').value), s = parseInt(document.getElementById('emo-sad').value), hp = parseInt(document.getElementById('emo-hope').value);
@@ -195,7 +205,6 @@
             let suffix = hp === maxVal ? "嚮往的花朵" : h === maxVal ? "明媚的小花" : a === maxVal ? "刺人的紅蕊" : s === maxVal ? "帶露的垂櫻" : "霧氣般的芬芳";
 
             gameState.currentFlowerName = prefix + suffix;
-            // 顏色計算 (加入難過的藍色調)
             gameState.currentHue = (h * 50 + a * 0 + w * 220 + s * 180 + hp * 300) / 100;
             gameState.plantStatus = 'growing';
             gameState.growStartTime = Date.now();
@@ -220,15 +229,17 @@
             const date = document.getElementById('lantern-date').value;
             if(!text) return;
 
-            // 儲存信件
-            const newLetter = {
-                id: Date.now(),
-                content: text,
-                mode: currentLanternMode,
-                date: currentLanternMode === 'future' ? date : new Date().toISOString().split('T')[0],
-                timestamp: new Date().toLocaleDateString()
-            };
-            gameState.futureLetters.push(newLetter);
+            // 修改：只有「給未來」的信件會進入信箱
+            if (currentLanternMode === 'future') {
+                const newLetter = {
+                    id: Date.now(),
+                    content: text,
+                    mode: currentLanternMode,
+                    date: date,
+                    timestamp: new Date().toLocaleDateString()
+                };
+                gameState.futureLetters.push(newLetter);
+            }
 
             // 動畫
             const lan = document.createElement('div');
