@@ -1,1 +1,326 @@
-123
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>小星靈的暖心窩</title>
+    <style>
+        :root {
+            --bg-day: #fff9e6; --bg-night: #2c3e50;
+            --primary-pink: #ffb7c5; --primary-blue: #a2d2ff; --primary-yellow: #f9d71c;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            margin: 0; padding: 0; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+            transition: background 1s; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; height: 100vh;
+        }
+        .day { background: var(--bg-day); color: #5d4037; }
+        .night { background: var(--bg-night); color: #ecf0f1; }
+
+        /* 進度條樣式 */
+        #top-bar { width: 100%; padding: 15px 20px 5px; max-width: 400px; }
+        .progress-container { width: 100%; height: 12px; background: rgba(0,0,0,0.1); border-radius: 6px; overflow: hidden; }
+        #progress-bar { width: 0%; height: 100%; background: var(--primary-pink); transition: width 0.5s; }
+        .level-text { font-size: 12px; margin-top: 5px; display: flex; justify-content: space-between; }
+
+        /* 儲存空間條 */
+        .storage-info { margin: 15px 0; text-align: left; }
+        .storage-container { width: 100%; height: 8px; background: #eee; border-radius: 4px; overflow: hidden; margin-top: 5px; }
+        #storage-bar { width: 0%; height: 100%; background: #5dade2; transition: width 0.3s; }
+
+        #game-container { position: relative; flex: 1; width: 100%; display: flex; justify-content: center; align-items: center; }
+        #pet { width: 150px; height: 150px; cursor: pointer; transition: transform 0.3s; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-20px); } }
+        
+        #message-bubble {
+            position: absolute; top: 15%; background: white; color: #333; padding: 15px;
+            border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 80%; opacity: 0; transition: opacity 0.5s; pointer-events: none; z-index: 10;
+        }
+
+        .controls { padding: 10px 20px 30px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 400px; }
+        button { border: none; padding: 12px; border-radius: 15px; font-weight: bold; box-shadow: 0 4px 0 rgba(0,0,0,0.1); cursor: pointer; font-size: 14px; }
+        button:active { transform: translateY(2px); box-shadow: none; }
+
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: white; color: #333; padding: 25px; border-radius: 20px; width: 85%; max-width: 350px; text-align: center; }
+        textarea { width: 100%; height: 80px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; padding: 10px; font-size: 16px; }
+        
+        /* 信件列表樣式 */
+        .letter-item { background: #f9f9f9; padding: 10px; border-radius: 10px; margin-bottom: 10px; text-align: left; position: relative; }
+        .letter-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 5px; }
+        .fav-btn { color: #f1c40f; cursor: pointer; }
+        .del-btn { color: #e74c3c; cursor: pointer; font-size: 12px; }
+
+        .sky-lantern {
+            position: absolute; bottom: -100px; width: 60px; height: 80px;
+            background: #ff6b6b; border-radius: 10px 10px 5px 5px;
+            animation: flyUp 8s forwards linear; color: white; font-size: 10px; text-align: center; padding-top: 10px;
+        }
+        @keyframes flyUp { to { transform: translateY(-120vh) translateX(50px); opacity: 0; } }
+        .gift-star { position: absolute; font-size: 35px; cursor: pointer; animation: float 2s infinite; z-index: 10; filter: drop-shadow(0 0 5px gold); }
+    </style>
+</head>
+<body class="day">
+
+    <div id="top-bar">
+        <div class="progress-container"><div id="progress-bar"></div></div>
+        <div class="level-text">
+            <span id="current-form-name">麻糬球</span>
+            <span id="points-display">0 / 20</span>
+        </div>
+    </div>
+
+    <div id="message-bubble"></div>
+
+    <div id="game-container">
+        <img id="pet" src="https://cdn-icons-png.flaticon.com/512/4359/4359914.png" alt="pet" onclick="petInteraction()">
+    </div>
+
+    <div class="controls">
+        <button style="background: var(--primary-pink);" onclick="feed('pink')">摸摸頭</button>
+        <button style="background: var(--primary-blue);" onclick="feed('blue')">深呼吸</button>
+        <button style="background: var(--primary-yellow);" onclick="feed('yellow')">驚喜</button>
+        <button style="background: #e67e22;" onclick="openLantern('future')">寫給未來</button>
+        <button style="background: #95a5a6;" onclick="openLantern('worry')">煩惱飛走</button>
+        <button style="background: #a2d2ff;" onclick="toggleLetters()">往日信箱</button>
+        <button style="background: #ddd;" onclick="toggleAlbum()">相簿</button>
+        <button style="background: #ddd;" onclick="openSaveMenu()">存檔</button>
+        <button style="background: #ddd;" onclick="location.reload()">刷讀</button>
+    </div>
+
+    <div id="lantern-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="lantern-title">寫下你的心願</h3>
+            <textarea id="lantern-text" placeholder="想對未來的自己說什麼？"></textarea>
+            <div id="date-picker-area" style="display:none;">
+                <p style="font-size: 14px;">選擇送達日期：</p>
+                <input type="date" id="lantern-date" style="width:100%; padding:10px; margin-bottom:10px; border-radius:10px; border:1px solid #ddd;">
+            </div>
+            <button style="background: #ff6b6b; color: white; width: 100%;" onclick="launchLantern()">釋放天燈</button>
+            <p style="font-size: 12px; margin-top: 10px; color: #888;" onclick="closeModal()">取消</p>
+        </div>
+    </div>
+
+    <div id="letters-modal" class="modal">
+        <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
+            <h3>📬 往日信箱</h3>
+            <div id="letters-list"></div>
+            <button style="margin-top: 20px; width: 100%;" onclick="closeModal()">關閉</button>
+        </div>
+    </div>
+
+    <div id="save-modal" class="modal">
+        <div class="modal-content">
+            <h3>存檔管理</h3>
+            <div class="storage-info">
+                <div class="storage-text" style="font-size:12px; display:flex; justify-content:space-between;">
+                    <span>存檔空間使用率</span><span id="storage-percent">0%</span>
+                </div>
+                <div class="storage-container"><div id="storage-bar"></div></div>
+            </div>
+            <button style="background: var(--primary-blue); width: 100%; margin-bottom: 10px;" onclick="manualSave()">立即存檔</button>
+            <button style="background: #eee; width: 100%;" onclick="clearData()">重置進度</button>
+            <p style="font-size: 12px; margin-top: 15px; color: #888;" onclick="closeModal()">返回</p>
+        </div>
+    </div>
+
+    <div id="album-modal" class="modal">
+        <div class="modal-content">
+            <h3>成長回憶</h3>
+            <div id="album-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;"></div>
+            <button style="margin-top: 20px; width: 100%;" onclick="closeModal()">關閉</button>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            petForms: [
+                { id: 'baby', name: '麻糬球', minPoints: 0, img: 'https://cdn-icons-png.flaticon.com/512/4359/4359914.png' },
+                { id: 'rabbit', name: '垂耳兔', minPoints: 20, img: 'https://cdn-icons-png.flaticon.com/512/2663/2663067.png' },
+                { id: 'cat', name: '元氣貓', minPoints: 50, img: 'https://cdn-icons-png.flaticon.com/512/616/616408.png' }
+            ],
+            quotes: {
+                pink: ["妳今天超棒的！", "抱一個，沒事的。", "妳是我最珍貴的寶物。"],
+                blue: ["吸氣... 吐氣...", "慢慢來，我在這。", "深呼吸，焦慮會過去的。"],
+                yellow: ["送妳一朵小花！", "今天也要加油喔！", "看到妳笑我就開心。"]
+            }
+        };
+
+        let gameState = JSON.parse(localStorage.getItem('myPetGame')) || {
+            points: 0,
+            unlockedForms: ['baby'],
+            futureLetters: [] // { id, text, unlockTime, isRead, isFav }
+        };
+
+        function init() {
+            updateTheme();
+            updatePetDisplay();
+            updateProgressBar();
+            setInterval(updateTheme, 60000);
+            setInterval(checkFutureLetters, 10000);
+            checkFutureLetters();
+        }
+
+        function updateTheme() {
+            const hour = new Date().getHours();
+            document.body.className = (hour > 6 && hour < 18) ? 'day' : 'night';
+        }
+
+        function updateProgressBar() {
+            const currentForm = [...CONFIG.petForms].reverse().find(f => gameState.points >= f.minPoints);
+            const nextForm = CONFIG.petForms.find(f => f.minPoints > gameState.points);
+            const bar = document.getElementById('progress-bar');
+            document.getElementById('current-form-name').innerText = currentForm.name;
+            if (nextForm) {
+                const percent = ((gameState.points - currentForm.minPoints) / (nextForm.minPoints - currentForm.minPoints)) * 100;
+                bar.style.width = percent + "%";
+                document.getElementById('points-display').innerText = `${gameState.points} / ${nextForm.minPoints}`;
+            } else {
+                bar.style.width = "100%";
+                document.getElementById('points-display').innerText = `已達上限 (${gameState.points})`;
+            }
+        }
+
+        function feed(type) {
+            gameState.points += 1;
+            showBubble(CONFIG.quotes[type][Math.floor(Math.random()*3)]);
+            checkEvolution();
+            updateProgressBar();
+            autoSave();
+            document.getElementById('pet').style.transform = 'scale(1.2) translateY(-10px)';
+            setTimeout(() => document.getElementById('pet').style.transform = 'scale(1)', 200);
+        }
+
+        function showBubble(text) {
+            const b = document.getElementById('message-bubble');
+            b.innerText = text; b.style.opacity = 1;
+            setTimeout(() => b.style.opacity = 0, 3000);
+        }
+
+        function checkEvolution() {
+            CONFIG.petForms.forEach(f => {
+                if (gameState.points >= f.minPoints && !gameState.unlockedForms.includes(f.id)) {
+                    gameState.unlockedForms.push(f.id);
+                    showBubble(`進化成 ${f.name} 了！`);
+                    updatePetDisplay();
+                }
+            });
+        }
+
+        function updatePetDisplay() {
+            const f = [...CONFIG.petForms].reverse().find(f => gameState.points >= f.minPoints);
+            document.getElementById('pet').src = f.img;
+        }
+
+        function petInteraction() { showBubble("啾！❤️"); }
+
+        let currentLanternMode = '';
+        function openLantern(mode) {
+            currentLanternMode = mode;
+            document.getElementById('lantern-title').innerText = mode === 'future' ? '給未來的自己' : '煩惱隨風飄散';
+            document.getElementById('date-picker-area').style.display = mode === 'future' ? 'block' : 'none';
+            if(mode === 'future') document.getElementById('lantern-date').valueAsDate = new Date(Date.now() + 86400000);
+            document.getElementById('lantern-modal').style.display = 'flex';
+        }
+
+        function launchLantern() {
+            const text = document.getElementById('lantern-text').value;
+            if(!text) return;
+            if(currentLanternMode === 'future') {
+                const date = document.getElementById('lantern-date').value;
+                gameState.futureLetters.push({ id: Date.now(), text, unlockTime: new Date(date).getTime(), isRead: false, isFav: false });
+                autoSave();
+            }
+            const lan = document.createElement('div');
+            lan.className = 'sky-lantern'; lan.innerText = text.substring(0,6)+'...';
+            if(currentLanternMode === 'worry') lan.style.background = '#95a5a6';
+            document.getElementById('game-container').appendChild(lan);
+            closeModal();
+            document.getElementById('lantern-text').value = '';
+            setTimeout(() => lan.remove(), 8000);
+        }
+
+        function checkFutureLetters() {
+            const now = Date.now();
+            gameState.futureLetters.forEach(l => {
+                if (now >= l.unlockTime && !l.isRead) spawnLetterGift(l);
+            });
+        }
+
+        function spawnLetterGift(letter) {
+            if (document.getElementById(`gift-${letter.id}`)) return;
+            const star = document.createElement('div');
+            star.id = `gift-${letter.id}`; star.className = 'gift-star'; star.innerHTML = '⭐';
+            star.style.left = (20 + Math.random()*60) + "%"; star.style.top = (30 + Math.random()*30) + "%";
+            star.onclick = () => {
+                alert(`【來自過去的信】\n\n「${letter.text}」\n\n這封信已存入往日信箱。`);
+                letter.isRead = true; star.remove(); autoSave();
+            };
+            document.getElementById('game-container').appendChild(star);
+        }
+
+        // --- 收藏與管理功能 ---
+        function toggleLetters() {
+            const list = document.getElementById('letters-list');
+            list.innerHTML = '';
+            const readLetters = gameState.futureLetters.filter(l => l.isRead);
+            if(readLetters.length === 0) list.innerHTML = '<p style="color:#888;">目前還沒有已讀取的信件...</p>';
+            readLetters.sort((a,b) => b.isFav - a.isFav).forEach(l => {
+                list.innerHTML += `
+                    <div class="letter-item">
+                        <div style="font-size:14px;">${l.text}</div>
+                        <div class="letter-actions">
+                            <span class="fav-btn" onclick="toggleFav(${l.id})">${l.isFav ? '★ 已收藏' : '☆ 收藏'}</span>
+                            <span class="del-btn" onclick="deleteLetter(${l.id})">刪除</span>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('letters-modal').style.display = 'flex';
+        }
+
+        function toggleFav(id) {
+            const l = gameState.futureLetters.find(l => l.id === id);
+            l.isFav = !l.isFav; autoSave(); toggleLetters();
+        }
+
+        function deleteLetter(id) {
+            if(confirm("確定要永久刪除這封信嗎？")) {
+                gameState.futureLetters = gameState.futureLetters.filter(l => l.id !== id);
+                autoSave(); toggleLetters();
+            }
+        }
+
+        function toggleAlbum() {
+            const grid = document.getElementById('album-grid');
+            grid.innerHTML = '';
+            CONFIG.petForms.forEach(f => {
+                const open = gameState.unlockedForms.includes(f.id);
+                grid.innerHTML += `<div style="opacity:${open?1:0.3}; background:#eee; padding:10px; border-radius:15px;">
+                    <img src="${f.img}" style="width:50px;"><br><small>${open?f.name:'???'}</small></div>`;
+            });
+            document.getElementById('album-modal').style.display = 'flex';
+        }
+
+        function updateStorageUI() {
+            const len = JSON.stringify(gameState).length;
+            const percent = ((len / (5*1024*1024)) * 100).toFixed(2);
+            document.getElementById('storage-bar').style.width = percent + "%";
+            document.getElementById('storage-percent').innerText = percent + "%";
+        }
+
+        function openSaveMenu() { updateStorageUI(); document.getElementById('save-modal').style.display = 'flex'; }
+        function manualSave() { autoSave(); updateStorageUI(); alert("存檔成功！"); }
+        function autoSave() { localStorage.setItem('myPetGame', JSON.stringify(gameState)); }
+        function clearData() { if(confirm("重置所有進度？")) { localStorage.removeItem('myPetGame'); location.reload(); } }
+        function closeModal() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
+
+        init();
+    </script>
+</body>
+</html>
+
