@@ -164,6 +164,77 @@ body {
     box-shadow: 0 4px 10px rgba(0,0,0,0.5);
     touch-action: none; /* 防止滑動箭頭時觸發頁面滾動 */
 }
+
+/* 捕捉球圖示：預設灰色，捕獲後變彩色 */
+.ball-icon {
+    width: 20px;
+    height: 20px;
+    background: #555; /* 預設灰色 */
+    border-radius: 50%;
+    border: 2px solid #333;
+    position: relative;
+    transition: background 0.3s;
+}
+
+.ball-icon.captured {
+    /* 紅白球配色 */
+    background: linear-gradient(to bottom, #ff4444 50%, white 50%);
+    border-color: #000;
+}
+
+.ball-icon.captured::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 6px; height: 6px;
+    background: white;
+    border: 2px solid #333;
+    border-radius: 50%;
+}
+
+/* --- 修正後的 Mega 標示區塊 --- */
+
+/* 基礎徽章 */
+.mega-badge {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 24px;
+    height: 24px;
+    background: #333; /* 未擁有時為深色 */
+    border: 2px solid #666;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0 5px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+}
+
+/* 徽章內的符號 (使用 Ω 或 M) */
+.mega-badge::before {
+    content: 'Ω'; 
+    color: rgba(255,255,255,0.5);
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* 當擁有道具時 (與 JS 中的 .mega-badge ${isOwnedItem ? 'owned' : ''} 對接) */
+.mega-badge.owned {
+    background: linear-gradient(135deg, #ff7eb3 0%, #ff758c 100%);
+    border-color: white;
+    filter: brightness(1.2) saturate(1.2);
+    box-shadow: 0 0 10px rgba(255, 126, 179, 0.8);
+}
+
+/* 擁有時符號變亮 */
+.mega-badge.owned::before {
+    color: white;
+    text-shadow: 0 0 3px rgba(0,0,0,0.5);
+}
+
+
     </style>
 </head>
 <body>
@@ -287,39 +358,93 @@ const POKEMON_NAMES = [
 
 /** 2. 修改數據生成邏輯，讓它讀取上面的清單 **/
 const POKEMON_DATA = Array.from({length: 721}, (_, i) => {
-        const idNum = i + 1;
-        return {
-            id: idNum.toString().padStart(3, '0'),
-            name: POKEMON_NAMES[i] || "No." + idNum,
-            // 這裡可以定義哪些是傳說級（傷害 70）
-            type: [144, 145, 146, 150, 151, 249, 250, 382, 383, 384, 483, 484, 487, 493, 643, 644, 646, 716, 717, 718].includes(idNum) ? "Legendary" : "Normal",
-            // 這裡定義哪些有關卡獎勵道具（Mega石、小智手裡劍等）
-            hasMega: [6, 9, 150, 384, 658].includes(idNum) 
-        };
-    });
+    const idNum = i + 1;
+
+    // --- 1. 補齊所有 Mega 進化名單 (包含原始回歸) ---
+    // 包含：御三家、耿鬼、路卡利歐、烈咬陸鯊、超夢(X/Y)等
+    const megaIds = [
+        3, 6, 9, 15, 18, 65, 80, 94, 115, 127, 130, 142, 150, 181, 208, 212, 214, 229, 248, 
+        254, 257, 260, 282, 302, 303, 306, 308, 310, 319, 323, 334, 354, 359, 362, 373, 376, 
+        380, 381, 382, 383, 384, 428, 445, 448, 475, 531, 719
+    ];
+
+    // --- 2. 補齊所有傳說與幻之寶可夢 (Legendary & Mythical) ---
+    // 第一世代：三神鳥、超夢、夢幻
+    // 第二世代：三聖獸、洛奇亞、鳳王、雪拉比
+    // 第三世代：三神柱、拉帝兄妹、蓋歐卡、固拉多、烈空坐、基拉祈、代歐奇希斯
+    // 第四世代：三聖菇、帝牙盧卡、帕路奇亞、席多藍恩、雷吉奇卡斯、騎拉帝納、克雷色利亞、達克萊伊、潔咪、阿爾宙斯
+    // 第五世代：勾帕路翁、代拉基翁、畢力吉翁、龍捲雲、雷電雲、土地雲、捷克羅姆、萊希拉姆、酋雷姆、凱路迪歐、美洛耶塔、蓋諾賽克特
+    // 第六世代：哲爾尼亞斯、伊裴爾塔爾、基格爾德、蒂安希、胡帕、波爾凱尼恩
+    const legendaryIds = [
+        144, 145, 146, 150, 151, 
+        243, 244, 245, 249, 250, 251,
+        377, 378, 379, 380, 381, 382, 383, 384, 385, 386,
+        480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 494,
+        638, 639, 640, 641, 642, 643, 644, 645, 646, 647, 648, 649,
+        716, 717, 718, 719, 720, 721
+    ];
+
+    return {
+        id: idNum.toString().padStart(3, '0'),
+        name: POKEMON_NAMES[i] || "No." + idNum,
+        // 設定類型：傳說級傷害 70，一般級傷害 40~60 (此處僅標記類型)
+        type: legendaryIds.includes(idNum) ? "Legendary" : "Normal",
+        // 設定是否有 Mega 石獎勵 (含小智版甲賀忍蛙 ID: 658)
+        hasMega: megaIds.includes(idNum) || idNum === 658
+    };
+});
 
     /** 遊戲狀態 **/
     let gameState = {
-        stamina: 24,
-        lastUpdate: Date.now(),
-        keys: 0,
-        captured: [],
-        items: [],
-        unlocked: ["001"],
-        lastPlayed: "001",
-        currentRegionIdx: 0,
-        isHardMode: false
-    };
+    stamina: 24,
+    lastUpdate: Date.now(),
+    keys: 0,
+    captured: ["001", "004", "007", "025"], // 建議初始抓到幾隻，測試才不會報錯
+    items: [],
+    unlocked: ["001"],
+    lastPlayed: "001",
+    currentRegionIdx: 0,
+    isHardMode: false,
+    
+    // --- 在這裡加入隊伍資料 ---
+    // 預設隊伍：妙蛙種子(001)、小火龍(004)、傑尼龜(007)、皮卡丘(025)
+    team: ["001", "004", "007", "025"] 
+};
+// 如果原本沒有，請加上這行
+if (!gameState.clearCounts) gameState.clearCounts = {};
+let battleData = {
+    currentHP: 0,
+    maxHP: 0,
+    moves: 15,
+    combo: 0,
+    board: [], 
+    selectedTile: null
+};
+let currentCatchRate = 0;
 
     function init() {
-        const saved = localStorage.getItem('SHUFFLE_WEB_SAVE');
-        if (saved) gameState = JSON.parse(saved);
-        
-        renderRegionButtons();
-        renderMap();
-        scrollToLastPlayed();
-        setInterval(updateStamina, 1000);
+    const saved = localStorage.getItem('SHUFFLE_WEB_SAVE');
+    if (saved) {
+        const loadedData = JSON.parse(saved);
+        // 使用 Object.assign 確保：舊存檔有的資料會蓋上去，
+        // 但新加入的欄位 (team, clearCounts) 若舊檔沒有，則保留初始預設值。
+        gameState = Object.assign({}, gameState, loadedData);
     }
+    
+    // 確保關鍵物件一定存在，防止讀取舊檔後變成 undefined
+    if (!gameState.clearCounts) gameState.clearCounts = {};
+    if (!gameState.team) gameState.team = ["001", "004", "007", "025"];
+    if (!gameState.items) gameState.items = [];
+
+    // 介面初始化
+    updateStatusBar();
+    renderRegionButtons();
+    renderMap();
+    scrollToLastPlayed();
+    
+    // 啟動計時器
+    setInterval(updateStamina, 1000);
+}
 
     function renderRegionButtons() {
         const container = document.getElementById('region-btns');
@@ -360,80 +485,467 @@ const POKEMON_DATA = Array.from({length: 721}, (_, i) => {
         renderMap();
     }
 
-    function updateStamina() {
-        const now = Date.now();
-        const diff = now - gameState.lastUpdate;
-        const wait = 30 * 60 * 1000;
-        if (gameState.stamina < 24 && diff >= wait) {
-            gameState.stamina++;
-            gameState.lastUpdate += wait;
-            save();
-        }
-        const remaining = gameState.stamina < 24 ? Math.ceil((wait - (now - gameState.lastUpdate)) / 1000) : 0;
-        document.getElementById('ui-stamina').innerText = `${gameState.stamina}/24`;
-        document.getElementById('ui-timer').innerText = remaining > 0 ? 
-            `${Math.floor(remaining/60).toString().padStart(2,'0')}:${(remaining%60).toString().padStart(2,'0')}` : "MAX";
-            updateStatusBar();
-    }
+    
 
     function renderMap() {
-        const list = document.getElementById('stage-list');
-        list.innerHTML = '';
-        const config = REGION_CONFIG[gameState.currentRegionIdx];
-        
-        const regionData = POKEMON_DATA.filter(p => {
-            const id = parseInt(p.id);
-            return id >= config.range[0] && id <= config.range[1];
-        });
-
-        regionData.forEach(p => {
-            const isUnlocked = gameState.unlocked.includes(p.id);
-            const isCaptured = gameState.captured.includes(p.id);
-            const isOwnedItem = gameState.items.includes(p.id);
-            
-            // 使用 PokeAPI 的高品質圖片 (或是你可以更換為其他來源)
-            // 這裡將 ID 轉為整數以符合 PokeAPI 格式
-            const imgId = parseInt(p.id);
-            const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${imgId}.png`;
-
-            const div = document.createElement('div');
-            div.id = `stage-${p.id}`;
-            div.className = `stage-item ${!isUnlocked ? 'locked' : ''} ${gameState.lastPlayed === p.id ? 'current' : ''}`;
-            
-            div.innerHTML = `
-                <div class="ball-icon ${isCaptured ? 'captured' : ''}"></div>
-                
-                <img class="pkmn-icon" src="${spriteUrl}" alt="${p.name}" loading="lazy">
-                
-                <div class="stage-info">
-                    <div class="stage-no">No.${p.id}</div>
-                    <div class="stage-name">${p.name}</div>
-                </div>
-                
-                ${p.hasMega ? `<div class="item-icon ${isOwnedItem ? 'owned' : ''}">M</div>` : ''}
-            `;
-            
-            div.onclick = () => {
-    if (!isUnlocked) return;
+    const list = document.getElementById('stage-list');
+    list.innerHTML = '';
+    const config = REGION_CONFIG[gameState.currentRegionIdx];
     
-    // 1. 更新最後遊玩紀錄
-    gameState.lastPlayed = p.id;
-    save();
-    renderMap();
+    const regionData = POKEMON_DATA.filter(p => {
+        const id = parseInt(p.id);
+        return id >= config.range[0] && id <= config.range[1];
+    });
 
-    // 2. 開啟準備畫面
-    openPrep(p);
-};
-            list.appendChild(div);
-        });
+    regionData.forEach(p => {
+        const isUnlocked = gameState.unlocked.includes(p.id);
+        const isCaptured = gameState.captured.includes(p.id);
+        const isOwnedItem = gameState.items.includes(`${p.id}_mega`);
+        
+        const imgId = parseInt(p.id);
+        const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${imgId}.png`;
 
+        const div = document.createElement('div');
+        div.id = `stage-${p.id}`;
+        // 已解鎖但未打過的下一關也會顯示彩色，若要更嚴格，可以檢查 nextId 是否已解鎖
+        div.className = `stage-item ${!isUnlocked ? 'locked' : ''} ${gameState.lastPlayed === p.id ? 'current' : ''}`;
+        
+        div.innerHTML = `
+            <div class="ball-icon ${isCaptured ? 'captured' : ''}"></div>
+            
+            <img class="pkmn-icon" src="${spriteUrl}" alt="${p.name}" 
+                 style="${!isUnlocked ? 'filter: brightness(0) opacity(0.5);' : ''}" loading="lazy">
+            
+            <div class="stage-info">
+                <div class="stage-no">No.${p.id}</div>
+                <div class="stage-name">${p.name}</div>
+            </div>
+            
+            ${p.hasMega ? `
+                <div class="mega-badge ${isOwnedItem ? 'owned' : ''}"></div>
+            ` : ''}
+        `;
+        
+        div.onclick = () => {
+            if (!isUnlocked) return;
+            gameState.lastPlayed = p.id;
+            save();
+            renderMap();
+            openPrep(p);
+        };
+        list.appendChild(div);
+    });
+
+    // 更新頂部狀態列
+    if(document.getElementById('ui-dex')) {
         document.getElementById('ui-dex').innerText = `${gameState.captured.length}/721`;
+    }
+    if(document.getElementById('ui-keys')) {
         document.getElementById('ui-keys').innerText = gameState.keys;
     }
+}
 
+function startBattleLogic() {
+    if (gameState.stamina < 1) { alert("體力不足！"); return; }
+    
+    // 1. 初始化數據
+    const p = POKEMON_DATA.find(x => x.id === gameState.lastPlayed);
+    battleData.maxHP = (gameState.isHardMode) ? 4000 : (p.type === "Legendary" ? 3000 : 2500);
+    battleData.currentHP = battleData.maxHP;
+    battleData.moves = 15;
+    battleData.board = [];
 
+    // 2. 切換畫面
+    document.getElementById('prep-overlay').style.display = 'none';
+    document.getElementById('battle-screen').style.display = 'flex';
+    document.getElementById('enemy-sprite').src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(p.id)}.png`;
+    
+    updateBattleUI();
+    initBoard();
+    
+    gameState.stamina -= 1;
+    save();
+}
 
-// 開啟準備畫面函式
+function initBoard() {
+    const boardEl = document.getElementById('board');
+    boardEl.innerHTML = '';
+    
+    // 生成 36 個棋子 (隨機從隊伍 4 人中挑選)
+    for (let i = 0; i < 36; i++) {
+        const randomMemberId = gameState.team[Math.floor(Math.random() * 4)];
+        const tileData = { id: i, pokemonId: randomMemberId };
+        battleData.board.push(tileData);
+        
+        const div = document.createElement('div');
+        div.className = 'tile';
+        div.dataset.index = i;
+        div.innerHTML = `<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(randomMemberId)}.png">`;
+        
+        // 綁定點擊交換邏輯
+        div.onclick = () => handleTileClick(i);
+        
+        boardEl.appendChild(div);
+    }
+}
+
+function handleTileClick(index) {
+    const tiles = document.querySelectorAll('.tile');
+    
+    // 如果還沒選第一顆
+    if (battleData.selectedTile === null) {
+        battleData.selectedTile = index;
+        tiles[index].classList.add('selected');
+    } 
+    // 如果點了「同一顆」棋子：取消選取
+    else if (battleData.selectedTile === index) {
+        tiles[index].classList.remove('selected');
+        battleData.selectedTile = null;
+    } 
+    // 如果選了「第二顆」不同位置的棋子：執行交換
+    else {
+        const firstIndex = battleData.selectedTile;
+        
+        // 1. 執行數據與畫面交換
+        swapTiles(firstIndex, index);
+        
+        // 2. 清除選取狀態
+        tiles[firstIndex].classList.remove('selected');
+        battleData.selectedTile = null;
+        
+        // 3. 消耗步數並執行消除判定
+        battleData.moves--;
+        updateBattleUI();
+        checkMatches(); 
+    }
+}
+
+function swapTiles(idx1, idx2) {
+    // 陣列數據交換
+    const temp = battleData.board[idx1].pokemonId;
+    battleData.board[idx1].pokemonId = battleData.board[idx2].pokemonId;
+    battleData.board[idx2].pokemonId = temp;
+    
+    // 畫面更新 (重新渲染兩個格子)
+    const tiles = document.querySelectorAll('.tile');
+    tiles[idx1].innerHTML = `<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(battleData.board[idx1].pokemonId)}.png">`;
+    tiles[idx2].innerHTML = `<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(battleData.board[idx2].pokemonId)}.png">`;
+}
+
+function updateBattleUI() {
+    const hpPercent = (battleData.currentHP / battleData.maxHP) * 100;
+    document.getElementById('enemy-hp-fill').style.width = `${hpPercent}%`;
+    document.getElementById('enemy-hp-text').innerText = `HP: ${battleData.currentHP} / ${battleData.maxHP}`;
+    document.getElementById('moves-left').innerText = battleData.moves;
+}
+
+function closeBattle() {
+    document.getElementById('battle-screen').style.display = 'none';
+}
+
+function checkMatches() {
+    // 【回合/天降開始檢查】
+    if (battleData.currentHP <= 0) {
+        checkBattleEnd();
+        return; 
+    }
+
+    let board = battleData.board;
+    let toMatch = new Set();
+
+    // 橫向掃描
+    for (let r = 0; r < 6; r++) {
+        for (let c = 0; c < 4; c++) {
+            let idx = r * 6 + c;
+            let id1 = board[idx].pokemonId;
+            let id2 = board[idx + 1].pokemonId;
+            let id3 = board[idx + 2].pokemonId;
+            if (id1 && id1 === id2 && id1 === id3) {
+                toMatch.add(idx); toMatch.add(idx + 1); toMatch.add(idx + 2);
+            }
+        }
+    }
+
+    // 縱向掃描
+    for (let c = 0; c < 6; c++) {
+        for (let r = 0; r < 4; r++) {
+            let idx = r * 6 + c;
+            let id1 = board[idx].pokemonId;
+            let id2 = board[idx + 6].pokemonId;
+            let id3 = board[idx + 12].pokemonId;
+            if (id1 && id1 === id2 && id1 === id3) {
+                toMatch.add(idx); toMatch.add(idx + 6); toMatch.add(idx + 12);
+            }
+        }
+    }
+
+    if (toMatch.size > 0) {
+        handleElimination(toMatch);
+    } else {
+        // Combo 完全結束
+        battleData.combo = 0;
+        document.getElementById('combo-text').style.display = 'none';
+        
+        // 如果 Combo 結束但怪還沒死，檢查是否還有步數
+        checkBattleEnd();
+    }
+}
+
+function handleElimination(matchSet) {
+    battleData.combo++;
+    const representativeIdx = Array.from(matchSet)[0];
+    const pkmnId = battleData.board[representativeIdx].pokemonId;
+    const pkmnInfo = POKEMON_DATA.find(p => p.id === pkmnId);
+    
+    let baseDamage = (pkmnInfo && pkmnInfo.type === "Legendary") ? 70 : 50;
+    let formMultiplier = 1.0;
+    const megaCheck = document.getElementById('mega-check');
+    if (megaCheck && megaCheck.checked && pkmnInfo.hasMega) formMultiplier = 1.5;
+
+    let comboMultiplier = 1 + (battleData.combo - 1) * 0.05;
+    let finalDamage = (baseDamage * matchSet.size) * formMultiplier * comboMultiplier;
+    
+    battleData.currentHP -= Math.floor(finalDamage);
+    if (battleData.currentHP < 0) battleData.currentHP = 0;
+
+    updateBattleUI();
+    showCombo();
+
+    const tiles = document.querySelectorAll('.tile');
+    matchSet.forEach(idx => {
+        tiles[idx].style.opacity = '0';
+        battleData.board[idx].pokemonId = null;
+    });
+
+    // 這裡直接呼叫補位，由下一輪 checkMatches 檢查 HP
+    setTimeout(() => {
+        refillBoard();
+    }, 500);
+}
+
+function showCombo() {
+    const comboEl = document.getElementById('combo-text');
+    comboEl.innerText = `${battleData.combo} COMBO!`;
+    comboEl.style.display = 'block';
+}
+
+function refillBoard() {
+    for (let c = 0; c < 6; c++) {
+        let emptySpaces = 0;
+        for (let r = 5; r >= 0; r--) {
+            let idx = r * 6 + c;
+            if (battleData.board[idx].pokemonId === null) {
+                emptySpaces++;
+            } else if (emptySpaces > 0) {
+                battleData.board[idx + emptySpaces * 6].pokemonId = battleData.board[idx].pokemonId;
+                battleData.board[idx].pokemonId = null;
+            }
+        }
+        for (let r = 0; r < emptySpaces; r++) {
+            battleData.board[r * 6 + c].pokemonId = gameState.team[Math.floor(Math.random() * 4)];
+        }
+    }
+
+    renderBoard();
+
+    // 觸發天降判定，讓 checkMatches 重新判斷狀態
+    setTimeout(() => {
+        checkMatches();
+    }, 300);
+}
+
+function renderBoard() {
+    const tiles = document.querySelectorAll('.tile');
+    battleData.board.forEach((data, i) => {
+        tiles[i].style.opacity = '1';
+        tiles[i].innerHTML = `<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(data.pokemonId)}.png">`;
+    });
+}
+
+function checkBattleEnd() {
+    if (battleData.currentHP <= 0) {
+        const pId = gameState.lastPlayed;
+        const pInfo = POKEMON_DATA.find(p => p.id === pId);
+
+        // 1. 強制解鎖下一關
+        const nextId = (parseInt(pId) + 1).toString().padStart(3, '0');
+        if (parseInt(nextId) <= 721 && !gameState.unlocked.includes(nextId)) {
+            gameState.unlocked.push(nextId);
+        }
+
+        // 2. Mega 石計算
+        let megaRewardMsg = "";
+        if (pInfo && pInfo.hasMega) {
+            if (!gameState.clearCounts) gameState.clearCounts = {};
+            gameState.clearCounts[pId] = (gameState.clearCounts[pId] || 0) + 1;
+            const count = gameState.clearCounts[pId];
+            
+            // 呼叫處理分歧獎勵的函式（現在改回傳字串）
+            megaRewardMsg = handleBranchMegaLogic(pId, count);
+            
+            // 一般 Mega 石處理
+            if (pId !== "006" && pId !== "150" && count === 5 && !gameState.items.includes(`${pId}_mega`)) {
+                gameState.items.push(`${pId}_mega`);
+                megaRewardMsg = `<div style="color:#ffcc00; margin-top:10px;">★ 獲得 ${pInfo.name} Mega 石 ★</div>`;
+            }
+        }
+
+        // 3. 捕捉分流判斷
+        const isCaptured = gameState.captured.includes(pId);
+        if (isCaptured) {
+            const maxCount = (pId === "006" || pId === "150") ? 10 : 5;
+            const progress = (pInfo && pInfo.hasMega) ? `<br><small style="color:#bbb">Mega 挑戰進度：${gameState.clearCounts[pId]}/${maxCount}</small>` : "";
+            
+            save();
+            // 使用小卡取代 alert
+            showResultCard("挑戰成功", `下一關 ${nextId} 已解鎖！${progress}${megaRewardMsg}`, () => {
+                closeBattle(); // 點確認後回地圖
+            });
+        } else {
+            save(); 
+            // 如果還沒抓過，我們先顯示「通關並解鎖」的小卡，確認後再進入捕捉畫面
+            showResultCard("挑戰成功", `下一關 ${nextId} 已解鎖！${megaRewardMsg}`, () => {
+                handleBattleWin(); 
+            });
+        }
+    } else if (battleData.moves <= 0) {
+        showResultCard("挑戰失敗", "步數已用盡，請再接再厲！", () => {
+            closeBattle();
+        });
+    }
+}
+
+// 稍微修改獎勵邏輯，讓它回傳字串而不是自己跳 alert
+function handleBranchMegaLogic(pId, count) {
+    const xStone = `${pId}_mega_x`;
+    const yStone = `${pId}_mega_y`;
+    let msg = "";
+
+    if (count === 5 && !gameState.items.includes(xStone)) {
+        gameState.items.push(xStone);
+        if (!gameState.items.includes(`${pId}_mega`)) gameState.items.push(`${pId}_mega`);
+        msg = `<div style="color:#ffcc00; margin-top:10px;">★ 獲得 Mega 石 X ★</div>`;
+    } else if (count === 10 && !gameState.items.includes(yStone)) {
+        gameState.items.push(yStone);
+        msg = `<div style="color:#ffcc00; margin-top:10px;">★ 獲得 Mega 石 Y ★</div>`;
+    }
+    return msg;
+}
+
+// 戰鬥結束時調用
+function handleBattleWin() {
+    const p = POKEMON_DATA.find(x => x.id === gameState.lastPlayed);
+    const isLegendary = (p.type === "Legendary");
+    const useKey = document.getElementById('use-key').checked;
+
+    // 規則 1: 傳說寶可夢必須有鑰匙
+    if (isLegendary && !useKey) {
+        alert("通關成功！但未開啟傳說之鑰，寶可夢直接離開了。");
+        closeBattle();
+        return;
+    }
+
+    // 規則 2: 公式計算 (20 + 剩餘步數 * 5)
+    let bonusRate = battleData.moves * 5;
+    currentCatchRate = 20 + bonusRate;
+    if (currentCatchRate > 100) currentCatchRate = 100;
+
+    // 消耗資源 (若是傳說)
+    if (isLegendary && useKey) {
+        gameState.keys--;
+        save();
+    }
+
+    // 顯示 UI
+    openCatchUI(p, bonusRate);
+}
+
+function openCatchUI(p, bonus) {
+    document.getElementById('battle-screen').style.display = 'none';
+    document.getElementById('catch-overlay').style.display = 'flex';
+    document.getElementById('catch-sprite').src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(p.id)}.png`;
+    
+    // 取得 UI 元素並恢復初始狀態
+    const rateText = document.getElementById('catch-rate-text');
+    const detailText = document.getElementById('catch-rate-detail');
+    const ball = document.getElementById('pokeball-ui');
+
+    // 重置文字顏色與內容 (確保不會殘留上一次的 "成功" 或 "失敗" 樣式)
+    rateText.innerText = `捕捉率: ${currentCatchRate}%`;
+    rateText.style.color = "white"; 
+    detailText.innerText = `基礎 20% + 步數獎勵 ${bonus}%`;
+    detailText.style.color = "#bbb";
+
+    // 重置按鈕與球的狀態
+    document.getElementById('btn-throw').style.display = 'block';
+    document.getElementById('btn-catch-close').style.display = 'none';
+    ball.style.display = 'none';
+    ball.style.opacity = "1"; // 恢復透明度
+}
+
+function startThrowAnimation() {
+    const ball = document.getElementById('pokeball-ui');
+    document.getElementById('btn-throw').style.display = 'none';
+    ball.style.display = 'block';
+
+    // 搖晃動畫模擬
+    let shakeCount = 0;
+    const interval = setInterval(() => {
+        ball.style.transform = `rotate(${shakeCount % 2 === 0 ? 15 : -15}deg)`;
+        shakeCount++;
+        if (shakeCount >= 6) {
+            clearInterval(interval);
+            executeCatchLogic();
+        }
+    }, 300);
+}
+
+function executeCatchLogic() {
+    const success = (Math.random() * 100) <= currentCatchRate;
+    const pId = gameState.lastPlayed;
+    
+    // 取得 UI 元素
+    const rateText = document.getElementById('catch-rate-text');
+    const detailText = document.getElementById('catch-rate-detail');
+    const ball = document.getElementById('pokeball-ui');
+
+    // 1. 解鎖下一關 (不論成功與否)
+    const nextId = (parseInt(pId) + 1).toString().padStart(3, '0');
+    if (!gameState.unlocked.includes(nextId)) {
+        gameState.unlocked.push(nextId);
+    }
+
+    // 2. 處理捕捉結果與 UI 更新
+    if (success) {
+        // 成功邏輯
+        rateText.innerText = "成功捕獲！";
+        rateText.style.color = "var(--accent-color)";
+        detailText.innerText = "已加入你的收藏名單";
+        
+        if (!gameState.captured.includes(pId)) {
+            gameState.captured.push(pId);
+        }
+    } else {
+        // 失敗邏輯
+        rateText.innerText = "捕捉失敗...";
+        rateText.style.color = "#ff5555";
+        detailText.innerText = "成功通關！可惜未能捕捉到寶可夢";
+        
+        // 失敗時讓球消失，增加遺憾感
+        ball.style.opacity = "0.3";
+    }
+
+    // 3. 儲存狀態並顯示「離開」按鈕
+    save();
+    document.getElementById('btn-catch-close').style.display = 'block';
+}
+
+function exitCatch() {
+    document.getElementById('catch-overlay').style.display = 'none';
+    renderMap(); // 刷新地圖紅白球狀態
+}
+
+    // 開啟準備畫面函式
 function openPrep(p) {
     const overlay = document.getElementById('prep-overlay');
     document.getElementById('prep-stage-name').innerText = p.name;
@@ -446,14 +958,15 @@ function openPrep(p) {
 
     // 顯示隊伍 (這裡暫時寫死 4 個 Slot，之後可連動隊伍系統)
     const teamDiv = document.getElementById('prep-team-slots');
-    teamDiv.innerHTML = '';
-    for(let i=1; i<=4; i++) {
-        teamDiv.innerHTML += `
-            <div style="text-align:center;">
-                <div style="width:50px; height:50px; background:#222; border-radius:50%; border:${i===1?'2px solid var(--accent-color)':'1px solid #666'}"></div>
-                <div style="font-size:10px; margin-top:5px;">Slot ${i}</div>
-            </div>`;
-    }
+teamDiv.innerHTML = '';
+gameState.team.forEach((id, index) => {
+    const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(id)}.png`;
+    teamDiv.innerHTML += `
+        <div style="text-align:center;">
+            <img src="${spriteUrl}" style="width:50px; height:50px; background:#222; border-radius:50%; border:${index===0?'2px solid var(--accent-color)':'1px solid #666'}">
+            <div style="font-size:10px; margin-top:5px;">小隊成員 ${index + 1}</div>
+        </div>`;
+    });
 
     // 渲染型態道具 (通關10次解鎖邏輯)
     const formOptions = document.getElementById('prep-form-options');
@@ -480,22 +993,59 @@ function closePrep() {
     document.getElementById('prep-overlay').style.display = 'none';
 }
 
-function startBattleLogic() {
-    if (gameState.stamina < 1) {
-        alert("體力不足！");
-        return;
-    }
-    // 扣除體力並儲存
-    gameState.stamina -= 1;
-    save();
-    updateStamina(); // 更新 UI 顯示
-    
-    // 進入戰鬥畫面 (下一階段開發)
-    alert("戰鬥開始！進入消除棋盤...");
-    closePrep();
+function showResultCard(title, content, callback = null) {
+    document.getElementById('result-title').innerText = title;
+    document.getElementById('result-content').innerHTML = content;
+    document.getElementById('result-overlay').style.display = 'flex';
+    // 儲存回調函式，確認按鈕點擊後執行
+    window.resultCallback = callback;
 }
+
+function closeResultCard() {
+    document.getElementById('result-overlay').style.display = 'none';
+    if (window.resultCallback) {
+        window.resultCallback();
+        window.resultCallback = null;
+    }
+}
+
+function updateStamina() {
+    const now = Date.now();
+    const wait = 30 * 60 * 1000; // 30 分鐘
+    
+    // 邏輯處理：檢查是否過了一個週期
+    if (gameState.stamina < 24) {
+        const diff = now - gameState.lastUpdate;
+        if (diff >= wait) {
+            // 計算過了幾個 30 分鐘 (防止掛機太久沒領)
+            const gained = Math.floor(diff / wait);
+            gameState.stamina = Math.min(24, gameState.stamina + gained);
+            gameState.lastUpdate += gained * wait;
+            save();
+        }
+    } else {
+        // 如果體力全滿，保持最後更新時間為現在，避免滿體力後掉 1 滴又要等 30 分
+        gameState.lastUpdate = now;
+    }
+
+    // UI 處理：呼叫統一的渲染函式
+    updateStatusBar();
+}
+
 function updateStatusBar() {
+    // 計算剩餘倒數秒數
+    const now = Date.now();
+    const wait = 30 * 60 * 1000;
+    const remaining = gameState.stamina < 24 ? Math.ceil((wait - (now - gameState.lastUpdate)) / 1000) : 0;
+
+    // 更新體力數字
     document.getElementById('ui-stamina').innerText = `${gameState.stamina}/24`;
+    
+    // 更新倒數計時器
+    document.getElementById('ui-timer').innerText = remaining > 0 ? 
+        `${Math.floor(remaining/60).toString().padStart(2,'0')}:${(remaining%60).toString().padStart(2,'0')}` : "MAX";
+    
+    // 更新圖鑑與金鑰
     document.getElementById('ui-dex').innerText = `${gameState.captured.length}/721`;
     document.getElementById('ui-keys').innerText = gameState.keys;
 }
@@ -540,5 +1090,86 @@ function updateStatusBar() {
         </div>
     </div>
 </div>
+
+<div id="battle-screen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#1a1a1a; z-index:300; flex-direction:column; padding-top:var(--safe-top);">
+    
+    <div id="battle-header" style="height:35%; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;">
+        <div id="enemy-hp-bar" style="width:80%; height:10px; background:#444; border-radius:5px; margin-bottom:10px; overflow:hidden;">
+            <div id="enemy-hp-fill" style="width:100%; height:100%; background:#ff4444; transition:width 0.3s;"></div>
+        </div>
+        <div id="enemy-hp-text" style="font-size:12px; color:#ccc;">HP: 2500 / 2500</div>
+        <img id="enemy-sprite" src="" style="width:120px; height:120px; object-fit:contain; margin:10px 0;">
+        <div id="combo-text" style="position:absolute; right:20px; top:50%; font-size:24px; color:var(--accent-color); font-weight:bold; display:none;">0 COMBO</div>
+    </div>
+
+    <div id="board-container" style="flex:1; display:flex; justify-content:center; align-items:center; background:#222; padding:10px;">
+        <div id="board" style="display:grid; grid-template-columns:repeat(6, 1fr); grid-template-rows:repeat(6, 1fr); gap:4px; width:100%; max-width:360px; aspect-ratio:1/1;">
+            </div>
+    </div>
+
+    <div id="battle-footer" style="height:15%; display:flex; justify-content:space-around; align-items:center; padding-bottom:var(--safe-bottom);">
+        <div style="text-align:center;">
+            <div style="font-size:12px; color:#aaa;">剩餘步數</div>
+            <div id="moves-left" style="font-size:24px; font-weight:bold; color:var(--accent-color);">15</div>
+        </div>
+        <div id="battle-team-preview" style="display:flex; gap:5px;">
+            </div>
+    </div>
+</div>
+
+<div id="catch-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:400; flex-direction:column; justify-content:center; align-items:center; color:white; font-family: sans-serif;">
+    <div style="text-align:center; width:85%; max-width:400px;">
+        <h2 style="color:var(--accent-color); letter-spacing:2px;">GET CHANCE!</h2>
+        
+        <div style="margin: 20px 0; position: relative;">
+            <img id="catch-sprite" src="" style="width:160px; height:160px; object-fit:contain; filter: drop-shadow(0 0 10px rgba(255,255,255,0.5));">
+        </div>
+
+        <div style="background:#222; border:2px solid #444; border-radius:20px; padding:20px; margin-bottom:30px;">
+            <div id="catch-rate-text" style="font-size:32px; font-weight:bold; color:var(--accent-color);">捕捉率: 20%</div>
+            <div id="catch-rate-detail" style="font-size:12px; color:#888; margin-top:5px;">基礎 20% + 步數獎勵 --%</div>
+        </div>
+
+        <div id="ball-box" style="height:80px; display:flex; justify-content:center; align-items:center;">
+            <div id="pokeball-ui" style="width:50px; height:50px; background:linear-gradient(to bottom, #ff4444 50%, #eee 50%); border:4px solid #333; border-radius:50%; position:relative; display:none;">
+                <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:12px; height:12px; background:white; border:3px solid #333; border-radius:50%;"></div>
+            </div>
+        </div>
+
+        <div style="margin-top:20px;">
+            <button id="btn-throw" onclick="startThrowAnimation()" style="width:100%; padding:18px; background:var(--accent-color); border:none; border-radius:40px; font-size:20px; font-weight:bold; cursor:pointer;">投擲精靈球</button>
+            <button id="btn-catch-close" onclick="exitCatch()" style="display:none; width:100%; padding:12px; background:transparent; border:1px solid #555; color:#aaa; border-radius:40px; margin-top:15px;">離開</button>
+        </div>
+    </div>
+</div>
+
+<div id="result-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 200; justify-content: center; align-items: center; flex-direction: column;">
+    <div style="background: #333; width: 85%; max-width: 320px; border-radius: 20px; border: 3px solid var(--accent-color); padding: 25px; text-align: center; box-shadow: 0 0 20px rgba(255, 204, 0, 0.4);">
+        <h2 id="result-title" style="margin: 0; color: var(--accent-color); font-size: 24px;">挑戰成功</h2>
+        <hr style="border: 0; border-top: 1px solid #555; margin: 15px 0;">
+        
+        <div id="result-content" style="font-size: 16px; line-height: 1.6; color: white; margin-bottom: 20px;">
+            </div>
+
+        <button onclick="closeResultCard()" style="background: var(--accent-color); color: black; border: none; padding: 12px 40px; border-radius: 30px; font-weight: bold; font-size: 16px; cursor: pointer; width: 100%;">確 認</button>
+    </div>
+</div>
+
+<style>
+    /* 棋子樣式 */
+    .tile {
+        background: #333;
+        border-radius: 8px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: transform 0.1s;
+        touch-action: none; /* 重要：防止拖拽時網頁跟著滾動 */
+    }
+    .tile img { width: 85%; height: 85%; object-fit: contain; pointer-events: none; }
+    .tile.selected { border: 2px solid white; transform: scale(1.1); z-index: 10; background: #555; }
+</style>
+
 </body>
 </html>
