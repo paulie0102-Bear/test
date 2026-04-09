@@ -3,724 +3,542 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>小星靈的暖心花園 - 溫柔療癒存檔版</title>
-    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/512/emoji_u1f338.png">
-    
-    <link rel="manifest" href="manifest.json">
-    <meta name="apple-mobile-web-app-title" content="小星靈花園">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>PokeShuffle Web - SHUFFLE-WEB-2026</title>
     <style>
-        :root {
-    --bg-day: #e8f5e9; --bg-night: #1a2a1a;
-    --primary-green: #81c784; --primary-flower: #f48fb1;
-}
-
-/* 🌟 全域優化：禁用 iOS 長按選單，提升遊戲感 */
-* { 
-    box-sizing: border-box; 
-    -webkit-tap-highlight-color: transparent; 
-    
-    /* 🚫 禁用長按與選取內容 (遊戲體驗優化) */
-    -webkit-touch-callout: none;    /* iOS Safari 專用：禁用長按選單 */
-    -webkit-user-select: none;      /* Safari, Chrome, Opera 舊版 */
-    -moz-user-select: none;         /* Firefox 專用 */
-    -ms-user-select: none;          /* Internet Explorer/Edge 舊版 */
-    user-select: none;              /* 標準屬性：支援所有現代瀏覽器 */
-}
-
-/* 🔓 確保輸入框、文字區域與可編輯內容仍可選取文字 */
-input, textarea, [contenteditable="true"] { 
-    -webkit-user-select: text; 
-    -moz-user-select: text;
-    -ms-user-select: text;
-    user-select: text; 
+       :root {
+    --status-height: 90px; /* 稍微加高以容納手機頂部狀態 */
+    --sidebar-width: 85px;
+    --accent-color: #ffcc00;
+    /* 安全區域變數：針對 iPhone 瀏海與底部橫條 */
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 body {
-    margin: 0; padding: 0; font-family: "PingFang TC", sans-serif;
-    transition: background 1s; 
+    font-family: 'PingFang TC', 'Microsoft JhengHei', 'Arial', sans-serif;
+    margin: 0;
+    background: #1a1a1a; /* 稍微加深底色更像手遊 */
+    color: white;
     overflow: hidden;
-    display: flex; flex-direction: column; align-items: center; 
     height: 100vh;
-    /* 🌟 適應 iOS 安全區域 (防止內容被瀏海或底條遮住) */
-    padding-top: env(safe-area-inset-top);
-}
-
-/* 背景裝飾 */
-.day { background: var(--bg-day); color: #2e7d32; }
-.night { background: var(--bg-night); color: #a5d6a7; }
-
-/* 🌟 底部按鈕區優化：自動避開 iPhone 底部的小白條 */
-.controls { 
-    padding: 10px 20px;
-    padding-bottom: calc(30px + env(safe-area-inset-bottom)); 
-    display: grid; 
-    grid-template-columns: repeat(3, 1fr); 
-    gap: 10px; 
-    width: 100%; 
-    max-width: 400px; 
-}
-
-.decoration-emoji {
-    position: fixed; /* 改用 fixed 確保滾動時位置不變 */
-    pointer-events: none;
-    z-index: 1;
-    user-select: none;
-}
-
-/* 櫻花漂浮感 (白天) */
-@keyframes sakuraFloat {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    50% { transform: translateY(-15px) rotate(15deg); }
-}
-
-/* 星星呼吸感 (夜晚) */
-@keyframes starBlink {
-    0%, 100% { opacity: 0.3; transform: scale(0.8); }
-    50% { opacity: 1; transform: scale(1.1); }
-}
-
-        /* 進度條 */
-        #top-bar { width: 100%; padding: 15px 20px 5px; max-width: 400px; z-index: 10; }
-        .progress-container { width: 100%; height: 12px; background: rgba(0,0,0,0.1); border-radius: 6px; overflow: hidden; }
-        #progress-bar { width: 0%; height: 100%; background: var(--primary-green); transition: width 0.5s; }
-        .level-text { font-size: 12px; margin-top: 5px; display: flex; justify-content: space-between; font-weight: bold; }
-
-        /* 核心遊戲區 */
-        #game-container { position: relative; flex: 1; width: 100%; display: flex; justify-content: center; align-items: center; flex-direction: column; }
-        #flower-pot { width: 200px; height: 200px; cursor: pointer; transition: transform 0.3s; position: relative; z-index: 5; }
-        #flower-pot:active { transform: scale(0.95); }
-        #flower-img { width: 100%; height: 100%; object-fit: contain; }
-        #growth-timer { position: absolute; top: -35px; width: 100%; text-align: center; font-weight: bold; font-size: 20px; color: #ff8a80; }
-
-        #message-bubble {
-            position: absolute; top: 10%; background: white; color: #333; padding: 18px;
-            border-radius: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-            max-width: 85%; opacity: 0; transition: opacity 0.5s; pointer-events: none; z-index: 20; line-height: 1.5;
-        }
-
-        /* 天燈 */
-        .sky-lantern {
-            position: absolute; bottom: -100px; width: 60px; height: 80px;
-            background: #ff6b6b; border-radius: 10px 10px 5px 5px;
-            animation: flyUp 8s forwards linear; color: white; font-size: 10px; text-align: center; padding: 10px 5px; z-index: 1;
-        }
-        @keyframes flyUp { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(-120vh) translateX(50px) rotate(10deg); opacity: 0; } }
-
-        /* 控制按鈕 */
-        .controls { padding: 10px 20px 30px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 400px; }
-        button { border: none; padding: 12px; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; }
-        button:active { transform: translateY(2px); filter: brightness(0.9); }
-
-        /* 彈窗 */
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
-        .modal-content { background: white; color: #333; padding: 20px; border-radius: 25px; width: 100%; max-width: 380px; text-align: center; max-height: 90vh; overflow-y: auto; }
-        
-        .scroll-list { display: grid; grid-template-columns: repeat(1, 1fr); gap: 10px; margin-top: 15px; }
-        .album-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .item-card { background: #fdfdfd; padding: 15px; border-radius: 18px; border: 1px solid #f0f0f0; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .item-card img { width: 65px; height: 65px; }
-        
-        .emotion-input-group { margin: 12px 0; display: flex; align-items: center; }
-        .emotion-input-group label { font-size: 14px; width: 70px; text-align: left; }
-        input[type=range] { flex: 1; accent-color: var(--primary-green); }
-        
-        /* 隱藏的檔案選擇器 */
-        #import-input { display: none; }
-        textarea { width: 100%; height: 100px; padding: 10px; border-radius: 10px; border: 1px solid #ddd; resize: none; font-family: inherit; }
-        
-        /* 儲存容量進度條專用樣式 */
-        .storage-progress-area { background: #f9f9f9; padding: 15px; border-radius: 15px; margin-bottom: 15px; text-align: left; border: 1px solid #eee; }
-    </style>
-    <style>
-       /* 🫧 泡泡與樹葉的基礎樣式 */
-.pop-item {
-    position: fixed;
-    font-size: 45px; /* 增大尺寸，讓手機好點擊 */
-    cursor: pointer;
-    z-index: 9999;  /* 確保在最上層 */
-    user-select: none;
+    /* 防止手機長按彈出菜單，提升遊戲感 */
+    -webkit-touch-callout: none;
     -webkit-user-select: none;
-    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
-    
-    /* 讓元素有飄浮動效 */
-    animation: bubbleFloat 4s ease-in-out infinite;
-    
-    /* 讓點擊反應更靈敏 */
-    touch-action: manipulation; 
+    user-select: none;
 }
 
-/* 💥 點擊破裂特效 (當 JS 加入 .popped 類別時觸發) */
-.pop-item.popped {
-    transform: scale(2.5); /* 瞬間放大 */
-    opacity: 0;           /* 變透明 */
-    pointer-events: none; /* 防止重複點擊 */
+/* 頂部狀態欄：加入 safe-top 防止被瀏海擋住 */
+#status-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: calc(var(--status-height) + var(--safe-top));
+    padding-top: var(--safe-top);
+    background: rgba(0, 0, 0, 0.95);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    border-bottom: 2px solid var(--accent-color);
+    font-size: 14px;
+    box-sizing: border-box;
 }
 
-/* ☁️ 飄浮動畫：模擬在空氣中輕微晃動的感覺 */
-@keyframes bubbleFloat {
-    0%, 100% { 
-        transform: translate(0, 0) rotate(0deg); 
-    }
-    33% { 
-        transform: translate(15px, -25px) rotate(8deg); 
-    }
-    66% { 
-        transform: translate(-15px, 15px) rotate(-8deg); 
-    }
+.status-row { display: flex; gap: 15px; margin-bottom: 5px; }
+
+/* 左側選單：避開底部手勢區 */
+#sidebar {
+    position: fixed;
+    left: 0;
+    top: calc(var(--status-height) + var(--safe-top));
+    bottom: var(--safe-bottom);
+    width: var(--sidebar-width);
+    background: #222;
+    overflow-y: auto;
+    border-right: 1px solid #444;
+    z-index: 90;
+    /* 隱藏滾動條但保持滾動 */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+#sidebar::-webkit-scrollbar { display: none; }
+
+.side-btn {
+    padding: 22px 5px; /* 加大點擊範圍防止誤觸 */
+    text-align: center;
+    font-size: 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #333;
+    color: #888;
+    touch-action: manipulation;
 }
 
-/* 📱 針對小螢幕的微調：如果覺得太大可以縮小一點 */
-@media (max-width: 380px) {
-    .pop-item {
-        font-size: 38px;
-    }
+.side-btn.active { background: var(--accent-color); color: black; font-weight: bold; }
+.side-btn.unlocked { color: white; }
+.mode-toggle { background: #444; color: #ff5555; font-weight: bold; }
+
+/* 主地圖視窗：主體部分也需要考慮底部安全區 */
+#map-container {
+    margin-left: var(--sidebar-width);
+    margin-top: calc(var(--status-height) + var(--safe-top));
+    height: calc(100vh - (var(--status-height) + var(--safe-top) + var(--safe-bottom)));
+    overflow-y: scroll;
+    background: #333;
+    position: relative;
+    scroll-behavior: smooth;
+}
+
+#stage-list {
+    display: flex;
+    flex-direction: column-reverse;
+    padding: 15px; /* 稍微縮小 padding */
+    padding-bottom: 80px; /* 底部預留空間防止被箭頭遮擋 */
+    min-height: 100%;
+}
+
+/* 關卡單元：優化手機點擊感 */
+.stage-item {
+    background: #444;
+    margin: 8px 0;
+    padding: 12px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    border: 2px solid transparent;
+    min-height: 75px; /* 增加最小高度，符合拇指點擊尺寸 */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    box-sizing: border-box;
+    touch-action: manipulation;
+}
+
+.stage-item:active { transform: scale(0.97); background: #555; } /* 點擊回饋 */
+
+.pkmn-icon {
+    width: 55px;
+    height: 55px;
+    margin: 0 10px;
+    object-fit: contain;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.stage-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    pointer-events: none; /* 文字不阻擋點擊 */
+}
+
+.stage-no { font-size: 11px; color: #bbb; margin-bottom: 2px; }
+.stage-name { font-size: 16px; font-weight: bold; }
+
+.stage-item.locked { opacity: 0.3; filter: grayscale(1); pointer-events: none; }
+.stage-item.current { border-color: var(--accent-color); background: #555; }
+
+/* 導航箭頭：向上移動避開底部系統橫條 */
+#nav-arrows {
+    position: fixed;
+    right: 20px;
+    bottom: calc(30px + var(--safe-bottom));
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    z-index: 100;
+}
+
+.arrow-btn {
+    width: 60px;
+    height: 60px;
+    background: rgba(0, 0, 0, 0.75);
+    border: 2px solid var(--accent-color);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 30px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    touch-action: none; /* 防止滑動箭頭時觸發頁面滾動 */
 }
     </style>
 </head>
-<body class="day">
+<body>
 
-    <div id="top-bar">
-        <div class="progress-container"><div id="progress-bar"></div></div>
-        <div class="level-text">
-            <span id="garden-name">載入中...</span>
-            <span id="points-display">0 / 10</span>
+    <div id="status-bar">
+        <div class="status-row">
+            <span id="region-title">關都地區</span>
+            <span>圖鑑: <b id="ui-dex">0/721</b></span>
+            <span>🔑: <b id="ui-keys">0</b></span>
+        </div>
+        <div class="status-row">
+            <span>⚡ <b id="ui-stamina">24/24</b></span>
+            <span id="ui-timer">00:00</span>
         </div>
     </div>
 
-    <div id="message-bubble"></div>
-
-    <div id="game-container">
-        <div id="flower-pot" onclick="handlePlantClick()">
-            <div id="growth-timer"></div>
-            <img id="flower-img" src="" alt="plant">
-        </div>
-        <p id="hint-text" style="font-size: 14px; margin-top: 15px;">點擊土壤播下此刻的心情</p>
-        <p id="flower-name-display" style="font-weight: bold; color: #e91e63; margin-top: 5px;"></p>
-    </div>
-
-    <div class="controls">
-        <button style="background: #aed581; color: #33691e;" onclick="openPlantModal()">播下情緒</button>
-        <button style="background: #81d4fa; color: #01579b;" onclick="openLantern('future')">寫給未來</button>
-        <button style="background: #cfd8dc; color: #37474f;" onclick="openLantern('worry')">煩惱飛走</button>
-        <button style="background: #f8bbd0; color: #880e4f;" onclick="toggleLetters()">往日信箱</button>
-        <button style="background: #ffe0b2; color: #e65100;" onclick="toggleAlbum()">花卉圖鑑</button>
-        <button style="background: #eeeeee;" onclick="openSaveMenu()">系統設定</button>
-    </div>
-
-    <div id="plant-modal" class="modal">
-        <div class="modal-content">
-            <h3>調配種子情緒</h3>
-            <p style="font-size: 12px; color: #888; margin-bottom: 15px;">將此刻的情緒比例分配完畢 (總和100)</p>
-            <div class="emotion-input-group">
-    <label>😊 開心</label>
-    <input type="range" id="emo-happy" min="0" max="100" value="20" step="20" oninput="validateEmotions()">
-</div>
-<div class="emotion-input-group">
-    <label>😡 生氣</label>
-    <input type="range" id="emo-angry" min="0" max="100" value="20" step="20" oninput="validateEmotions()">
-</div>
-<div class="emotion-input-group">
-    <label>😟 煩惱</label>
-    <input type="range" id="emo-worry" min="0" max="100" value="20" step="20" oninput="validateEmotions()">
-</div>
-<div class="emotion-input-group">
-    <label>😢 難過</label>
-    <input type="range" id="emo-sad" min="0" max="100" value="20" step="20" oninput="validateEmotions()">
-</div>
-<div class="emotion-input-group">
-    <label>✨ 期盼</label>
-    <input type="range" id="emo-hope" min="0" max="100" value="20" step="20" oninput="validateEmotions()">
-</div>
-            <div id="total-check" style="font-weight: bold; margin: 10px 0;">總和: 100 / 100</div>
-            <button id="plant-btn" style="background: #aed581; width: 100%; padding: 15px; border-radius: 15px;" onclick="confirmPlanting()">開始種植</button>
-            <p style="font-size: 13px; margin-top: 15px; color: #999; cursor: pointer;" onclick="closeModal()">先不種了</p>
-        </div>
-    </div>
-
-    <div id="list-modal" class="modal"><div class="modal-content"><h3 id="list-title">清單</h3><div id="list-container" class="scroll-list"></div><button style="background: #eee; width: 100%; margin-top: 20px; padding: 12px;" onclick="closeModal()">返回花園</button></div></div>
-    
-    <div id="lantern-modal" class="modal"><div class="modal-content"><h3 id="lantern-title">寫下你的心願</h3><textarea id="lantern-text" placeholder="寫點什麼吧..."></textarea><div id="date-picker-area"><p style="font-size: 14px;">預計抵達日期：</p><input type="date" id="lantern-date" style="width:100%; padding:10px; margin-bottom:10px; border-radius:10px; border:1px solid #ddd;"></div><button style="background: #ff6b6b; color: white; width: 100%; padding: 15px; border-radius: 15px;" onclick="launchLantern()">釋放天燈</button><p style="font-size: 12px; margin-top: 15px; color: #888;" onclick="closeModal()">取消</p></div></div>
-
-    <div id="save-modal" class="modal">
-        <div class="modal-content">
-            <h3>資料管理中心</h3>
-            <p style="font-size: 11px; color: #888; margin-bottom: 15px;">監控本地容量，建議定期匯出備份避免數據丟失。</p>
-            
-            <div class="storage-progress-area">
-                <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 5px;">
-                    <span style="font-weight:bold;">存檔空間佔用</span>
-                    <span id="storage-usage-text">0%</span>
-                </div>
-                <div class="progress-container" style="height: 8px; background: #ddd;">
-                    <div id="storage-bar" style="width: 0%; height: 100%; background: #4caf50; transition: width 0.5s;"></div>
-                </div>
-                <p id="storage-kb-info" style="font-size: 10px; color: #999; margin-top: 6px; margin-bottom:0;">已使用: 0 KB / 5120 KB</p>
+    <div id="sidebar">
+        <div class="side-btn mode-toggle" onclick="toggleDifficulty()">普通</div>
+        <div id="region-btns">
             </div>
-            
-            <button style="background: #2196f3; color:white; width: 100%; margin-bottom: 12px; padding: 14px; border-radius: 12px;" onclick="exportSaveFile()">📤 匯出備份 (JSON)</button>
-            
-            <button style="background: #9c27b0; color:white; width: 100%; margin-bottom: 12px; padding: 14px; border-radius: 12px;" onclick="triggerImport()">📥 匯入備份 (JSON)</button>
-            <input type="file" id="import-input" accept=".json" onchange="importSaveFile(event)">
-
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
-            
-            <button style="background: #ff5252; color:white; width: 100%; padding: 10px; border-radius: 12px; font-size: 12px;" onclick="clearData()">🔥 重置所有進度 (不可還原)</button>
-            
-            <p style="font-size: 12px; margin-top: 15px; color: #888; cursor: pointer;" onclick="closeModal()">返回花園</p>
-        </div>
     </div>
 
-    <script>
-    // 1. 常數與設定區
-    const STORAGE_KEY = 'myGardenGame_v4'; // 升級版本號以避免舊資料衝突
-    const GROWTH_TIME_LIMIT = 300; 
-    const WORDS_LOW = ["妳辛苦了，給自己一點掌聲吧。", "深呼吸，情緒只是路過的雲。", "今天的妳也值得被好好對待。", "浮名本是身外物，不著方寸也風流。", "妳種下的不只是花，是與自己和解的證明。"];
-    const WORDS_HIGH = ["心靈的花園因為妳的誠實而繁茂。", "擁抱每一種情緒，那是妳獨一無二的色彩。", "無論是風雨還是晴天，妳都在茁壯成長。", "不論過去如何，未來有妳有我。", "在這裡，每一份心情都值得被溫柔親吻。"];
+    <div id="map-container">
+        <div id="stage-list"></div>
+    </div>
 
-    const ASSETS = {
-        soil: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1fab4.png',
-        sprout: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f331.png',
-        flowers: [
-            { id: 'f1', name: '向日葵', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f33b.png' },
-            { id: 'f2', name: '大雛菊', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f33c.png' },
-            { id: 'f3', name: '粉紅鬱金香', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f337.png' },
-            { id: 'f4', name: '綻放櫻花', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f338.png' },
-            { id: 'f5', name: '藍繡球', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1fabb.png' },
-            { id: 'f6', name: '紅玫瑰', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f339.png' }
-        ],
-        foods: [
-            { id: 'fd1', name: '草莓冰淇淋', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f366.png' },
-            { id: 'fd2', name: '沁涼雪花冰', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f367.png' },
-            { id: 'fd3', name: '三色抹茶丸子', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f361.png' },
-            { id: 'fd4', name: '提拉米蘇蛋糕', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f370.png' },
-            { id: 'fd5', name: '法式吐司', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f35e.png' },
-            { id: 'fd6', name: '金黃薯條', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f35f.png' }
-        ]
-    };
-// 在常數區定義遊戲時間
-const NURTURE_TIME_LIMIT = 10; // 小遊戲持續 10 秒
-let miniGameScore = 0;         // 紀錄本次戳破的數量
-let spawnInterval = null;      // 用來清除產生器的計時器
-    // 2. 狀態初始化 (移至上方)
-    let gameState = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
-        points: 0, gardenLv: 1, plantStatus: 'idle', 
-        growStartTime: 0, currentFlowerId: "", currentFlowerName: "", currentFlowerImg: "",
-        futureLetters: [], flowerAlbum: [] 
-    };
+    <div id="nav-arrows">
+        <div class="arrow-btn" onmousedown="startScroll(-1)" onmouseup="stopScroll()" ontouchstart="startScroll(-1)" ontouchend="stopScroll()">↑</div>
+        <div class="arrow-btn" onmousedown="startScroll(1)" onmouseup="stopScroll()" ontouchstart="startScroll(1)" ontouchend="stopScroll()">↓</div>
+    </div>
 
     
 
-    function autoSave() { 
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState));
-        if(document.getElementById('save-modal').style.display === 'flex') updateStorageProgress();
-    }
+<script>
+    /** 地區配置 **/
+    const REGION_CONFIG = [
+        { name: "關都", range: [1, 151], id: "kanto" },
+        { name: "城都", range: [152, 251], id: "johto" },
+        { name: "豐緣", range: [252, 386], id: "hoenn" },
+        { name: "神奧", range: [387, 493], id: "sinnoh" },
+        { name: "合眾", range: [494, 649], id: "unova" },
+        { name: "卡洛斯", range: [650, 721], id: "kalos" }
+    ];
 
-    function validateEmotions() {
-        const h = parseInt(document.getElementById('emo-happy').value), 
-              a = parseInt(document.getElementById('emo-angry').value),
-              w = parseInt(document.getElementById('emo-worry').value), 
-              s = parseInt(document.getElementById('emo-sad').value),
-              hp = parseInt(document.getElementById('emo-hope').value);
-        const total = h + a + w + s + hp;
-        const display = document.getElementById('total-check');
-        display.innerText = `總和: ${total} / 100`;
-        display.style.color = (total === 100) ? 'green' : 'red';
-        document.getElementById('plant-btn').disabled = (total !== 100);
-    }
+    /** 1. 在這裡貼上你的名字清單 **/
+const POKEMON_NAMES = [
+    "妙蛙種子","妙蛙草","妙蛙花","小火龍","火恐龍","噴火龍","傑尼龜","卡米龜","水箭龜","綠毛蟲",
+    "鐵甲蛹","巴大蝶","獨角蟲","鐵殼蛹","大針蜂","波波","比比鳥","大比鳥","小拉達","拉達",
+    "烈雀","大嘴雀","阿柏蛇","阿柏怪","皮卡丘","雷丘","穿山鼠","穿山王","尼多蘭","尼多娜",
+    "尼多后","尼多朗","尼多力諾","尼多王","皮皮","皮可西","六尾","九尾","胖丁","胖可丁",
+    "超音蝠","大嘴蝠","走路草","臭臭花","霸王花","派拉斯","派拉斯特","毛球","摩魯蛾","地鼠",
+    "三地鼠","喵喵","貓老大","可達鴨","哥達鴨","猴怪","火爆猴","卡蒂狗","風速狗","蚊香蝌蚪",
+    "蚊香君","蚊香泳士","凱西","勇基拉","胡地","腕力","豪力","怪力","喇叭芽","口呆花",
+    "大食花","瑪瑙水母","毒刺水母","小拳石","隆隆石","隆隆岩","小火馬","烈焰馬","呆呆獸","呆殼獸",
+    "小磁怪","三合一磁怪","大蔥鴨","嘟嘟","嘟嘟利","小海獅","白海獅","臭泥","臭臭泥","大舌貝",
+    "刺甲貝","鬼斯","鬼斯通","耿鬼","大岩蛇","催眠貘","引夢貘人","大鉗蟹","巨鉗蟹","霹靂電球",
+    "頑皮雷彈","蛋蛋","椰蛋樹","卡拉卡拉","嘎啦嘎啦","飛腿郎","快拳郎","大舌頭","瓦斯彈","雙彈瓦斯",
+    "獨角犀牛","鑽角犀獸","吉利蛋","蔓藤怪","袋獸","墨海馬","海刺龍","角金魚","金魚王","海星星",
+    "寶石海星","魔牆人偶","飛天螳螂","迷唇姐","電擊獸","鴨嘴火獸","凱羅斯","肯泰羅","鯉魚王","暴鯉龍",
+    "拉普拉斯","百變怪","伊布","水伊布","雷伊布","火伊布","多邊獸","菊石獸","多刺菊石獸","化石盔",
+    "鐮刀盔","化石翼龍","卡比獸","急凍鳥","閃電鳥","火焰鳥","迷你龍","哈克龍","快龍","超夢",
+    "夢幻","菊草葉","月桂葉","大竺葵","火球鼠","火岩鼠","火暴獸","小鋸鱷","藍鱷","大力鱷",
+    "尾立","大尾立","咕咕","貓頭夜鷹","芭瓢蟲","安瓢蟲","圓絲蛛","阿利多斯","叉字蝠","燈籠魚",
+    "電燈怪","皮丘","皮寶寶","寶寶丁","波克比","波克基古","天然雀","天然鳥","咩利羊","茸茸羊",
+    "電龍","美麗花","瑪力露","瑪力露麗","胡說樹","牛蛙君","毽子草","毽子花","毽子棉","長尾怪手",
+    "向日種子","向日花怪","陽陽瑪","烏波","沼王","太陽伊布","月亮伊布","黑暗鴉","呆呆王","夢妖",
+    "未知圖騰","果然翁","麒麟奇","榛果球","佛烈托斯","土龍弟弟","天蠍","大鋼蛇","布魯","布魯皇",
+    "千針魚","巨鉗螳螂","壺壺","赫拉克羅斯","狃拉","熊寶寶","圈圈熊","熔岩蟲","熔岩蝸牛","小山豬",
+    "長毛豬","太陽珊瑚","鐵炮魚","章魚桶","信使鳥","巨翅飛魚","盔甲鳥","戴魯比","黑魯加","刺龍王",
+    "小小象","頓甲","多邊獸Ⅱ","驚角鹿","圖圖犬","巴爾郎","柯波朗","迷唇娃","電擊怪","鴨嘴寶寶",
+    "大奶罐","幸福蛋","雷公","炎帝","水君","幼基拉斯","沙基拉斯","班基拉斯","洛奇亞","鳳王",
+    "雪拉比","木守宮","森林蜥蜴","蜥蜴王","火稚雞","力壯雞","火焰雞","水躍魚","沼躍魚","巨沼怪",
+    "土狼犬","大狼犬","蛇紋熊","直衝熊","刺尾蟲","甲殼繭","狩獵鳳蝶","盾甲繭","毒粉蛾","蓮葉童子",
+    "蓮帽小童","樂天河童","橡實果","長鼻葉","狡猾天狗","傲骨燕","大王燕","長翅鷗","大嘴鷗","拉魯拉絲",
+    "奇魯莉安","沙奈朵","溜溜糖球","雨翅蛾","蘑蘑菇","斗笠菇","懶人獺","過動猿","請假王","土居忍士",
+    "鐵面忍者","脫殼忍者","咕妞妞","吼爆彈","爆音怪","幕下力士","超力王","露力麗","朝北鼻","向尾喵",
+    "優雅貓","勾魂眼","大嘴娃","可可多拉","可多拉","波士可多拉","瑪沙那","恰雷姆","落雷獸","雷電獸",
+    "正電拍拍","負電拍拍","電螢蟲","甜甜螢","毒薔薇","溶食獸","吞食獸","利牙魚","巨牙鯊","吼吼鯨",
+    "吼鯨王","呆火駝","噴火駝","煤炭龜","跳跳豬","噗噗豬","晃晃斑","大顎蟻","超音波幼蟲","沙漠蜻蜓",
+    "沙漠奈亞","夢歌仙人掌","青綿鳥","七夕青鳥","貓鼬斬","飯匙蛇","月石","太陽岩","泥泥鰍","地震鯰",
+    "龍蝦小兵","鐵螯龍蝦","天秤偶","念力土土偶","觸手百合","搖籃百合","太古羽蟲","太古盔甲","笨笨魚","美納斯",
+    "飄浮泡泡","變隱龍","怨影娃娃","詛咒娃娃","夜巡靈","夜巨人","熱帶龍","風鈴鈴","阿勃梭魯","小果然",
+    "雪童子","冰鬼護","海豹球","海魔獅","帝牙海獅","珍珠貝","獵斑魚","櫻花魚","古空棘魚","愛心魚",
+    "寶貝龍","甲殼龍","暴飛龍","鐵啞鈴","金屬怪","巨金怪","雷吉洛克","雷吉艾斯","雷吉斯奇魯","拉帝亞斯",
+    "拉帝歐斯","蓋歐卡","固拉多","烈空坐","基拉祈","代歐奇希斯","草苗龜","樹林龜","土台龜","小火焰猴",
+    "猛火猴","烈焰猴","波加曼","波皇子","帝王拿波","姆克兒","姆克鳥","姆克鷹","大牙狸","大尾狸",
+    "圓法師","音箱蟀","小貓怪","勒克貓","倫琴貓","含羞苞","羅絲雷朵","頭蓋龍","戰槌龍","盾甲龍",
+    "護城龍","結草兒","結草貴婦","紳士蛾","三蜜蜂","蜂女王","帕奇利茲","泳圈鼬","浮潛鼬","櫻花寶",
+    "櫻花兒","無殼海兔","海兔獸","雙尾怪手","飄飄球","隨風球","卷卷耳","長耳兔","夢妖魔","烏鴉頭頭",
+    "魅力喵","東施喵","鈴鐺響","臭鼬噗","坦克臭鼬","銅鏡怪","青銅鐘","盆才怪","魔尼尼","小福蛋",
+    "聒噪鳥","花岩怪","圓陸鯊","尖牙陸鯊","烈咬陸鯊","小卡比獸","利歐路","路卡利歐","怪河馬","河馬獸",
+    "鉗尾蠍","龍王蠍","不良蛙","毒骷蛙","尖牙籠","螢光魚","霓虹魚","小球飛魚","雪笠怪","暴雪王",
+    "瑪狃拉","自爆磁怪","大舌舔","超甲狂犀","巨蔓藤","電擊魔獸","鴨嘴炎獸","波克基斯","梅卡陽瑪","葉伊布",
+    "冰伊布","天蠍王","象牙豬","多邊獸Ｚ","艾路雷朵","大朝北鼻","黑夜魔靈","雪妖女","洛托姆","由克希",
+    "艾姆利多","亞克諾姆","帝牙盧卡","帕路奇亞","席多藍恩","雷吉奇卡斯","騎拉帝納","克雷色利亞","霏歐納","瑪納霏",
+    "達克萊伊","謝米","阿爾宙斯"
+    ,"比克提尼","藤藤蛇","青藤蛇","君主蛇","暖暖豬","炒炒豬","炎武王"
+,"水水獺","雙刃丸","大劍鬼","探探鼠","步哨鼠","小約克","哈約克","長毛狗","扒手貓","酷豹"
+,"花椰猴","花椰猿","爆香猴","爆香猿","冷水猴","冷水猿","食夢夢","夢夢蝕","豆豆鴿","咕咕鴿"
+,"高傲雉雞","斑斑馬","雷電斑馬","石丸子","地幔岩","龐岩怪","滾滾蝙蝠","心蝙蝠","螺釘地鼠","龍頭地鼠"
+,"差不多娃娃","搬運小匠","鐵骨土人","修建老匠","圓蝌蚪","藍蟾蜍","蟾蜍王","投摔鬼","打擊鬼","蟲寶包"
+,"寶包繭","保母蟲","百足蜈蚣","車輪毬","蜈蚣王","木棉球","風妖精","百合根娃娃","裙兒小姐","野蠻鱸魚"
+,"黑眼鱷","混混鱷","流氓鱷","火紅不倒翁","達摩狒狒","沙鈴仙人掌","石居蟹","岩殿居蟹","滑滑小子","頭巾混混"
+,"象徵鳥","哭哭面具","死神棺","原蓋海龜","肋骨海龜","始祖小鳥","始祖大鳥","破破袋","灰塵山","索羅亞"
+,"索羅亞克","泡沫栗鼠","奇諾栗鼠","哥德寶寶","哥德小童","哥德小姐","單卵細胞球","雙卵細胞球","人造細胞卵","鴨寶寶"
+,"舞天鵝","迷你冰","多多冰","雙倍多多冰","四季鹿","萌芽鹿","電飛鼠","蓋蓋蟲","騎士蝸牛","哎呀球菇"
+,"敗露球菇","輕飄飄","胖嘟嘟","保母曼波","電電蟲","電蜘蛛","種子鐵球","堅果啞鈴","齒輪兒","齒輪組"
+,"齒輪怪","麻麻小魚","麻麻鰻","麻麻鰻魚王","小灰怪","大宇怪","燭光靈","燈火幽靈","水晶燈火靈","牙牙"
+,"斧牙龍","雙斧戰龍","噴嚏熊","凍原熊","幾何雪花","小嘴蝸","敏捷蟲","泥巴魚","功夫鼬","師父鼬"
+,"赤面龍","泥偶小人","泥偶巨人","駒刀小兵","劈斬司令","爆炸頭水牛","毛頭小鷹","勇士雄鷹","禿鷹丫頭","禿鷹娜"
+,"熔蟻獸","鐵蟻","單首龍","雙首暴龍","三首惡龍","燃燒蟲","火神蛾","勾帕路翁","代拉基翁","畢力吉翁"
+,"龍捲雲","雷電雲","萊希拉姆","捷克羅姆","土地雲","酋雷姆","凱路迪歐","美洛耶塔","蓋諾賽克特","哈力栗"
+,"胖胖哈力","布里卡隆","火狐狸","長尾火狐","妖火紅狐","呱呱泡蛙","呱頭蛙","甲賀忍蛙","掘掘兔","掘地兔"
+,"小箭雀","火箭雀","烈箭鷹","粉蝶蟲","粉蝶蛹","彩粉蝶","小獅獅","火炎獅","花蓓蓓","花葉蒂"
+,"花潔夫人","坐騎小羊","坐騎山羊","頑皮熊貓","流氓熊貓","多麗米亞","妙喵","超能妙喵","獨劍鞘","雙劍鞘"
+,"堅盾劍怪","粉香香","芳香精","綿綿泡芙","胖甜妮","好啦鱿","烏賊王","龜腳腳","龜足巨鎧","垃垃藻"
+,"毒藻龍","鐵臂槍蝦","鋼炮臂蝦","傘電蜥","光電傘蜥","寶寶暴龍","怪顎龍","冰雪龍","冰雪巨龍","仙子伊布"
+,"摔角鷹人","咚咚鼠","小碎鑽","黏黏寶","黏美兒","黏美龍","鑰圈兒","小木靈","朽木妖","南瓜精"
+,"南瓜怪人","冰寶","冰岩怪","嗡蝠","音波龍","哲爾尼亞斯","伊裴爾塔爾","基格爾德","蒂安希","胡帕","波爾凱尼恩"
+];
 
-    function confirmPlanting() {
-    // 1. 決定這次會種出什麼（邏輯不變）
-    let pool = (gameState.gardenLv < 5) ? ASSETS.flowers : ASSETS.flowers.concat(ASSETS.foods);
-    const item = pool[Math.floor(Math.random() * pool.length)];
-
-    gameState.currentFlowerId = item.id; 
-    gameState.currentFlowerName = item.name; 
-    gameState.currentFlowerImg = item.img;
-
-    // 2. 這裡原本是直接改為 'growing'，現在改為啟動小遊戲
-    closeModal(); 
-    startNurturingGame(); // 呼叫下方新增的小遊戲函數
-}
-    function startNurturingGame() {
-    gameState.plantStatus = 'nurturing'; // 切換至新狀態
-    miniGameScore = 0;
-    updateUI();
-    showBubble("🫧 快速點擊泡泡與樹葉，幫植物澆水施肥！");
-
-    // 每 450 毫秒產生一個元素
-    spawnTimer = setInterval(createPopElement, 450);
-
-    // 10 秒後結束遊戲
-    setTimeout(() => {
-        clearInterval(spawnTimer);
-        finishNurturing();
-    }, 10000); 
-}
-
-function createPopElement() {
-    const el = document.createElement('div');
-    el.className = 'pop-item'; // 對應妳 CSS 寫的樣式
-    el.innerText = Math.random() > 0.5 ? '🫧' : '🍃';
-    
-    // 隨機出現在畫面中（避開邊緣）
-    el.style.left = (15 + Math.random() * 70) + '%';
-    el.style.top = (25 + Math.random() * 45) + '%';
-    
-    el.onclick = () => {
-        miniGameScore++;
-        el.classList.add('popped'); // 觸發破裂動畫
-        setTimeout(() => el.remove(), 250);
-    };
-
-    document.body.appendChild(el);
-    // 沒點到 3 秒後自動消失
-    setTimeout(() => { if(el.parentNode) el.remove(); }, 3000);
-}
-
-function finishNurturing() {
-    // 清理殘留泡泡
-    document.querySelectorAll('.pop-item').forEach(el => el.remove());
-    
-    // 獎勵計算：GROWTH_TIME_LIMIT 減去點擊次數，最低剩 3 秒
-    const actualWait = Math.max(3, GROWTH_TIME_LIMIT - miniGameScore);
-    
-    gameState.plantStatus = 'growing'; // 正式進入倒數
-    // 透過調整開始時間來實現「剩餘時間變少」的效果
-    gameState.growStartTime = Date.now() - (GROWTH_TIME_LIMIT - actualWait) * 1000;
-    
-    showBubble(`✨ 照顧完成！獲得 ${miniGameScore} 養分，倒數縮短了！`);
-    updateUI();
-    autoSave();
-}
-        
-
-    function harvest() {
-        const isNew = !gameState.flowerAlbum.find(f => f.id === gameState.currentFlowerId);
-        if (isNew) gameState.flowerAlbum.push({ id: gameState.currentFlowerId, name: gameState.currentFlowerName, img: gameState.currentFlowerImg });
-        
-        gameState.points += 2;
-        const words = (gameState.gardenLv >= 5) ? WORDS_HIGH : WORDS_LOW;
-        showBubble(`${isNew ? '🌟 新發現！' : ''}【${gameState.currentFlowerName}】盛開了。${words[Math.floor(Math.random() * words.length)]}`);
-        
-        gameState.plantStatus = 'idle';
-        checkLevelUp(); 
-        updateUI(); 
-        autoSave();
-    }
-
-    function checkLevelUp() {
-    const threshold = 20; // 直接改成固定數字
-    if (gameState.points >= threshold && gameState.gardenLv < 10) {
-        gameState.gardenLv++; 
-        gameState.points = 0; // 升級後經驗歸零
-        showBubble(`🎊 花園升級了！目前等級：Lv.${gameState.gardenLv}`);
-    }
-}
-    function updateUI() {
-        const threshold = 20; // 妳設定的固定門檻
-        const bar = document.getElementById('progress-bar');        
-        const pointsDisp = document.getElementById('points-display');
-        const nameDisp = document.getElementById('garden-name');
-        
-        if(bar) bar.style.width = (gameState.points / threshold * 100) + "%";
-        if(pointsDisp) pointsDisp.innerText = `${gameState.points} / ${threshold}`;
-        if(nameDisp) nameDisp.innerText = `Lv.${gameState.gardenLv} ${gameState.gardenLv >= 5 ? '繁盛花園' : '新手花園'}`;
-        
-        // --- 🌸 核心修改開始 ---
-        const isHighLevel = gameState.gardenLv >= 5;
-        const wasHighLevel = document.body.classList.contains('lvl-high');
-        document.body.classList.toggle('lvl-high', isHighLevel);
-
-        // 如果剛升到 5 等，或是日夜切換了，就重新畫裝飾
-        const currentMode = document.body.classList.contains('day') ? 'day' : 'night';
-        if (isHighLevel && (!wasHighLevel || window.currentRenderMode !== currentMode)) {
-            createLvlHighDecorations(currentMode);
-            window.currentRenderMode = currentMode;
-        } else if (!isHighLevel) {
-            // 如果未滿 5 等，清空裝飾（防止降級測試時殘留）
-            document.querySelectorAll('.decoration-emoji').forEach(d => d.remove());
-            window.currentRenderMode = null;
-        }
-        // --- 🌸 核心修改結束 ---
-        
-        const img = document.getElementById('flower-img');
-        const hint = document.getElementById('hint-text');
-        const flowerNameDisp = document.getElementById('flower-name-display');
-
-        if (gameState.plantStatus === 'idle') { 
-        img.src = ASSETS.soil; 
-        hint.innerText = "點擊土壤播下此刻的心情"; 
-        flowerNameDisp.innerText = ""; 
-    } 
-    // 🌟 新增：小遊戲護理階段
-    else if (gameState.plantStatus === 'nurturing') {
-        img.src = ASSETS.sprout; // 顯示嫩芽，代表剛播種正在照顧
-        hint.innerText = "✨ 正在細心呵護中... (點擊泡泡！)"; 
-        flowerNameDisp.innerText = "給予養分中..."; 
-    }
-    else if (gameState.plantStatus === 'growing') { 
-        img.src = ASSETS.sprout; 
-        hint.innerText = "情緒正在萌芽中..."; 
-        flowerNameDisp.innerText = "培育中..."; 
-    } 
-    else { 
-        img.src = gameState.currentFlowerImg; 
-        hint.innerText = "收成這份心情"; 
-        flowerNameDisp.innerText = "已盛開： " + gameState.currentFlowerName; 
-    }
-    }
-
-    function createLvlHighDecorations(mode) {
-            // 1. 先移除舊的裝飾
-            const oldDecos = document.querySelectorAll('.decoration-emoji');
-            oldDecos.forEach(d => d.remove());
-
-            // 2. 設定參數
-            const emoji = mode === 'day' ? '🌸' : '✨';
-            const animation = mode === 'day' ? 'sakuraFloat' : 'starBlink';
-            const count = 4; // 🌟 固定產生 4 個 (介於 3~5 之間)
-
-            const container = document.body;
-
-            for (let i = 0; i < count; i++) {
-                const span = document.createElement('span');
-                span.className = 'decoration-emoji';
-                span.innerText = emoji;
-
-                // 3. 🌟 隨機設定位置 (避開中間花盆區)
-                // 隨機在畫面的左側 30% 或右側 30%
-                const side = Math.random() > 0.5 ? 'left' : 'right';
-                const percentX = Math.random() * 30; // 0~30%
-                span.style[side] = percentX + '%';
-                
-                // 隨機高度 10%~80%
-                const percentY = 10 + Math.random() * 70;
-                span.style.top = percentY + '%';
-
-                // 4. 🌟 隨機設定大小 (20px ~ 50px)
-                const size = 20 + Math.random() * 30;
-                span.style.fontSize = size + 'px';
-
-                // 5. 🌟 隨機設定透明度與模糊 (白天櫻花特別需要)
-                if (mode === 'day') {
-                    const opacity = 0.3 + Math.random() * 0.4; // 0.3~0.7
-                    const blur = Math.random() * 2; // 0~2px 模糊
-                    span.style.opacity = opacity;
-                    span.style.filter = `blur(${blur}px)`;
-                } else {
-                    span.style.opacity = 0.5 + Math.random() * 0.5; // 0.5~1.0
-                }
-
-                // 6. 🌟 隨機設定動畫延遲 (讓它們看起來不要同時閃爍或漂浮)
-                const delay = Math.random() * 5; // 0~5秒延遲
-                const duration = 6 + Math.random() * 4; // 6~10秒持續時間
-                span.style.animation = `${animation} ${duration}s infinite ${delay}s linear`;
-
-                container.appendChild(span);
-            }
-            console.log(`✅ 已為高等級${mode}產生 ${count} 個裝飾 Emoji。`);
-        }
-
-        // --- 同步修改：init 函數，確保重新調整視窗大小時裝飾位置正確 (選做，增加穩定性) ---
-        function init() {
-            updateTheme();
-            updateUI();
-            setInterval(checkGrowth, 1000);
-            setInterval(updateTheme, 60000);
-            
-            // 當螢幕旋轉或調整大小時，重新刷新裝飾位置
-            window.addEventListener('resize', () => {
-                if (gameState.gardenLv >= 5) {
-                    const currentMode = document.body.classList.contains('day') ? 'day' : 'night';
-                    createLvlHighDecorations(currentMode);
-                }
-            });
-        }
-
-    function checkGrowth() {
-        if (gameState.plantStatus === 'growing') {
-            const elapsed = Math.floor((Date.now() - gameState.growStartTime) / 1000);
-            const timerDisp = document.getElementById('growth-timer');
-            if (elapsed >= GROWTH_TIME_LIMIT) { 
-                gameState.plantStatus = 'ready'; 
-                if(timerDisp) timerDisp.innerText = ""; 
-                updateUI(); 
-            } else {
-                if(timerDisp) timerDisp.innerText = `收成倒數 ${GROWTH_TIME_LIMIT - elapsed}s`;
-            }
-        }
-    }
-
-    // --- 系統功能 ---
-    function updateStorageProgress() {
-        const limit = 5120;
-        let total = 0;
-        try {
-            for (let x in localStorage) {
-                if (!localStorage.hasOwnProperty(x)) continue;
-                total += ((localStorage[x].length + x.length) * 2) / 1024;
-            }
-        } catch(e) { total = 0; }
-        
-        const percentage = Math.min((total / limit) * 100, 100).toFixed(1);
-        const bar = document.getElementById('storage-bar');
-        if(bar) {
-            bar.style.width = percentage + "%";
-            bar.style.background = percentage > 80 ? '#f44336' : '#4caf50';
-            document.getElementById('storage-usage-text').innerText = percentage + "%";
-            document.getElementById('storage-kb-info').innerText = `已使用: ${total.toFixed(1)} KB / ${limit} KB`;
-        }
-    }
-
-    function exportSaveFile() {
-        const dataStr = JSON.stringify(gameState, null, 2);
-        const blob = new Blob([dataStr], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `garden_backup_${new Date().toLocaleDateString()}.json`;
-        link.click();
-        showBubble("存檔已匯出。");
-    }
-
-    function importSaveFile(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const imported = JSON.parse(e.target.result);
-                if (imported.gardenLv) {
-                    gameState = imported;
-                    autoSave();
-                    location.reload();
-                }
-            } catch (err) { alert("讀取失敗，請檢查檔案格式。"); }
+/** 2. 修改數據生成邏輯，讓它讀取上面的清單 **/
+const POKEMON_DATA = Array.from({length: 721}, (_, i) => {
+        const idNum = i + 1;
+        return {
+            id: idNum.toString().padStart(3, '0'),
+            name: POKEMON_NAMES[i] || "No." + idNum,
+            // 這裡可以定義哪些是傳說級（傷害 70）
+            type: [144, 145, 146, 150, 151, 249, 250, 382, 383, 384, 483, 484, 487, 493, 643, 644, 646, 716, 717, 718].includes(idNum) ? "Legendary" : "Normal",
+            // 這裡定義哪些有關卡獎勵道具（Mega石、小智手裡劍等）
+            hasMega: [6, 9, 150, 384, 658].includes(idNum) 
         };
-        reader.readAsText(file);
-    }
+    });
 
-    function clearData() { if(confirm("確定要重置嗎？")) { localStorage.removeItem(STORAGE_KEY); location.reload(); } }
-    function handlePlantClick() { if (gameState.plantStatus === 'ready') harvest(); else if (gameState.plantStatus === 'idle') openPlantModal(); }
-    function openPlantModal() { if (gameState.plantStatus === 'idle') { document.getElementById('plant-modal').style.display = 'flex'; validateEmotions(); } else showBubble("有一顆心靈正在萌芽..."); }
-    function closeModal() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
-    function openSaveMenu() { updateStorageProgress(); document.getElementById('save-modal').style.display = 'flex'; }
-    function updateTheme() { const hr = new Date().getHours(); document.body.className = (hr > 6 && hr < 18) ? 'day' : 'night'; }
-    function showBubble(text) { const b = document.getElementById('message-bubble'); if(b) { b.innerText = text; b.style.opacity = 1; setTimeout(() => b.style.opacity = 0, 5000); } }
-    function triggerImport() { document.getElementById('import-input').click(); }
+    /** 遊戲狀態 **/
+    let gameState = {
+        stamina: 24,
+        lastUpdate: Date.now(),
+        keys: 0,
+        captured: [],
+        items: [],
+        unlocked: ["001"],
+        lastPlayed: "001",
+        currentRegionIdx: 0,
+        isHardMode: false
+    };
 
-    // --- 圖鑑與天燈邏輯 ---
-    function toggleAlbum() {
-        const container = document.getElementById('list-container');
-        document.getElementById('list-title').innerText = "花卉美食圖鑑";
-        container.className = "scroll-list album-grid";
-        container.innerHTML = gameState.flowerAlbum.length === 0 ? "<p>圖鑑空空的...</p>" : "";
-        gameState.flowerAlbum.forEach(item => {
-            const card = document.createElement('div'); card.className = 'item-card';
-            card.innerHTML = `<img src="${item.img}"><p>${item.name}</p>`;
-            container.appendChild(card);
-        });
-        document.getElementById('list-modal').style.display = 'flex';
-    }
-
-    let currentLanternMode = '';
-    function openLantern(mode) { 
-        currentLanternMode = mode; 
-        document.getElementById('lantern-title').innerText = mode === 'future' ? '給未來的自己' : '煩惱隨風飄散'; 
-        document.getElementById('date-picker-area').style.display = mode === 'future' ? 'block' : 'none'; 
-        document.getElementById('lantern-date').valueAsDate = new Date(Date.now() + 86400000); 
-        document.getElementById('lantern-modal').style.display = 'flex'; 
-    }
-
-    function launchLantern() { 
-        const textInput = document.getElementById('lantern-text');
-        const text = textInput.value; if(!text) return; 
-        if (currentLanternMode === 'future') {
-            gameState.futureLetters.push({ id: Date.now(), content: text, date: document.getElementById('lantern-date').value, timestamp: new Date().toLocaleDateString() }); 
-        }
-        const lan = document.createElement('div'); lan.className = 'sky-lantern'; 
-        lan.innerText = text.substring(0,5)+'...'; 
-        if(currentLanternMode === 'worry') lan.style.background = '#90a4ae'; 
-        document.getElementById('game-container').appendChild(lan); 
-        closeModal(); textInput.value = ''; autoSave(); setTimeout(() => lan.remove(), 8000); 
-    }
-
-    function toggleLetters() { 
-        const container = document.getElementById('list-container'); 
-        document.getElementById('list-title').innerText = "往日信箱"; 
-        container.className = "scroll-list"; 
-        container.innerHTML = gameState.futureLetters.length === 0 ? "<p>信箱空空的...</p>" : ""; 
+    function init() {
+        const saved = localStorage.getItem('SHUFFLE_WEB_SAVE');
+        if (saved) gameState = JSON.parse(saved);
         
-        gameState.futureLetters.forEach(l => { 
-            const isReady = l.date <= new Date().toISOString().split('T')[0]; 
-            const card = document.createElement('div'); 
-            card.className = 'item-card'; 
-            
-            // 🌟 重點：如果時間到了，顯示「開啟回憶」按鈕，否則顯示倒數
-            const contentHtml = isReady ? 
-                `<p style="cursor:pointer; color:#2e7d32; font-weight:bold; margin:10px 0; text-decoration:underline;" 
-                    onclick="showTimeCapsule('${l.content.replace(/'/g, "\\'")}')">📖 開啟時光膠囊</p>` : 
-                `<p style="color:#999; margin:10px 0;">⏳ 傳送中 (預計 ${l.date} 抵達)</p>`;
-
-            card.innerHTML = `
-                <p style='font-size:10px; color:#999'>${l.timestamp} 寄出</p>
-                ${contentHtml}
-                <button onclick='deleteLetter(${l.id})' style='font-size:10px; background:#ff8a80; color:white; border:none; padding:3px 8px; border-radius:5px;'>刪除</button>
-            `; 
-            container.appendChild(card); 
-        }); 
-        document.getElementById('list-modal').style.display = 'flex'; 
+        renderRegionButtons();
+        renderMap();
+        scrollToLastPlayed();
+        setInterval(updateStamina, 1000);
     }
 
-    function deleteLetter(id) { if(confirm("確定刪除？")) { gameState.futureLetters = gameState.futureLetters.filter(l => l.id !== id); autoSave(); toggleLetters(); } }
+    function renderRegionButtons() {
+        const container = document.getElementById('region-btns');
+        container.innerHTML = '';
+        REGION_CONFIG.forEach((reg, index) => {
+            const isUnlocked = isRegionUnlocked(index);
+            const btn = document.createElement('div');
+            btn.className = `side-btn ${gameState.currentRegionIdx === index ? 'active' : ''} ${isUnlocked ? 'unlocked' : ''}`;
+            btn.innerText = reg.name;
+            btn.onclick = () => { if(isUnlocked) switchRegion(index); };
+            container.appendChild(btn);
+        });
+    }
 
-    init();
+    function isRegionUnlocked(index) {
+        if (index === 0) return true;
+        // 需通關前一區最後一關
+        const prevRegionLastId = REGION_CONFIG[index-1].range[1].toString().padStart(3, '0');
+        return gameState.unlocked.includes((REGION_CONFIG[index].range[0]).toString().padStart(3, '0'));
+    }
 
-function showTimeCapsule(contentText) {
-    // 建立膠囊遮罩
-    const overlay = document.createElement('div');
-    overlay.id = 'capsule-overlay';
-    overlay.style = `
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.8); display: flex; align-items: center;
-        justify-content: center; z-index: 1000; backdrop-filter: blur(8px);
-        opacity: 0; transition: opacity 0.5s;
-    `;
+    function switchRegion(index) {
+        gameState.currentRegionIdx = index;
+        document.getElementById('region-title').innerText = REGION_CONFIG[index].name + "地區";
+        renderRegionButtons();
+        renderMap();
+        save();
+    }
 
-    // 膠囊本體
-    const content = document.createElement('div');
-    content.style = `
-        background: #fff9e6; padding: 40px 30px; border-radius: 30px;
-        width: 85%; max-width: 400px; text-align: center;
-        box-shadow: 0 0 30px rgba(255,215,0,0.3); transform: scale(0.8);
-        transition: transform 0.5s; border: 3px solid #d4af37; position: relative;
-    `;
+    function toggleDifficulty() {
+        // 只有通關 151 才能開困難
+        if (!gameState.unlocked.includes("152")) {
+            alert("需通關關都地區(151)方可解鎖困難模式");
+            return;
+        }
+        gameState.isHardMode = !gameState.isHardMode;
+        event.target.innerText = gameState.isHardMode ? "困難" : "普通";
+        renderMap();
+    }
 
-    content.innerHTML = `
-        <div style="font-size: 50px; margin-bottom: 20px;">✉️</div>
-        <h3 style="color: #8b4513; margin: 0 0 15px 0; font-size: 22px;">時光膠囊啟封</h3>
-        <div style="color: #5d4037; line-height: 1.8; font-size: 16px; min-height: 100px; display: flex; align-items: center; justify-content: center; border-top: 1px solid #eee; border-bottom: 1px solid #eee; margin: 15px 0; padding: 15px 0;">
-            "${contentText}"
-        </div>
-        <button onclick="document.getElementById('capsule-overlay').remove()" 
-                style="margin-top: 20px; padding: 12px 40px; background: #81c784; 
-                color: white; border: none; border-radius: 25px; cursor: pointer; font-weight: bold; font-size: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                收好這份回憶
-        </button>
-    `;
+    function updateStamina() {
+        const now = Date.now();
+        const diff = now - gameState.lastUpdate;
+        const wait = 30 * 60 * 1000;
+        if (gameState.stamina < 24 && diff >= wait) {
+            gameState.stamina++;
+            gameState.lastUpdate += wait;
+            save();
+        }
+        const remaining = gameState.stamina < 24 ? Math.ceil((wait - (now - gameState.lastUpdate)) / 1000) : 0;
+        document.getElementById('ui-stamina').innerText = `${gameState.stamina}/24`;
+        document.getElementById('ui-timer').innerText = remaining > 0 ? 
+            `${Math.floor(remaining/60).toString().padStart(2,'0')}:${(remaining%60).toString().padStart(2,'0')}` : "MAX";
+            updateStatusBar();
+    }
 
-    overlay.appendChild(content);
-    document.body.appendChild(overlay);
+    function renderMap() {
+        const list = document.getElementById('stage-list');
+        list.innerHTML = '';
+        const config = REGION_CONFIG[gameState.currentRegionIdx];
+        
+        const regionData = POKEMON_DATA.filter(p => {
+            const id = parseInt(p.id);
+            return id >= config.range[0] && id <= config.range[1];
+        });
 
-    // 啟動進場動畫
-    setTimeout(() => {
-        overlay.style.opacity = '1';
-        content.style.transform = 'scale(1)';
-    }, 10);
+        regionData.forEach(p => {
+            const isUnlocked = gameState.unlocked.includes(p.id);
+            const isCaptured = gameState.captured.includes(p.id);
+            const isOwnedItem = gameState.items.includes(p.id);
+            
+            // 使用 PokeAPI 的高品質圖片 (或是你可以更換為其他來源)
+            // 這裡將 ID 轉為整數以符合 PokeAPI 格式
+            const imgId = parseInt(p.id);
+            const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${imgId}.png`;
+
+            const div = document.createElement('div');
+            div.id = `stage-${p.id}`;
+            div.className = `stage-item ${!isUnlocked ? 'locked' : ''} ${gameState.lastPlayed === p.id ? 'current' : ''}`;
+            
+            div.innerHTML = `
+                <div class="ball-icon ${isCaptured ? 'captured' : ''}"></div>
+                
+                <img class="pkmn-icon" src="${spriteUrl}" alt="${p.name}" loading="lazy">
+                
+                <div class="stage-info">
+                    <div class="stage-no">No.${p.id}</div>
+                    <div class="stage-name">${p.name}</div>
+                </div>
+                
+                ${p.hasMega ? `<div class="item-icon ${isOwnedItem ? 'owned' : ''}">M</div>` : ''}
+            `;
+            
+            div.onclick = () => {
+    if (!isUnlocked) return;
+    
+    // 1. 更新最後遊玩紀錄
+    gameState.lastPlayed = p.id;
+    save();
+    renderMap();
+
+    // 2. 開啟準備畫面
+    openPrep(p);
+};
+            list.appendChild(div);
+        });
+
+        document.getElementById('ui-dex').innerText = `${gameState.captured.length}/721`;
+        document.getElementById('ui-keys').innerText = gameState.keys;
+    }
+
+
+
+// 開啟準備畫面函式
+function openPrep(p) {
+    const overlay = document.getElementById('prep-overlay');
+    document.getElementById('prep-stage-name').innerText = p.name;
+    
+    // 判定 HP (依據企劃公式)
+    let hp = 2500;
+    if (gameState.isHardMode) hp = 4000;
+    else if (p.type === "Legendary") hp = 3000;
+    document.getElementById('prep-stage-hp').innerText = `目標 HP: ${hp} (模式: ${gameState.isHardMode ? '困難' : '普通'})`;
+
+    // 顯示隊伍 (這裡暫時寫死 4 個 Slot，之後可連動隊伍系統)
+    const teamDiv = document.getElementById('prep-team-slots');
+    teamDiv.innerHTML = '';
+    for(let i=1; i<=4; i++) {
+        teamDiv.innerHTML += `
+            <div style="text-align:center;">
+                <div style="width:50px; height:50px; background:#222; border-radius:50%; border:${i===1?'2px solid var(--accent-color)':'1px solid #666'}"></div>
+                <div style="font-size:10px; margin-top:5px;">Slot ${i}</div>
+            </div>`;
+    }
+
+    // 渲染型態道具 (通關10次解鎖邏輯)
+    const formOptions = document.getElementById('prep-form-options');
+    formOptions.innerHTML = '';
+    if (p.hasMega) {
+        // 檢查是否已獲得該寶可夢的道具 (假設 gameState.items 存有 "006_mega")
+        const itemKey = `${p.id}_mega`;
+        if (gameState.items.includes(itemKey)) {
+            formOptions.innerHTML = `<label><input type="checkbox" id="mega-check"> 觸發型態變化</label>`;
+        } else {
+            formOptions.innerHTML = `<span style="color:#777; font-size:12px;">尚未獲得型態道具 (需通關該關 10 次)</span>`;
+        }
+    } else {
+        formOptions.innerHTML = `<span style="color:#777; font-size:12px;">此寶可夢無特殊型態</span>`;
+    }
+
+    // 傳說之鑰判斷
+    document.getElementById('prep-key-option').style.display = (p.type === "Legendary") ? 'block' : 'none';
+
+    overlay.style.display = 'block';
 }
 
+function closePrep() {
+    document.getElementById('prep-overlay').style.display = 'none';
+}
+
+function startBattleLogic() {
+    if (gameState.stamina < 1) {
+        alert("體力不足！");
+        return;
+    }
+    // 扣除體力並儲存
+    gameState.stamina -= 1;
+    save();
+    updateStamina(); // 更新 UI 顯示
+    
+    // 進入戰鬥畫面 (下一階段開發)
+    alert("戰鬥開始！進入消除棋盤...");
+    closePrep();
+}
+function updateStatusBar() {
+    document.getElementById('ui-stamina').innerText = `${gameState.stamina}/24`;
+    document.getElementById('ui-dex').innerText = `${gameState.captured.length}/721`;
+    document.getElementById('ui-keys').innerText = gameState.keys;
+}
+    function scrollToLastPlayed() {
+        const target = document.getElementById(`stage-${gameState.lastPlayed}`);
+        if (target) target.scrollIntoView({ block: 'center' });
+    }
+
+    let scrollInterval;
+    function startScroll(dir) {
+        const container = document.getElementById('map-container');
+        scrollInterval = setInterval(() => { container.scrollTop += dir * 12; }, 16);
+    }
+    function stopScroll() { clearInterval(scrollInterval); }
+
+    function save() { localStorage.setItem('SHUFFLE_WEB_SAVE', JSON.stringify(gameState)); }
+
+    window.onload = init;
 </script>
+<div id="prep-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:200; color:white; padding-top:env(safe-area-inset-top);">
+    <div style="padding: 30px 20px; text-align: center;">
+        <h2 id="prep-stage-name" style="color:var(--accent-color); font-size: 24px;">寶可夢名稱</h2>
+        <p id="prep-stage-hp" style="color:#aaa; font-size: 14px;">目標 HP: --</p>
+
+        <div style="background:#333; border-radius:15px; padding:20px; margin: 25px 0;">
+            <p style="font-size:12px; color:var(--accent-color); margin-top:0;">Slot 1 為隊長 (進化位)</p>
+            <div id="prep-team-slots" style="display:flex; justify-content:space-around;">
+                </div>
+        </div>
+
+        <div style="background:#222; border-radius:10px; padding:15px; text-align:left; margin-bottom: 25px;">
+            <div id="prep-form-options" style="display:flex; flex-wrap:wrap; gap:10px;">
+                </div>
+            <div id="prep-key-option" style="margin-top:10px; display:none; border-top:1px solid #444; padding-top:10px;">
+                <label><input type="checkbox" id="use-key"> 使用傳說之鑰 (開啟捕捉判定)</label>
+            </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            <button onclick="startBattleLogic()" style="padding:18px; background:var(--accent-color); border:none; border-radius:35px; font-size:18px; font-weight:bold; color:black;">開始戰鬥 (⚡ 1)</button>
+            <button onclick="closePrep()" style="padding:12px; background:transparent; border:1px solid #555; color:#888; border-radius:35px;">返回地圖</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
