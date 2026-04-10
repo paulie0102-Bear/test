@@ -432,7 +432,9 @@ let battleData = {
     selectedTile: null
 };
 let currentCatchRate = 0;
+let currentSelectingSlot = 0;
 
+    
     function init() {
     const saved = localStorage.getItem('SHUFFLE_WEB_SAVE');
     if (saved) {
@@ -1058,6 +1060,20 @@ function openPrep(p) {
             </div>`;
     });
 
+    const teamDiv = document.getElementById('prep-team-slots');
+    teamDiv.innerHTML = '';
+    gameState.team.forEach((id, index) => {
+        const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(id)}.png`;
+        teamDiv.innerHTML += `
+            <div style="text-align:center; cursor:pointer;" onclick="openMemberSelector(${index})">
+                <img src="${spriteUrl}" style="width:55px; height:55px; background:#222; border-radius:50%; 
+                     border:${index===0 ? '3px solid #ffcc00' : '1px solid #666'}; padding:2px;">
+                <div style="font-size:10px; margin-top:5px; color:${index===0?'#ffcc00':'#ccc'}">
+                    ${index===0 ? '隊長 (Mega)' : '隊員 ' + (index + 1)}
+                </div>
+            </div>`;
+    });
+
     // --- 型態道具判斷與分支選單 ---
     const formOptions = document.getElementById('prep-form-options');
     formOptions.innerHTML = '';
@@ -1100,6 +1116,56 @@ function openPrep(p) {
     overlay.style.display = 'block';
 }
 
+/**
+ * 打開隊員選擇清單
+ * @param {number} slotIndex - 點擊的位置 (0, 1, 2, 3)
+ */
+function openMemberSelector(slotIndex) {
+    currentSelectingSlot = slotIndex;
+    const container = document.getElementById('pokemon-list-container');
+    container.innerHTML = '';
+
+    // 取得所有已捕獲的寶可夢 (gameState.captured)
+    if (!gameState.captured || gameState.captured.length === 0) {
+        container.innerHTML = '<p style="grid-column: span 4;">目前沒有可用的寶可夢</p>';
+    } else {
+        gameState.captured.forEach(id => {
+            const pInfo = POKEMON_DATA.find(x => x.id === id);
+            const isAlreadyInTeam = gameState.team.includes(id);
+            const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(id)}.png`;
+
+            container.innerHTML += `
+                <div class="selector-item" 
+                     style="opacity:${isAlreadyInTeam ? '0.4' : '1'}; cursor:${isAlreadyInTeam ? 'not-allowed' : 'pointer'};"
+                     onclick="${isAlreadyInTeam ? '' : `selectTeamMember('${id}')`}">
+                    <img src="${spriteUrl}" style="width:50px;">
+                    <div style="font-size:10px;">${pInfo ? pInfo.name : id}</div>
+                </div>`;
+        });
+    }
+
+    document.getElementById('selector-overlay').style.display = 'flex';
+}
+
+/**
+ * 實際替換隊員
+ * @param {string} id - 選中的寶可夢 ID
+ */
+function selectTeamMember(id) {
+    // 1. 更新資料
+    gameState.team[currentSelectingSlot] = id;
+    
+    // 2. 存檔
+    save();
+
+    // 3. 關閉選擇器
+    document.getElementById('selector-overlay').style.display = 'none';
+
+    // 4. 重新刷新準備畫面，讓頭像立刻更新
+    const pInfo = POKEMON_DATA.find(x => x.id === gameState.lastPlayed);
+    if (pInfo) openPrep(pInfo);
+}
+    
 function closePrep() {
     document.getElementById('prep-overlay').style.display = 'none';
 }
@@ -1374,6 +1440,16 @@ function manualLoad() {
         </div>
     </div>
 </div>
+
+<div id="selector-overlay" class="overlay" style="display:none; z-index:200;">
+    <div class="card" style="width:90%; max-height:80vh; overflow-y:auto;">
+        <h3>選擇隊員</h3>
+        <div id="pokemon-list-container" style="display:grid; grid-template-columns: repeat(4, 1x); gap:10px;">
+            </div>
+        <button onclick="document.getElementById('selector-overlay').style.display='none'" style="margin-top:20px;">取消</button>
+    </div>
+</div>
+    
     
 <style>
     /* 棋子樣式 */
