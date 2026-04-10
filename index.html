@@ -277,28 +277,7 @@ body {
     </div>
 
 <div id="settings-trigger" onclick="toggleSettings(true)" style="position:fixed; top:10px; right:10px; cursor:pointer; font-size:24px; z-index:100;">⚙️</div>
-
-<div id="settings-overlay" class="overlay" style="display:none; flex-direction:column; align-items:center; justify-content:center; background:rgba(0,0,0,0.85); z-index:1000;">
-    <div class="settings-card" style="background:#333; color:white; padding:20px; border-radius:10px; width:300px; text-align:center;">
-        <h3>系統設置</h3>
-        <hr>
-        
-        <div style="margin:20px 0;">
-            <p>瀏覽器儲存空間使用率</p>
-            <div style="width:100%; height:15px; background:#111; border-radius:10px; overflow:hidden;">
-                <div id="storage-bar" style="width: 0%; height:100%; background:var(--accent-color, #ffcc00); transition: width 0.3s;"></div>
-            </div>
-            <small id="storage-text">0.00 / 5.00 MB (0%)</small>
-        </div>
-
-        <div style="display:flex; flex-direction:column; gap:10px;">
-            <button onclick="manualSave()" class="side-btn unlocked" style="width:100%">手動儲存存檔</button>
-            <button onclick="manualLoad()" class="side-btn" style="width:100%">讀取存檔檔案</button>
-            <button onclick="toggleSettings(false)" style="background:transparent; color:#888; border:none; margin-top:10px; cursor:pointer;">返回遊戲</button>
-        </div>
-    </div>
-</div>
-    
+   
 
 <script>
     /** 地區配置 **/
@@ -1336,6 +1315,28 @@ function manualLoad() {
     </div>
 </div>
 
+
+<div id="settings-overlay" class="overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; flex-direction:column; align-items:center; justify-content:center; background:rgba(0,0,0,0.85); z-index:1000;">
+    <div class="settings-card" style="background:#333; color:white; padding:20px; border-radius:10px; width:300px; text-align:center; box-shadow: 0 0 20px rgba(0,0,0,0.5);">
+        <h3>系統設置</h3>
+        <hr style="border: 0; border-top: 1px solid #555;">
+        
+        <div style="margin:20px 0;">
+            <p style="margin-bottom: 5px;">瀏覽器儲存空間使用率</p>
+            <div style="width:100%; height:15px; background:#111; border-radius:10px; overflow:hidden;">
+                <div id="storage-bar" style="width: 0%; height:100%; background:var(--accent-color, #ffcc00); transition: width 0.3s;"></div>
+            </div>
+            <small id="storage-text" style="color: #bbb;">0.00 / 5.00 MB (0%)</small>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:10px;">
+            <button onclick="manualSave()" class="side-btn unlocked" style="width:100%; cursor:pointer; padding:10px; border-radius:5px;">手動儲存存檔</button>
+            <button onclick="manualLoad()" class="side-btn" style="width:100%; cursor:pointer; padding:10px; border-radius:5px;">讀取存檔檔案</button>
+            <button onclick="toggleSettings(false)" style="background:transparent; color:#888; border:none; margin-top:10px; cursor:pointer; text-decoration:underline;">返回遊戲</button>
+        </div>
+    </div>
+</div>
+    
 <style>
     /* 棋子樣式 */
     .tile {
