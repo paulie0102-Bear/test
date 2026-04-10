@@ -711,10 +711,18 @@ function handleElimination(matchSet) {
     let finalDamage = (baseDamage * matchSet.size) * formMultiplier * comboMultiplier;
     
     battleData.currentHP -= Math.floor(finalDamage);
-    if (battleData.currentHP < 0) battleData.currentHP = 0;
+if (battleData.currentHP < 0) battleData.currentHP = 0;
 
-    updateBattleUI();
-    showCombo();
+updateBattleUI();
+showCombo();
+
+// ⭐⭐⭐ 這行是關鍵
+if (battleData.currentHP <= 0) {
+    setTimeout(() => {
+        checkBattleEnd();
+    }, 300);
+    return; // 直接中斷，不再進入消除與天降
+}
 
     const tiles = document.querySelectorAll('.tile');
     matchSet.forEach(idx => {
@@ -735,6 +743,7 @@ function showCombo() {
 }
 
 function refillBoard() {
+    if (battleData.currentHP <= 0) return;
     for (let c = 0; c < 6; c++) {
         let emptySpaces = 0;
         for (let r = 5; r >= 0; r--) {
