@@ -276,6 +276,28 @@ body {
         <div class="arrow-btn" onmousedown="startScroll(1)" onmouseup="stopScroll()" ontouchstart="startScroll(1)" ontouchend="stopScroll()">↓</div>
     </div>
 
+<div id="settings-trigger" onclick="toggleSettings(true)" style="position:fixed; top:10px; right:10px; cursor:pointer; font-size:24px; z-index:100;">⚙️</div>
+
+<div id="settings-overlay" class="overlay" style="display:none; flex-direction:column; align-items:center; justify-content:center; background:rgba(0,0,0,0.85); z-index:1000;">
+    <div class="settings-card" style="background:#333; color:white; padding:20px; border-radius:10px; width:300px; text-align:center;">
+        <h3>系統設置</h3>
+        <hr>
+        
+        <div style="margin:20px 0;">
+            <p>瀏覽器儲存空間使用率</p>
+            <div style="width:100%; height:15px; background:#111; border-radius:10px; overflow:hidden;">
+                <div id="storage-bar" style="width: 0%; height:100%; background:var(--accent-color, #ffcc00); transition: width 0.3s;"></div>
+            </div>
+            <small id="storage-text">0.00 / 5.00 MB (0%)</small>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:10px;">
+            <button onclick="manualSave()" class="side-btn unlocked" style="width:100%">手動儲存存檔</button>
+            <button onclick="manualLoad()" class="side-btn" style="width:100%">讀取存檔檔案</button>
+            <button onclick="toggleSettings(false)" style="background:transparent; color:#888; border:none; margin-top:10px; cursor:pointer;">返回遊戲</button>
+        </div>
+    </div>
+</div>
     
 
 <script>
@@ -511,18 +533,21 @@ let currentCatchRate = 0;
     const isUnlocked = gameState.unlocked.includes(p.id);
     const isCaptured = gameState.captured.includes(p.id);
     
-    // --- 【修正重點】支援 X/Y 分流的 Mega 石檢查 ---
-    const isOwnedItem = gameState.items.includes(`${p.id}_mega`) || 
-                        gameState.items.includes(`${p.id}_mega_x`) || 
-                        gameState.items.includes(`${p.id}_mega_y`);
+    // 檢查是否已擁有任何一種該寶可夢的 Mega 石
+    const hasAnyMegaStone = gameState.items.includes(`${p.id}_mega`) || 
+                            gameState.items.includes(`${p.id}_mega_x`) || 
+                            gameState.items.includes(`${p.id}_mega_y`);
     
     const imgId = parseInt(p.id);
     const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${imgId}.png`;
+    
+    // 設定 Mega 石圖示 (預設使用該寶可夢名稱命名的石頭，或通用石)
+    // 這裡建議預設顯示該怪物的專屬石路徑，PokeAPI 道具命名通常是 "lucarionite" 之類的，
+    // 若要簡單化，我們統一顯示一個漂亮的 Mega 標誌圖
+    const megaIconUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/mega-ring.png`;
 
     const div = document.createElement('div');
     div.id = `stage-${p.id}`;
-    
-    // 設定類名：確保 locked 與 current 狀態正確切換
     div.className = `stage-item ${!isUnlocked ? 'locked' : ''} ${gameState.lastPlayed === p.id ? 'current' : ''}`;
     
     div.innerHTML = `
@@ -538,7 +563,9 @@ let currentCatchRate = 0;
         </div>
         
         ${p.hasMega ? `
-            <div class="mega-badge ${isOwnedItem ? 'owned' : ''}"></div>
+            <div class="mega-item-icon ${hasAnyMegaStone ? 'owned' : 'not-owned'}" 
+                 style="background-image: url('${megaIconUrl}');">
+            </div>
         ` : ''}
     `;
     
@@ -816,7 +843,7 @@ function checkBattleEnd() {
 
     // 勝利條件
     if (battleData.currentHP <= 0) {
-        battleData.isEnding = true; // 確定勝利，鎖定棋盤
+        battleData.isEnding = true; 
 
         const pId = gameState.lastPlayed;
         const pInfo = POKEMON_DATA.find(p => p.id === pId);
@@ -827,17 +854,36 @@ function checkBattleEnd() {
             gameState.unlocked.push(nextId);
         }
 
-        // 2. Mega 石計算
+        // 2. Mega 石計算與進度顯示 (優化版)
         let megaRewardMsg = "";
+        let progress = ""; 
+        
         if (pInfo && pInfo.hasMega) {
             if (!gameState.clearCounts) gameState.clearCounts = {};
-            gameState.clearCounts[pId] = (gameState.clearCounts[pId] || 0) + 1;
-            const count = gameState.clearCounts[pId];
-            megaRewardMsg = handleBranchMegaLogic(pId, count);
             
-            if (pId !== "006" && pId !== "150" && count === 5 && !gameState.items.includes(`${pId}_mega`)) {
-                gameState.items.push(`${pId}_mega`);
-                megaRewardMsg = `<div style="color:#ffcc00; margin-top:10px;">★ 獲得 ${pInfo.name} Mega 石 ★</div>`;
+            // 檢查「進入此函式前」是否已經擁有石頭
+            const alreadyOwned = gameState.items.includes(`${pId}_mega`) || 
+                                 gameState.items.includes(`${pId}_mega_x`) || 
+                                 gameState.items.includes(`${pId}_mega_y`);
+
+            if (!alreadyOwned) {
+                // 還沒拿過才累加次數
+                gameState.clearCounts[pId] = (gameState.clearCounts[pId] || 0) + 1;
+                const count = gameState.clearCounts[pId];
+                const maxCount = (pId === "006" || pId === "150") ? 10 : 5;
+
+                // 判定是否獲得獎勵
+                megaRewardMsg = handleBranchMegaLogic(pId, count);
+                if (pId !== "006" && pId !== "150" && count === 5) {
+                    gameState.items.push(`${pId}_mega`);
+                    megaRewardMsg = `<div style="color:#ffcc00; margin-top:10px;">★ 獲得 ${pInfo.name} Mega 石 ★</div>`;
+                }
+
+                // 顯示進度 (因為這次剛滿 5/5 或還沒滿，所以要顯示)
+                progress = `<br><small style="color:#bbb">Mega 挑戰進度：${count}/${maxCount}</small>`;
+            } else {
+                // 如果早就拿過了，progress 保持為空字串，這會達成你「取消通關 X/5 次」的要求
+                progress = ""; 
             }
         }
 
@@ -846,22 +892,19 @@ function checkBattleEnd() {
         save(); 
 
         if (isCaptured) {
-            const maxCount = (pId === "006" || pId === "150") ? 10 : 5;
-            const progress = (pInfo && pInfo.hasMega) ? `<br><small style="color:#bbb">Mega 挑戰進度：${gameState.clearCounts[pId]}/${maxCount}</small>` : "";
-            
             showResultCard("挑戰成功", `下一關 ${nextId} 已解鎖！${progress}${megaRewardMsg}`, () => {
-                closeBattle(); // 先關閉戰鬥畫面回到地圖
+                closeBattle(); 
                 battleData.isEnding = false; 
+                renderMap(); // 確保回到地圖時立刻刷新 Mega 石亮起狀態
             });
         } else {
-            showResultCard("挑戰成功", `下一關 ${nextId} 已解鎖！${megaRewardMsg}`, () => {
-                // 【修改 2】不關閉戰鬥畫面，直接由 handleBattleWin 接手切換到捕捉畫面
+            showResultCard("挑戰成功", `下一關 ${nextId} 已解鎖！${progress}${megaRewardMsg}`, () => {
                 battleData.isEnding = false; 
                 handleBattleWin(); 
             });
         }
         return; 
-    } 
+    }
     
     // 失敗條件
     else if (battleData.moves <= 0) {
@@ -1126,6 +1169,82 @@ function updateStatusBar() {
     function save() { localStorage.setItem('SHUFFLE_WEB_SAVE', JSON.stringify(gameState)); }
 
     window.onload = init;
+
+    /** 顯示/隱藏設置界面並更新容量資訊 **/
+function toggleSettings(show) {
+    const overlay = document.getElementById('settings-overlay');
+    overlay.style.display = show ? 'flex' : 'none';
+    if (show) {
+        updateStorageStatus();
+    }
+}
+
+/** 計算儲存空間消耗百分比 **/
+function updateStorageStatus() {
+    let totalUsed = 0;
+    // 計算 localStorage 中所有 key 的總長度
+    for (let key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+            totalUsed += (localStorage[key].length + key.length) * 2; // UTF-16 佔 2 bytes
+        }
+    }
+
+    const usedMB = (totalUsed / (1024 * 1024)).toFixed(2);
+    const limitMB = 5.00; // 瀏覽器 localStorage 限制通常為 5MB
+    const percent = ((usedMB / limitMB) * 100).toFixed(1);
+
+    document.getElementById('storage-bar').style.width = `${percent}%`;
+    document.getElementById('storage-text').innerText = `${usedMB} / ${limitMB} MB (${percent}%)`;
+    
+    // 如果快爆了，改變顏色提醒
+    document.getElementById('storage-bar').style.background = percent > 80 ? "#ff5555" : "#ffcc00";
+}
+
+/** 手動導出 JSON 存檔檔案 **/
+function manualSave() {
+    const dataStr = JSON.stringify(gameState);
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = `Shuffle_Save_${new Date().toISOString().slice(0,10)}.json`;
+
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+    alert("存檔檔案已下載至您的設備。");
+}
+
+/** 手動讀取 JSON 存檔檔案 **/
+function manualLoad() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+
+    input.onchange = e => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.readAsText(file, 'UTF-8');
+
+        reader.onload = readerEvent => {
+            try {
+                const content = JSON.parse(readerEvent.target.result);
+                // 簡單驗證是否為本遊戲存檔 (檢查是否有 captured 欄位)
+                if (content.captured && content.unlocked) {
+                    if (confirm("確定要蓋過目前的進度嗎？讀取後遊戲將重新整理。")) {
+                        localStorage.setItem('SHUFFLE_WEB_SAVE', JSON.stringify(content));
+                        location.reload(); // 重新整理以載入新數據
+                    }
+                } else {
+                    alert("無效的存檔檔案格式！");
+                }
+            } catch (err) {
+                alert("讀取失敗：檔案格式錯誤。");
+            }
+        };
+    };
+    input.click();
+}
+    
 </script>
 <div id="prep-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:200; color:white; padding-top:env(safe-area-inset-top);">
     <div style="padding: 30px 20px; text-align: center;">
