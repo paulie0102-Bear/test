@@ -99,7 +99,9 @@ body {
 }
 
 /* 關卡單元：優化手機點擊感 */
+/* 修改 stage-item 基礎樣式，確保定位參考點 */
 .stage-item {
+    position: relative; /* 必須：讓內部的 mega-badge 能精確定位 */
     background: #444;
     margin: 8px 0;
     padding: 12px;
@@ -107,13 +109,66 @@ body {
     display: flex;
     align-items: center;
     border: 2px solid transparent;
-    min-height: 75px; /* 增加最小高度，符合拇指點擊尺寸 */
+    min-height: 75px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     box-sizing: border-box;
     touch-action: manipulation;
+    overflow: visible; /* 確保徽章不會被切掉 */
 }
 
-.stage-item:active { transform: scale(0.97); background: #555; } /* 點擊回饋 */
+.stage-item.locked { 
+    opacity: 0.5; /* 稍微調高一點，讓標示在鎖定時也能看到 */
+    filter: grayscale(1); 
+    pointer-events: none; 
+}
+
+.stage-item.current { 
+    border-color: var(--accent-color); 
+    background: #505050; 
+}
+
+.stage-item:active { 
+    transform: scale(0.97); 
+    background: #555; 
+}
+
+/* 強化 Mega 徽章視覺 */
+.mega-badge {
+    position: absolute;
+    bottom: 8px; /* 稍微往上調一點，避免貼齊邊緣 */
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    background: #222; /* 預設使用深色，與 #444 背景拉開對比 */
+    border: 2px solid #888; /* 亮色邊框 */
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    z-index: 10; /* 確保在圖片和文字之上 */
+    transition: all 0.3s ease;
+}
+
+.mega-badge::before {
+    content: 'Ω'; 
+    color: rgba(255,255,255,0.7);
+    font-size: 13px;
+    font-weight: bold;
+}
+
+/* 擁有道具時的華麗效果 */
+.mega-badge.owned {
+    background: linear-gradient(135deg, #ff7eb3 0%, #ff758c 100%);
+    border-color: #fff;
+    filter: brightness(1.1);
+    box-shadow: 0 0 8px rgba(255, 126, 179, 0.8);
+}
+
+.mega-badge.owned::before {
+    color: white;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
 
 .pkmn-icon {
     width: 55px;
@@ -135,9 +190,6 @@ body {
 
 .stage-no { font-size: 11px; color: #bbb; margin-bottom: 2px; }
 .stage-name { font-size: 16px; font-weight: bold; }
-
-.stage-item.locked { opacity: 0.3; filter: grayscale(1); pointer-events: none; }
-.stage-item.current { border-color: var(--accent-color); background: #555; }
 
 /* 導航箭頭：向上移動避開底部系統橫條 */
 #nav-arrows {
@@ -192,48 +244,6 @@ body {
     border: 2px solid #333;
     border-radius: 50%;
 }
-
-/* --- 修正後的 Mega 標示區塊 --- */
-
-/* 基礎徽章 */
-.mega-badge {
-    position: absolute;
-    bottom: 5px;
-    right: 5px;
-    width: 24px;
-    height: 24px;
-    background: #333; /* 未擁有時為深色 */
-    border: 2px solid #666;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 0 5px rgba(0,0,0,0.3);
-    transition: all 0.3s ease;
-}
-
-/* 徽章內的符號 (使用 Ω 或 M) */
-.mega-badge::before {
-    content: 'Ω'; 
-    color: rgba(255,255,255,0.5);
-    font-size: 14px;
-    font-weight: bold;
-}
-
-/* 當擁有道具時 (與 JS 中的 .mega-badge ${isOwnedItem ? 'owned' : ''} 對接) */
-.mega-badge.owned {
-    background: linear-gradient(135deg, #ff7eb3 0%, #ff758c 100%);
-    border-color: white;
-    filter: brightness(1.2) saturate(1.2);
-    box-shadow: 0 0 10px rgba(255, 126, 179, 0.8);
-}
-
-/* 擁有時符號變亮 */
-.mega-badge.owned::before {
-    color: white;
-    text-shadow: 0 0 3px rgba(0,0,0,0.5);
-}
-
 
     </style>
 </head>
@@ -498,43 +508,49 @@ let currentCatchRate = 0;
     });
 
     regionData.forEach(p => {
-        const isUnlocked = gameState.unlocked.includes(p.id);
-        const isCaptured = gameState.captured.includes(p.id);
-        const isOwnedItem = gameState.items.includes(`${p.id}_mega`);
-        
-        const imgId = parseInt(p.id);
-        const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${imgId}.png`;
+    const isUnlocked = gameState.unlocked.includes(p.id);
+    const isCaptured = gameState.captured.includes(p.id);
+    
+    // --- 【修正重點】支援 X/Y 分流的 Mega 石檢查 ---
+    const isOwnedItem = gameState.items.includes(`${p.id}_mega`) || 
+                        gameState.items.includes(`${p.id}_mega_x`) || 
+                        gameState.items.includes(`${p.id}_mega_y`);
+    
+    const imgId = parseInt(p.id);
+    const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${imgId}.png`;
 
-        const div = document.createElement('div');
-        div.id = `stage-${p.id}`;
-        // 已解鎖但未打過的下一關也會顯示彩色，若要更嚴格，可以檢查 nextId 是否已解鎖
-        div.className = `stage-item ${!isUnlocked ? 'locked' : ''} ${gameState.lastPlayed === p.id ? 'current' : ''}`;
+    const div = document.createElement('div');
+    div.id = `stage-${p.id}`;
+    
+    // 設定類名：確保 locked 與 current 狀態正確切換
+    div.className = `stage-item ${!isUnlocked ? 'locked' : ''} ${gameState.lastPlayed === p.id ? 'current' : ''}`;
+    
+    div.innerHTML = `
+        <div class="ball-icon ${isCaptured ? 'captured' : ''}"></div>
         
-        div.innerHTML = `
-            <div class="ball-icon ${isCaptured ? 'captured' : ''}"></div>
-            
-            <img class="pkmn-icon" src="${spriteUrl}" alt="${p.name}" 
-                 style="${!isUnlocked ? 'filter: brightness(0) opacity(0.5);' : ''}" loading="lazy">
-            
-            <div class="stage-info">
-                <div class="stage-no">No.${p.id}</div>
-                <div class="stage-name">${p.name}</div>
-            </div>
-            
-            ${p.hasMega ? `
-                <div class="mega-badge ${isOwnedItem ? 'owned' : ''}"></div>
-            ` : ''}
-        `;
+        <img class="pkmn-icon" src="${spriteUrl}" alt="${p.name}" 
+             style="${!isUnlocked ? 'filter: brightness(0) opacity(0.5);' : ''}" 
+             draggable="false" loading="lazy">
         
-        div.onclick = () => {
-            if (!isUnlocked) return;
-            gameState.lastPlayed = p.id;
-            save();
-            renderMap();
-            openPrep(p);
-        };
-        list.appendChild(div);
-    });
+        <div class="stage-info">
+            <div class="stage-no">No.${p.id}</div>
+            <div class="stage-name">${p.name}</div>
+        </div>
+        
+        ${p.hasMega ? `
+            <div class="mega-badge ${isOwnedItem ? 'owned' : ''}"></div>
+        ` : ''}
+    `;
+    
+    div.onclick = () => {
+        if (!isUnlocked) return;
+        gameState.lastPlayed = p.id;
+        save();
+        renderMap();
+        openPrep(p);
+    };
+    list.appendChild(div);
+});
 
     // 更新頂部狀態列
     if(document.getElementById('ui-dex')) {
