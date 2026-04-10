@@ -590,35 +590,40 @@ function initBoard() {
 }
 
 function handleTileClick(index) {
+    // --- 【新增攔截】如果敵人已經死了，禁止任何操作 ---
+    if (battleData.currentHP <= 0) {
+        checkBattleEnd(); // 再次確保結算畫面有出來
+        return;
+    }
+
     const tiles = document.querySelectorAll('.tile');
     
-    // 如果還沒選第一顆
     if (battleData.selectedTile === null) {
         battleData.selectedTile = index;
         tiles[index].classList.add('selected');
     } 
-    // 如果點了「同一顆」棋子：取消選取
     else if (battleData.selectedTile === index) {
         tiles[index].classList.remove('selected');
         battleData.selectedTile = null;
     } 
-    // 如果選了「第二顆」不同位置的棋子：執行交換
     else {
         const firstIndex = battleData.selectedTile;
         
-        // 1. 執行數據與畫面交換
+        // 執行交換
         swapTiles(firstIndex, index);
         
-        // 2. 清除選取狀態
         tiles[firstIndex].classList.remove('selected');
         battleData.selectedTile = null;
         
-        // 3. 消耗步數並執行消除判定
+        // 消耗步數
         battleData.moves--;
         updateBattleUI();
+        
+        // 觸發消除判定（判定開始時會檢查 HP）
         checkMatches(); 
     }
 }
+
 
 function swapTiles(idx1, idx2) {
     // 陣列數據交換
