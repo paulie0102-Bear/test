@@ -1010,7 +1010,7 @@ gameState.team.forEach((id, index) => {
         </div>`;
     });
 
-    // 渲染型態道具 (通關10次解鎖邏輯)
+    // 渲染型態道具 (通關5次解鎖邏輯)
     const formOptions = document.getElementById('prep-form-options');
     formOptions.innerHTML = '';
     if (p.hasMega) {
@@ -1019,7 +1019,7 @@ gameState.team.forEach((id, index) => {
         if (gameState.items.includes(itemKey)) {
             formOptions.innerHTML = `<label><input type="checkbox" id="mega-check"> 觸發型態變化</label>`;
         } else {
-            formOptions.innerHTML = `<span style="color:#777; font-size:12px;">尚未獲得型態道具 (需通關該關 10 次)</span>`;
+            formOptions.innerHTML = `<span style="color:#777; font-size:12px;">尚未獲得型態道具 (需通關該關 5 次)</span>`;
         }
     } else {
         formOptions.innerHTML = `<span style="color:#777; font-size:12px;">此寶可夢無特殊型態</span>`;
