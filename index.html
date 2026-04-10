@@ -590,9 +590,9 @@ function initBoard() {
 }
 
 function handleTileClick(index) {
-    // --- 【新增攔截】如果敵人已經死了，禁止任何操作 ---
-    if (battleData.currentHP <= 0) {
-        checkBattleEnd(); // 再次確保結算畫面有出來
+    // --- 【強化攔截】敵人已死、步數已滿、或正在結算中，禁止點擊 ---
+    if (battleData.currentHP <= 0 || battleData.moves <= 0 || battleData.isEnding) {
+        checkBattleEnd(); 
         return;
     }
 
@@ -612,15 +612,20 @@ function handleTileClick(index) {
         // 執行交換
         swapTiles(firstIndex, index);
         
+        // 清除選取狀態
         tiles[firstIndex].classList.remove('selected');
         battleData.selectedTile = null;
         
-        // 消耗步數
+        // --- 【修正步數邏輯】 ---
+        // 確定交換後扣除步數，並更新 UI
         battleData.moves--;
         updateBattleUI();
         
-        // 觸發消除判定（判定開始時會檢查 HP）
+        // 觸發判定
         checkMatches(); 
+        
+        // 如果扣完步數剛好歸零，且這波點擊沒造成消除（由 checkMatches 處理結算）
+        // 這裡不需要額外補 checkBattleEnd，交給 checkMatches 結尾即可
     }
 }
 
@@ -649,7 +654,7 @@ function closeBattle() {
 }
 
 function checkMatches() {
-    // 【回合/天降開始檢查】
+    // 每一輪判定開始前，先看敵人倒下沒
     if (battleData.currentHP <= 0) {
         checkBattleEnd();
         return; 
@@ -658,7 +663,7 @@ function checkMatches() {
     let board = battleData.board;
     let toMatch = new Set();
 
-    // 橫向掃描
+    // --- 橫向與縱向掃描 (維持你原本的邏輯) ---
     for (let r = 0; r < 6; r++) {
         for (let c = 0; c < 4; c++) {
             let idx = r * 6 + c;
@@ -670,8 +675,6 @@ function checkMatches() {
             }
         }
     }
-
-    // 縱向掃描
     for (let c = 0; c < 6; c++) {
         for (let r = 0; r < 4; r++) {
             let idx = r * 6 + c;
@@ -687,11 +690,13 @@ function checkMatches() {
     if (toMatch.size > 0) {
         handleElimination(toMatch);
     } else {
-        // Combo 完全結束
+        // --- 【關鍵修正】 Combo 結束時的處理 ---
         battleData.combo = 0;
-        document.getElementById('combo-text').style.display = 'none';
+        const comboEl = document.getElementById('combo-text');
+        if (comboEl) comboEl.style.display = 'none';
         
-        // 如果 Combo 結束但怪還沒死，檢查是否還有步數
+        // 只要不再有消除，就立刻檢查是否結束（輸或贏）
+        // 這樣步數到 0 時才會跳出視窗
         checkBattleEnd();
     }
 }
@@ -702,6 +707,7 @@ function handleElimination(matchSet) {
     const pkmnId = battleData.board[representativeIdx].pokemonId;
     const pkmnInfo = POKEMON_DATA.find(p => p.id === pkmnId);
     
+    // 計算傷害
     let baseDamage = (pkmnInfo && pkmnInfo.type === "Legendary") ? 70 : 50;
     let formMultiplier = 1.0;
     const megaCheck = document.getElementById('mega-check');
@@ -710,30 +716,40 @@ function handleElimination(matchSet) {
     let comboMultiplier = 1 + (battleData.combo - 1) * 0.05;
     let finalDamage = (baseDamage * matchSet.size) * formMultiplier * comboMultiplier;
     
-    battleData.currentHP -= Math.floor(finalDamage);
-if (battleData.currentHP < 0) battleData.currentHP = 0;
+    // 扣除 HP 並確保不為負數
+    battleData.currentHP = Math.max(0, battleData.currentHP - Math.floor(finalDamage));
 
-updateBattleUI();
-showCombo();
+    updateBattleUI();
+    showCombo();
 
-// ⭐⭐⭐ 這行是關鍵
-if (battleData.currentHP <= 0) {
-    setTimeout(() => {
-        checkBattleEnd();
-    }, 300);
-    return; // 直接中斷，不再進入消除與天降
-}
-
+    // 執行消除視覺效果
     const tiles = document.querySelectorAll('.tile');
     matchSet.forEach(idx => {
         tiles[idx].style.opacity = '0';
         battleData.board[idx].pokemonId = null;
     });
 
-    // 這裡直接呼叫補位，由下一輪 checkMatches 檢查 HP
-    setTimeout(() => {
-        refillBoard();
-    }, 500);
+    // --- 關鍵修正邏輯 ---
+    if (battleData.currentHP <= 0) {
+        // 1. 設置一個旗標防止 handleTileClick 繼續運作
+        battleData.isEnding = true; 
+
+        // 2. 停止背景所有消除動作，延遲半秒後直接結算
+        // 不需要用 while(id--)，改用邏輯分流即可
+        setTimeout(() => {
+            checkBattleEnd();
+        }, 500);
+    } else {
+        // 3. 只有沒贏的情況下，才在 500ms 後補位
+        setTimeout(() => {
+            // 補位前再次檢查，預防非同步狀態產生的 Bug
+            if (battleData.currentHP > 0) {
+                refillBoard();
+            } else {
+                checkBattleEnd();
+            }
+        }, 500);
+    }
 }
 
 function showCombo() {
@@ -777,7 +793,13 @@ function renderBoard() {
 }
 
 function checkBattleEnd() {
+    // 防止重複執行結算邏輯
+    if (battleData.isEnding) return;
+
+    // 勝利條件
     if (battleData.currentHP <= 0) {
+        battleData.isEnding = true; // 標記正在結算
+        
         const pId = gameState.lastPlayed;
         const pInfo = POKEMON_DATA.find(p => p.id === pId);
 
@@ -787,17 +809,14 @@ function checkBattleEnd() {
             gameState.unlocked.push(nextId);
         }
 
-        // 2. Mega 石計算
+        // 2. Mega 石計算 (維持原樣)
         let megaRewardMsg = "";
         if (pInfo && pInfo.hasMega) {
             if (!gameState.clearCounts) gameState.clearCounts = {};
             gameState.clearCounts[pId] = (gameState.clearCounts[pId] || 0) + 1;
             const count = gameState.clearCounts[pId];
-            
-            // 呼叫處理分歧獎勵的函式（現在改回傳字串）
             megaRewardMsg = handleBranchMegaLogic(pId, count);
             
-            // 一般 Mega 石處理
             if (pId !== "006" && pId !== "150" && count === 5 && !gameState.items.includes(`${pId}_mega`)) {
                 gameState.items.push(`${pId}_mega`);
                 megaRewardMsg = `<div style="color:#ffcc00; margin-top:10px;">★ 獲得 ${pInfo.name} Mega 石 ★</div>`;
@@ -806,29 +825,35 @@ function checkBattleEnd() {
 
         // 3. 捕捉分流判斷
         const isCaptured = gameState.captured.includes(pId);
+        save(); // 統一在彈窗前存檔
+
         if (isCaptured) {
             const maxCount = (pId === "006" || pId === "150") ? 10 : 5;
             const progress = (pInfo && pInfo.hasMega) ? `<br><small style="color:#bbb">Mega 挑戰進度：${gameState.clearCounts[pId]}/${maxCount}</small>` : "";
             
-            save();
-            // 使用小卡取代 alert
             showResultCard("挑戰成功", `下一關 ${nextId} 已解鎖！${progress}${megaRewardMsg}`, () => {
-                closeBattle(); // 點確認後回地圖
+                battleData.isEnding = false; // 恢復旗標
+                closeBattle();
             });
         } else {
-            save(); 
-            // 如果還沒抓過，我們先顯示「通關並解鎖」的小卡，確認後再進入捕捉畫面
             showResultCard("挑戰成功", `下一關 ${nextId} 已解鎖！${megaRewardMsg}`, () => {
+                battleData.isEnding = false; // 恢復旗標
                 handleBattleWin(); 
             });
         }
-    } else if (battleData.moves <= 0) {
+        return; 
+    } 
+    
+    // 失敗條件：必須在 HP > 0 且 步數 <= 0 且 「目前沒有任何消除進行中」時觸發
+    // 如果 handleElimination 還在跑，不應該觸發這個
+    else if (battleData.moves <= 0) {
+        battleData.isEnding = true;
         showResultCard("挑戰失敗", "步數已用盡，請再接再厲！", () => {
+            battleData.isEnding = false;
             closeBattle();
         });
     }
 }
-
 // 稍微修改獎勵邏輯，讓它回傳字串而不是自己跳 alert
 function handleBranchMegaLogic(pId, count) {
     const xStone = `${pId}_mega_x`;
