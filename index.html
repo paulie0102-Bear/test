@@ -1040,82 +1040,78 @@ function exitCatch() {
     // 開啟準備畫面函式
 function openPrep(p) {
     const overlay = document.getElementById('prep-overlay');
-    document.getElementById('prep-stage-name').innerText = p.name;
     
-    // 判定目標 HP
+    // 安全檢查：確保元素存在再執行，避免報錯
+    const stageName = document.getElementById('prep-stage-name');
+    const stageHp = document.getElementById('prep-stage-hp');
+    const teamDiv = document.getElementById('prep-team-slots');
+    const formOptions = document.getElementById('prep-form-options');
+    const keyOption = document.getElementById('prep-key-option');
+
+    if (stageName) stageName.innerText = p.name;
+    
+    // 1. 判定目標 HP (依據模式與種類)
     let hp = 2500;
     if (gameState.isHardMode) hp = 4000;
     else if (p.type === "Legendary") hp = 3000;
-    document.getElementById('prep-stage-hp').innerText = `目標 HP: ${hp} (模式: ${gameState.isHardMode ? '困難' : '普通'})`;
+    if (stageHp) stageHp.innerText = `目標 HP: ${hp} (模式: ${gameState.isHardMode ? '困難' : '普通'})`;
 
-    // 顯示隊伍
-    const teamDiv = document.getElementById('prep-team-slots');
-    teamDiv.innerHTML = '';
-    gameState.team.forEach((id, index) => {
-        const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(id)}.png`;
-        teamDiv.innerHTML += `
-            <div style="text-align:center;">
-                <img src="${spriteUrl}" style="width:50px; height:50px; background:#222; border-radius:50%; border:${index===0?'2px solid var(--accent-color)':'1px solid #666'}">
-                <div style="font-size:10px; margin-top:5px;">小隊成員 ${index + 1}</div>
-            </div>`;
-    });
-
-    const teamDiv = document.getElementById('prep-team-slots');
-    teamDiv.innerHTML = '';
-    gameState.team.forEach((id, index) => {
-        const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(id)}.png`;
-        teamDiv.innerHTML += `
-            <div style="text-align:center; cursor:pointer;" onclick="openMemberSelector(${index})">
-                <img src="${spriteUrl}" style="width:55px; height:55px; background:#222; border-radius:50%; 
-                     border:${index===0 ? '3px solid #ffcc00' : '1px solid #666'}; padding:2px;">
-                <div style="font-size:10px; margin-top:5px; color:${index===0?'#ffcc00':'#ccc'}">
-                    ${index===0 ? '隊長 (Mega)' : '隊員 ' + (index + 1)}
-                </div>
-            </div>`;
-    });
-
-    // --- 型態道具判斷與分支選單 ---
-    const formOptions = document.getElementById('prep-form-options');
-    formOptions.innerHTML = '';
-
-    if (p.hasMega) {
-        // 檢查是否擁有該 ID 的 Mega 石 (不分 X/Y)
-        const hasStone = gameState.items.includes(`${p.id}_mega`);
-
-        if (hasStone) {
-            const isBranch = (p.id === "006" || p.id === "150");
-            if (isBranch) {
-                // 如果是噴火龍或超夢，顯示下拉選單
-                formOptions.innerHTML = `
-                    <div style="display:flex; align-items:center; gap:8px; justify-content:center; background: rgba(255,204,0,0.1); padding: 5px; border-radius: 5px;">
-                        <label style="font-size:13px; cursor:pointer;">
-                            <input type="checkbox" id="mega-check"> 觸發進化
-                        </label>
-                        <select id="mega-branch" style="background:#333; color:white; border:1px solid #ffcc00; border-radius:3px; font-size:12px;">
-                            <option value="X">Mega X型</option>
-                            <option value="Y">Mega Y型</option>
-                        </select>
-                    </div>`;
-            } else {
-                // 一般 Mega 寶可夢
-                formOptions.innerHTML = `
-                    <label style="font-size:13px; cursor:pointer; color: var(--accent-color);">
-                        <input type="checkbox" id="mega-check"> 觸發型態變化
-                    </label>`;
-            }
-        } else {
-            formOptions.innerHTML = `<span style="color:#777; font-size:12px;">尚未獲得型態道具 (需通關 5 次)</span>`;
-        }
-    } else {
-        formOptions.innerHTML = `<span style="color:#777; font-size:12px;">此寶可夢無特殊型態</span>`;
+    // 2. 顯示隊伍 (整合「更換隊員」功能)
+    if (teamDiv) {
+        teamDiv.innerHTML = '';
+        gameState.team.forEach((id, index) => {
+            const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(id)}.png`;
+            teamDiv.innerHTML += `
+                <div style="text-align:center; cursor:pointer;" onclick="openMemberSelector(${index})">
+                    <img src="${spriteUrl}" style="width:55px; height:55px; background:#222; border-radius:50%; 
+                         border:${index === 0 ? '3px solid #ffcc00' : '1px solid #666'}; padding:2px;">
+                    <div style="font-size:10px; margin-top:5px; color:${index === 0 ? '#ffcc00' : '#ccc'}">
+                        ${index === 0 ? '隊長 (Mega)' : '隊員 ' + (index + 1)}
+                    </div>
+                </div>`;
+        });
     }
 
-    // 傳說之鑰判斷
-    document.getElementById('prep-key-option').style.display = (p.type === "Legendary") ? 'block' : 'none';
+    // 3. 型態道具判斷與分支選單
+    if (formOptions) {
+        formOptions.innerHTML = '';
+        if (p.hasMega) {
+            // 統一檢查是否擁有通用 Mega 石
+            const hasStone = gameState.items.includes(`${p.id}_mega`);
+            if (hasStone) {
+                const isBranch = (p.id === "006" || p.id === "150");
+                if (isBranch) {
+                    formOptions.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:8px; justify-content:center; background: rgba(255,204,0,0.1); padding: 5px; border-radius: 5px;">
+                            <label style="font-size:13px; cursor:pointer;">
+                                <input type="checkbox" id="mega-check"> 觸發進化
+                            </label>
+                            <select id="mega-branch" style="background:#333; color:white; border:1px solid #ffcc00; border-radius:3px; font-size:12px;">
+                                <option value="X">Mega X型</option>
+                                <option value="Y">Mega Y型</option>
+                            </select>
+                        </div>`;
+                } else {
+                    formOptions.innerHTML = `
+                        <label style="font-size:13px; cursor:pointer; color: var(--accent-color);">
+                            <input type="checkbox" id="mega-check"> 觸發型態變化
+                        </label>`;
+                }
+            } else {
+                formOptions.innerHTML = `<span style="color:#777; font-size:12px;">尚未獲得型態道具 (需通關 5 次)</span>`;
+            }
+        } else {
+            formOptions.innerHTML = `<span style="color:#777; font-size:12px;">此寶可夢無特殊型態</span>`;
+        }
+    }
+
+    // 4. 傳說之鑰判斷
+    if (keyOption) {
+        keyOption.style.display = (p.type === "Legendary") ? 'block' : 'none';
+    }
 
     overlay.style.display = 'block';
 }
-
 /**
  * 打開隊員選擇清單
  * @param {number} slotIndex - 點擊的位置 (0, 1, 2, 3)
