@@ -1126,29 +1126,48 @@ function openPrep(p) {
     overlay.style.display = 'block';
 }
 /**
+/**
  * 打開隊員選擇清單
- * @param {number} slotIndex - 點擊的位置 (0, 1, 2, 3)
+ * @param {number} slotIndex - 正在更換哪一個位置 (0~3)
  */
 function openMemberSelector(slotIndex) {
     currentSelectingSlot = slotIndex;
     const container = document.getElementById('pokemon-list-container');
+    if (!container) return;
+
     container.innerHTML = '';
 
-    // 取得所有已捕獲的寶可夢 (gameState.captured)
+    // 取得所有已捕獲的寶可夢
     if (!gameState.captured || gameState.captured.length === 0) {
-        container.innerHTML = '<p style="grid-column: span 4;">目前沒有可用的寶可夢</p>';
+        container.innerHTML = '<p style="grid-column: span 4; color: #888;">尚未捕獲任何寶可夢</p>';
     } else {
-        gameState.captured.forEach(id => {
-            const pInfo = POKEMON_DATA.find(x => x.id === id);
-            const isAlreadyInTeam = gameState.team.includes(id);
-            const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(id)}.png`;
+        // 將已獲得的 ID 轉為詳細資料並排序 (可以按編號排)
+        const availablePkmn = gameState.captured.map(id => POKEMON_DATA.find(p => p.id === id)).filter(p => p);
+
+        availablePkmn.forEach(p => {
+            const isAlreadyInTeam = gameState.team.includes(p.id);
+            const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(p.id)}.png`;
+            
+            // 檢查這隻寶可夢是否具備 Mega 潛力
+            const megaIcon = p.hasMega ? 
+                `<span style="position:absolute; top:2px; right:2px; background:#ffcc00; color:black; font-size:8px; padding:1px 3px; border-radius:3px; font-weight:bold;">M</span>` : "";
 
             container.innerHTML += `
                 <div class="selector-item" 
-                     style="opacity:${isAlreadyInTeam ? '0.4' : '1'}; cursor:${isAlreadyInTeam ? 'not-allowed' : 'pointer'};"
-                     onclick="${isAlreadyInTeam ? '' : `selectTeamMember('${id}')`}">
-                    <img src="${spriteUrl}" style="width:50px;">
-                    <div style="font-size:10px;">${pInfo ? pInfo.name : id}</div>
+                     style="position:relative; background:#333; border:1px solid ${isAlreadyInTeam ? '#444' : '#666'}; 
+                            border-radius:8px; padding:10px; text-align:center; 
+                            opacity:${isAlreadyInTeam ? '0.5' : '1'}; 
+                            cursor:${isAlreadyInTeam ? 'not-allowed' : 'pointer'};
+                            transition: transform 0.1s;"
+                     onclick="${isAlreadyInTeam ? '' : `selectTeamMember('${p.id}')`}"
+                     onmouseover="${isAlreadyInTeam ? '' : "this.style.borderColor='#ffcc00'; this.style.transform='scale(1.05)'"}"
+                     onmouseout="this.style.borderColor='${isAlreadyInTeam ? '#444' : '#666'}'; this.style.transform='scale(1)'">
+                    
+                    ${megaIcon}
+                    <img src="${spriteUrl}" style="width:50px; height:50px; margin-bottom:5px;">
+                    <div style="font-size:11px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                        ${p.name}
+                    </div>
                 </div>`;
         });
     }
@@ -1157,22 +1176,22 @@ function openMemberSelector(slotIndex) {
 }
 
 /**
- * 實際替換隊員
- * @param {string} id - 選中的寶可夢 ID
- */
 function selectTeamMember(id) {
-    // 1. 更新資料
+    // 1. 更新 gameState 資料
     gameState.team[currentSelectingSlot] = id;
     
-    // 2. 存檔
+    // 2. 存檔到 localStorage
     save();
 
-    // 3. 關閉選擇器
+    // 3. 關閉選擇視窗
     document.getElementById('selector-overlay').style.display = 'none';
 
-    // 4. 重新刷新準備畫面，讓頭像立刻更新
-    const pInfo = POKEMON_DATA.find(x => x.id === gameState.lastPlayed);
-    if (pInfo) openPrep(pInfo);
+    // 4. 重點：獲取當前關卡的資料，重新刷新準備畫面
+    // 假設你目前正在挑戰的關卡 ID 存在 gameState.lastPlayed
+    const currentStagePkmn = POKEMON_DATA.find(x => x.id === gameState.lastPlayed);
+    if (currentStagePkmn) {
+        openPrep(currentStagePkmn);
+    }
 }
     
 function closePrep() {
