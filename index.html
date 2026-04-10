@@ -793,13 +793,15 @@ function renderBoard() {
 }
 
 function checkBattleEnd() {
-    // 防止重複執行結算邏輯
-    if (battleData.isEnding) return;
+    // 【修改 1】不再檢查 isEnding，改為檢查 UI 是否已經顯示
+    // 這樣可以避免 handleElimination 設了 isEnding 為 true 後導致此函式直接 return 的死鎖問題
+    const resultOverlay = document.getElementById('result-overlay');
+    if (resultOverlay.style.display === 'flex') return;
 
     // 勝利條件
     if (battleData.currentHP <= 0) {
-        battleData.isEnding = true; // 標記正在結算
-        
+        battleData.isEnding = true; // 確定勝利，鎖定棋盤
+
         const pId = gameState.lastPlayed;
         const pInfo = POKEMON_DATA.find(p => p.id === pId);
 
@@ -809,7 +811,7 @@ function checkBattleEnd() {
             gameState.unlocked.push(nextId);
         }
 
-        // 2. Mega 石計算 (維持原樣)
+        // 2. Mega 石計算
         let megaRewardMsg = "";
         if (pInfo && pInfo.hasMega) {
             if (!gameState.clearCounts) gameState.clearCounts = {};
@@ -825,35 +827,36 @@ function checkBattleEnd() {
 
         // 3. 捕捉分流判斷
         const isCaptured = gameState.captured.includes(pId);
-        save(); // 統一在彈窗前存檔
+        save(); 
 
         if (isCaptured) {
             const maxCount = (pId === "006" || pId === "150") ? 10 : 5;
             const progress = (pInfo && pInfo.hasMega) ? `<br><small style="color:#bbb">Mega 挑戰進度：${gameState.clearCounts[pId]}/${maxCount}</small>` : "";
             
             showResultCard("挑戰成功", `下一關 ${nextId} 已解鎖！${progress}${megaRewardMsg}`, () => {
-                battleData.isEnding = false; // 恢復旗標
-                closeBattle();
+                closeBattle(); // 先關閉戰鬥畫面回到地圖
+                battleData.isEnding = false; 
             });
         } else {
             showResultCard("挑戰成功", `下一關 ${nextId} 已解鎖！${megaRewardMsg}`, () => {
-                battleData.isEnding = false; // 恢復旗標
+                // 【修改 2】不關閉戰鬥畫面，直接由 handleBattleWin 接手切換到捕捉畫面
+                battleData.isEnding = false; 
                 handleBattleWin(); 
             });
         }
         return; 
     } 
     
-    // 失敗條件：必須在 HP > 0 且 步數 <= 0 且 「目前沒有任何消除進行中」時觸發
-    // 如果 handleElimination 還在跑，不應該觸發這個
+    // 失敗條件
     else if (battleData.moves <= 0) {
         battleData.isEnding = true;
         showResultCard("挑戰失敗", "步數已用盡，請再接再厲！", () => {
-            battleData.isEnding = false;
             closeBattle();
+            battleData.isEnding = false;
         });
     }
 }
+    
 // 稍微修改獎勵邏輯，讓它回傳字串而不是自己跳 alert
 function handleBranchMegaLogic(pId, count) {
     const xStone = `${pId}_mega_x`;
@@ -1033,10 +1036,14 @@ function closePrep() {
 }
 
 function showResultCard(title, content, callback = null) {
+    // 【修改 3】確保 z-index 足夠高，能蓋過 battle-screen (300) 與 catch-overlay (400)
+    const overlay = document.getElementById('result-overlay');
+    overlay.style.zIndex = "500"; 
+    
     document.getElementById('result-title').innerText = title;
     document.getElementById('result-content').innerHTML = content;
-    document.getElementById('result-overlay').style.display = 'flex';
-    // 儲存回調函式，確認按鈕點擊後執行
+    overlay.style.display = 'flex';
+    
     window.resultCallback = callback;
 }
 
@@ -1182,7 +1189,7 @@ function updateStatusBar() {
     </div>
 </div>
 
-<div id="result-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 200; justify-content: center; align-items: center; flex-direction: column;">
+<div id="result-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 500; justify-content: center; align-items: center; flex-direction: column;">
     <div style="background: #333; width: 85%; max-width: 320px; border-radius: 20px; border: 3px solid var(--accent-color); padding: 25px; text-align: center; box-shadow: 0 0 20px rgba(255, 204, 0, 0.4);">
         <h2 id="result-title" style="margin: 0; color: var(--accent-color); font-size: 24px;">挑戰成功</h2>
         <hr style="border: 0; border-top: 1px solid #555; margin: 15px 0;">
