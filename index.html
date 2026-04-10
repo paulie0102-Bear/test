@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>PokeShuffle Web - SHUFFLE-WEB-2026</title>
     <style>
-       :root {
-    --status-height: 90px; /* 稍微加高以容納手機頂部狀態 */
+
+    :root {
+    --status-height: 90px;
     --sidebar-width: 85px;
     --accent-color: #ffcc00;
-    /* 安全區域變數：針對 iPhone 瀏海與底部橫條 */
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -17,22 +17,18 @@
 body {
     font-family: 'PingFang TC', 'Microsoft JhengHei', 'Arial', sans-serif;
     margin: 0;
-    background: #1a1a1a; /* 稍微加深底色更像手遊 */
+    background: #1a1a1a;
     color: white;
     overflow: hidden;
     height: 100vh;
-    /* 防止手機長按彈出菜單，提升遊戲感 */
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
 }
 
-/* 頂部狀態欄：加入 safe-top 防止被瀏海擋住 */
 #status-bar {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
+    top: 0; left: 0; width: 100%;
     height: calc(var(--status-height) + var(--safe-top));
     padding-top: var(--safe-top);
     background: rgba(0, 0, 0, 0.95);
@@ -42,13 +38,11 @@ body {
     align-items: center;
     z-index: 100;
     border-bottom: 2px solid var(--accent-color);
-    font-size: 14px;
     box-sizing: border-box;
 }
 
 .status-row { display: flex; gap: 15px; margin-bottom: 5px; }
 
-/* 左側選單：避開底部手勢區 */
 #sidebar {
     position: fixed;
     left: 0;
@@ -59,14 +53,13 @@ body {
     overflow-y: auto;
     border-right: 1px solid #444;
     z-index: 90;
-    /* 隱藏滾動條但保持滾動 */
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
 #sidebar::-webkit-scrollbar { display: none; }
 
 .side-btn {
-    padding: 22px 5px; /* 加大點擊範圍防止誤觸 */
+    padding: 22px 5px;
     text-align: center;
     font-size: 12px;
     cursor: pointer;
@@ -74,12 +67,9 @@ body {
     color: #888;
     touch-action: manipulation;
 }
-
 .side-btn.active { background: var(--accent-color); color: black; font-weight: bold; }
 .side-btn.unlocked { color: white; }
-.mode-toggle { background: #444; color: #ff5555; font-weight: bold; }
 
-/* 主地圖視窗：主體部分也需要考慮底部安全區 */
 #map-container {
     margin-left: var(--sidebar-width);
     margin-top: calc(var(--status-height) + var(--safe-top));
@@ -92,106 +82,81 @@ body {
 
 #stage-list {
     display: flex;
-    flex-direction: column-reverse;
-    padding: 15px; /* 稍微縮小 padding */
-    padding-bottom: 80px; /* 底部預留空間防止被箭頭遮擋 */
+    flex-direction: column-reverse; /* 關鍵：地圖起點在下方 */
+    padding: 15px;
+    padding-bottom: 100px;
     min-height: 100%;
 }
 
-/* 關卡單元：優化手機點擊感 */
-/* 修改 stage-item 基礎樣式，確保定位參考點 */
 .stage-item {
-    position: relative; /* 必須：讓內部的 mega-badge 能精確定位 */
+    position: relative;
     background: #444;
-    margin: 8px 0;
-    padding: 12px;
+    margin: 10px 0;
+    padding: 15px;
     border-radius: 16px;
     display: flex;
     align-items: center;
     border: 2px solid transparent;
-    min-height: 75px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    transition: all 0.2s;
+    cursor: pointer;
     box-sizing: border-box;
-    touch-action: manipulation;
-    overflow: visible; /* 確保徽章不會被切掉 */
 }
 
-.stage-item.locked { 
-    opacity: 0.5; /* 稍微調高一點，讓標示在鎖定時也能看到 */
-    filter: grayscale(1); 
-    pointer-events: none; 
-}
+.stage-item.locked { opacity: 0.5; filter: grayscale(1); pointer-events: none; }
+.stage-item.current { border-color: var(--accent-color); background: #505050; }
+.stage-item:active { transform: scale(0.97); background: #555; }
 
-.stage-item.current { 
-    border-color: var(--accent-color); 
-    background: #505050; 
-}
-
-.stage-item:active { 
-    transform: scale(0.97); 
-    background: #555; 
-}
-
-/* 強化 Mega 徽章視覺 */
-.mega-badge {
+/* Mega 進化石圖示 - 修正版 */
+.mega-stone-icon {
     position: absolute;
-    bottom: 8px; /* 稍微往上調一點，避免貼齊邊緣 */
-    right: 8px;
-    width: 24px;
-    height: 24px;
-    background: #222; /* 預設使用深色，與 #444 背景拉開對比 */
-    border: 2px solid #888; /* 亮色邊框 */
+    top: -8px;
+    right: -8px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-    z-index: 10; /* 確保在圖片和文字之上 */
+    /* 確保元素一定會顯示 */
+    display: block !important; 
+    background-size: 24px; /* 固定圖片大小，確保在 32px 的圓圈內居中 */
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 50;
     transition: all 0.3s ease;
 }
 
-.mega-badge::before {
-    content: 'Ω'; 
-    color: rgba(255,255,255,0.7);
-    font-size: 13px;
-    font-weight: bold;
+/* 狀態：尚未獲得 */
+.mega-stone-icon.not-owned {
+    background-color: #333;
+    border: 2px solid #666;
+    filter: grayscale(1) brightness(0.6);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
 }
 
-/* 擁有道具時的華麗效果 */
-.mega-badge.owned {
-    background: linear-gradient(135deg, #ff7eb3 0%, #ff758c 100%);
-    border-color: #fff;
-    filter: brightness(1.1);
-    box-shadow: 0 0 8px rgba(255, 126, 179, 0.8);
+/* 狀態：已獲得 */
+.mega-stone-icon.owned {
+    background-color: #222;
+    border: 2px solid var(--accent-color);
+    box-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
+    filter: grayscale(0) brightness(1.1);
+    animation: mega-stone-glow 2s infinite alternate;
 }
 
-.mega-badge.owned::before {
-    color: white;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+@keyframes mega-stone-glow {
+    from { box-shadow: 0 0 5px rgba(255, 204, 0, 0.5); transform: scale(1); }
+    to { box-shadow: 0 0 15px rgba(255, 204, 0, 0.9); transform: scale(1.1); }
 }
 
 .pkmn-icon {
-    width: 55px;
-    height: 55px;
-    margin: 0 10px;
+    width: 55px; height: 55px; margin: 0 10px;
     object-fit: contain;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 50%;
     flex-shrink: 0;
 }
 
-.stage-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    pointer-events: none; /* 文字不阻擋點擊 */
-}
-
-.stage-no { font-size: 11px; color: #bbb; margin-bottom: 2px; }
+.stage-info { flex: 1; display: flex; flex-direction: column; pointer-events: none; }
+.stage-no { font-size: 11px; color: #bbb; }
 .stage-name { font-size: 16px; font-weight: bold; }
 
-/* 導航箭頭：向上移動避開底部系統橫條 */
 #nav-arrows {
     position: fixed;
     right: 20px;
@@ -203,46 +168,78 @@ body {
 }
 
 .arrow-btn {
-    width: 60px;
-    height: 60px;
+    width: 60px; height: 60px;
     background: rgba(0, 0, 0, 0.75);
     border: 2px solid var(--accent-color);
     border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 30px;
-    cursor: pointer;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    touch-action: none; /* 防止滑動箭頭時觸發頁面滾動 */
+    display: flex; justify-content: center; align-items: center;
+    font-size: 30px; cursor: pointer;
 }
 
-/* 捕捉球圖示：預設灰色，捕獲後變彩色 */
 .ball-icon {
-    width: 20px;
-    height: 20px;
-    background: #555; /* 預設灰色 */
+    width: 20px; height: 20px;
+    background: #555;
     border-radius: 50%;
     border: 2px solid #333;
     position: relative;
-    transition: background 0.3s;
 }
-
-.ball-icon.captured {
-    /* 紅白球配色 */
-    background: linear-gradient(to bottom, #ff4444 50%, white 50%);
-    border-color: #000;
-}
-
+.ball-icon.captured { background: linear-gradient(to bottom, #ff4444 50%, white 50%); border-color: #000; }
 .ball-icon.captured::after {
-    content: '';
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 6px; height: 6px;
-    background: white;
-    border: 2px solid #333;
-    border-radius: 50%;
+    content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 6px; height: 6px; background: white; border: 2px solid #333; border-radius: 50%;
+}
+
+.overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.9); display: none;
+    justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(5px);
+}
+
+.card {
+    background: #2c2c2c; color: white; padding: 20px; border-radius: 20px;
+    border: 2px solid #444; width: 90%; max-width: 400px;
+    display: flex; flex-direction: column; align-items: center;
+}
+
+#pokemon-list-container {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 12px; width: 100%; margin: 15px 0;
+}
+
+.selector-item {
+    background: #3d3d3d; border-radius: 12px; padding: 5px; text-align: center;
+    cursor: pointer; border: 2px solid transparent; transition: all 0.2s;
+}
+.selector-item:active { transform: scale(0.9); background: #555; border-color: var(--accent-color); }
+.selector-item img { width: 100%; height: auto; object-fit: contain; }
+
+.mega-container {
+    width: 80%;
+    margin: 5px auto;
+    text-align: center;
+}
+.mega-bar-bg {
+    background: #444;
+    height: 12px;
+    border-radius: 6px;
+    border: 1px solid #000;
+    overflow: hidden;
+}
+.mega-bar-fill {
+    width: 0%; /* 由 JS 控制 */
+    height: 100%;
+    background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+    transition: width 0.3s ease;
+}
+/* 進化完成後的特殊顏色 */
+.mega-bar-fill.mega-full {
+    background: linear-gradient(90deg, #ff9d00, #ffd700);
+    box-shadow: 0 0 8px #ffcc00;
+}
+.mega-text {
+    font-size: 10px;
+    color: #ccc;
+    margin-top: 2px;
 }
 
     </style>
@@ -256,7 +253,7 @@ body {
             <span>🔑: <b id="ui-keys">0</b></span>
         </div>
         <div class="status-row">
-            <span>⚡ <b id="ui-stamina">24/24</b></span>
+            <span>⚡ <b id="ui-stamina">10/10</b></span>
             <span id="ui-timer">00:00</span>
         </div>
     </div>
@@ -374,9 +371,11 @@ const POKEMON_DATA = Array.from({length: 721}, (_, i) => {
     // --- 1. 補齊所有 Mega 進化名單 (包含原始回歸) ---
     // 包含：御三家、耿鬼、路卡利歐、烈咬陸鯊、超夢(X/Y)等
     const megaIds = [
-        3, 6, 9, 15, 18, 65, 80, 94, 115, 127, 130, 142, 150, 181, 208, 212, 214, 229, 248, 
-        254, 257, 260, 282, 302, 303, 306, 308, 310, 319, 323, 334, 354, 359, 362, 373, 376, 
-        380, 381, 382, 383, 384, 428, 445, 448, 475, 531, 719
+        3, 6, 9, 15, 18, 65, 80, 94, 115, 127, 
+  130, 142, 150, 181, 208, 212, 214, 229, 248, 254, 
+  257, 260, 282, 302, 303, 306, 308, 310, 319, 323, 
+  334, 354, 359, 362, 373, 376, 380, 381, 382, 383, 
+  384, 428, 445, 448, 460, 475, 531, 646, 658, 719
     ];
 
     // --- 2. 補齊所有傳說與幻之寶可夢 (Legendary & Mythical) ---
@@ -396,18 +395,19 @@ const POKEMON_DATA = Array.from({length: 721}, (_, i) => {
     ];
 
     return {
-        id: idNum.toString().padStart(3, '0'),
-        name: POKEMON_NAMES[i] || "No." + idNum,
-        // 設定類型：傳說級傷害 70，一般級傷害 40~60 (此處僅標記類型)
-        type: legendaryIds.includes(idNum) ? "Legendary" : "Normal",
-        // 設定是否有 Mega 石獎勵 (含小智版甲賀忍蛙 ID: 658)
-        hasMega: megaIds.includes(idNum) || idNum === 658
-    };
+    id: idNum.toString().padStart(3, '0'),
+    name: POKEMON_NAMES[i] || "No." + idNum,
+    // 類型判定：傳說級 70，一般級 40~60
+    type: legendaryIds.includes(idNum) ? "Legendary" : "Normal",
+    // 只要在 megaIds 列表內，hasMega 就為 true
+    // 因為你已經把 658 補進 megaIds 陣列了，所以這裡不需要額外寫 if
+    hasMega: megaIds.includes(idNum)
+};
 });
 
     /** 遊戲狀態 **/
     let gameState = {
-    stamina: 24,
+    stamina: 10,
     lastUpdate: Date.now(),
     keys: 0,
     captured: ["001", "004", "007", "025"], // 建議初始抓到幾隻，測試才不會報錯
@@ -439,15 +439,23 @@ let currentSelectingSlot = 0;
     const saved = localStorage.getItem('SHUFFLE_WEB_SAVE');
     if (saved) {
         const loadedData = JSON.parse(saved);
-        // 使用 Object.assign 確保：舊存檔有的資料會蓋上去，
-        // 但新加入的欄位 (team, clearCounts) 若舊檔沒有，則保留初始預設值。
+        // 使用 Object.assign 確保舊存檔資料覆蓋，同時保留新欄位的預設值
         gameState = Object.assign({}, gameState, loadedData);
     }
     
-    // 確保關鍵物件一定存在，防止讀取舊檔後變成 undefined
+    // 確保關鍵物件一定存在
     if (!gameState.clearCounts) gameState.clearCounts = {};
     if (!gameState.team) gameState.team = ["001", "004", "007", "025"];
     if (!gameState.items) gameState.items = [];
+    if (!gameState.unlocked) gameState.unlocked = ["001"];
+
+    // --- 核心改動：自動解鎖所有地區的第一關 ---
+    REGION_CONFIG.forEach(reg => {
+        const startId = reg.range[0].toString().padStart(3, '0');
+        if (!gameState.unlocked.includes(startId)) {
+            gameState.unlocked.push(startId);
+        }
+    });
 
     // 介面初始化
     updateStatusBar();
@@ -480,113 +488,184 @@ let currentSelectingSlot = 0;
     }
 
     function switchRegion(index) {
-        gameState.currentRegionIdx = index;
-        document.getElementById('region-title').innerText = REGION_CONFIG[index].name + "地區";
-        renderRegionButtons();
-        renderMap();
-        save();
+    gameState.currentRegionIdx = index;
+    gameState.isHardMode = false; // 強制重置
+
+    // 更新標題
+    document.getElementById('region-title').innerText = REGION_CONFIG[index].name + "地區";
+    
+    // 更新按鈕文字
+    const btn = document.querySelector('.mode-toggle');
+    if (btn) {
+        btn.innerText = "普通";
+        btn.classList.remove('active');
     }
+
+    renderRegionButtons();
+    renderMap();
+    save();
+}
 
     function toggleDifficulty() {
-        // 只有通關 151 才能開困難
-        if (!gameState.unlocked.includes("152")) {
-            alert("需通關關都地區(151)方可解鎖困難模式");
-            return;
-        }
-        gameState.isHardMode = !gameState.isHardMode;
-        event.target.innerText = gameState.isHardMode ? "困難" : "普通";
-        renderMap();
+    const currentReg = REGION_CONFIG[gameState.currentRegionIdx];
+    // 取得當前地區的最後一關 ID，例如 "151"
+    const lastIdOfRegion = currentReg.range[1].toString().padStart(3, '0');
+    
+    // --- 判定邏輯修正 ---
+    // 檢查方式：判定「最後一關」是否已經被「捕獲過」或是「通關次數 > 0」
+    // 如果你希望「打贏就算通關」(不一定要抓到)，用 clearCounts 判定最準：
+    const clearCount = gameState.clearCounts ? (gameState.clearCounts[lastIdOfRegion] || 0) : 0;
+    const isRegionCleared = clearCount > 0;
+
+    // 如果還沒通關
+    if (!isRegionCleared) {
+        alert(`需先擊敗 ${currentReg.name} 地區的最後一關 (No.${currentReg.range[1]} ${POKEMON_NAMES[currentReg.range[1]-1]}) 方可開啟困難模式！`);
+        return;
     }
 
+    // 執行切換
+    gameState.isHardMode = !gameState.isHardMode;
+    
+    // 更新 UI (直接抓 Class，避開 event.target 的不確定性)
+    const btn = document.querySelector('.mode-toggle');
+    if (btn) {
+        btn.innerText = gameState.isHardMode ? "困難" : "普通";
+        btn.style.background = gameState.isHardMode ? "#721c24" : ""; // 困難時變暗紅色
+        btn.style.color = gameState.isHardMode ? "#f8d7da" : "";
+    }
+    
+    renderMap();
+}
     
 
     function renderMap() {
     const list = document.getElementById('stage-list');
+    if (!list) return; // 安全檢查
     list.innerHTML = '';
+    
     const config = REGION_CONFIG[gameState.currentRegionIdx];
     
+    // 篩選出當前地區的寶可夢
     const regionData = POKEMON_DATA.filter(p => {
         const id = parseInt(p.id);
         return id >= config.range[0] && id <= config.range[1];
     });
 
     regionData.forEach(p => {
-    const isUnlocked = gameState.unlocked.includes(p.id);
-    const isCaptured = gameState.captured.includes(p.id);
-    
-    // 檢查是否已擁有任何一種該寶可夢的 Mega 石
-    const hasAnyMegaStone = gameState.items.includes(`${p.id}_mega`) || 
-                            gameState.items.includes(`${p.id}_mega_x`) || 
-                            gameState.items.includes(`${p.id}_mega_y`);
-    
-    const imgId = parseInt(p.id);
-    const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${imgId}.png`;
-    
-    // 設定 Mega 石圖示 (預設使用該寶可夢名稱命名的石頭，或通用石)
-    // 這裡建議預設顯示該怪物的專屬石路徑，PokeAPI 道具命名通常是 "lucarionite" 之類的，
-    // 若要簡單化，我們統一顯示一個漂亮的 Mega 標誌圖
-    const megaIconUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/mega-ring.png`;
-
-    const div = document.createElement('div');
-    div.id = `stage-${p.id}`;
-    div.className = `stage-item ${!isUnlocked ? 'locked' : ''} ${gameState.lastPlayed === p.id ? 'current' : ''}`;
-    
-    div.innerHTML = `
-        <div class="ball-icon ${isCaptured ? 'captured' : ''}"></div>
+        const isUnlocked = gameState.unlocked.includes(p.id);
+        const isCaptured = gameState.captured.includes(p.id);
         
-        <img class="pkmn-icon" src="${spriteUrl}" alt="${p.name}" 
-             style="${!isUnlocked ? 'filter: brightness(0) opacity(0.5);' : ''}" 
-             draggable="false" loading="lazy">
+        // --- 1. 判定 Mega 狀態 (使用 Key Stone 鑰石圖片) ---
+        let megaIconHtml = '';
+        if (p.hasMega) {
+            // 判定是否有任何形式的 Mega 石 (支援 X/Y 分支判定)
+            const hasStone = gameState.items.some(item => 
+                item === `${p.id}_mega` || item === `${p.id}_mega_x` || item === `${p.id}_mega_y`
+            );
+            
+            // 使用 GitHub 上更精緻的 Key Stone (鑰石) 圖片
+            const keyStoneUrl = `https://raw.githubusercontent.com/msikma/pokesprite/master/items/key-item/key-stone.png`;
+            
+            megaIconHtml = `
+                <div class="mega-stone-icon ${hasStone ? 'owned' : 'not-owned'}" 
+                     style="background-image: url('${keyStoneUrl}');">
+                </div>
+            `;
+        }
         
-        <div class="stage-info">
-            <div class="stage-no">No.${p.id}</div>
-            <div class="stage-name">${p.name}</div>
-        </div>
+        const imgId = parseInt(p.id);
+        const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${imgId}.png`;
         
-        ${p.hasMega ? `
-            <div class="mega-item-icon ${hasAnyMegaStone ? 'owned' : 'not-owned'}" 
-                 style="background-image: url('${megaIconUrl}');">
+        // --- 2. 建立關卡 DOM 元素 ---
+        const div = document.createElement('div');
+        div.id = `stage-${p.id}`;
+        // 套用 CSS 樣式 (由下往上推的邏輯在 CSS 的 column-reverse)
+        div.className = `stage-item ${!isUnlocked ? 'locked' : ''} ${gameState.lastPlayed === p.id ? 'current' : ''}`;
+        
+        div.innerHTML = `
+            <div class="ball-icon ${isCaptured ? 'captured' : ''}"></div>
+            
+            <img class="pkmn-icon" src="${spriteUrl}" alt="${p.name}" 
+                 style="${!isUnlocked ? 'filter: brightness(0) opacity(0.5);' : ''}" 
+                 draggable="false">
+            
+            <div class="stage-info">
+                <div class="stage-no">No.${p.id}</div>
+                <div class="stage-name">${p.name}</div>
             </div>
-        ` : ''}
-    `;
-    
-    div.onclick = () => {
-        if (!isUnlocked) return;
-        gameState.lastPlayed = p.id;
-        save();
-        renderMap();
-        openPrep(p);
-    };
-    list.appendChild(div);
-});
+            
+            ${megaIconHtml}
+        `;
+        
+        // --- 3. 綁定點擊事件 ---
+        div.onclick = () => {
+            if (!isUnlocked) return;
+            gameState.lastPlayed = p.id;
+            save(); // 儲存進度
+            renderMap(); // 刷新地圖邊框
+            openPrep(p); // 打開準備畫面 (在那邊才選 Mega 分支)
+        };
+        
+        list.appendChild(div);
+    });
 
-    // 更新頂部狀態列
-    if(document.getElementById('ui-dex')) {
-        document.getElementById('ui-dex').innerText = `${gameState.captured.length}/721`;
-    }
-    if(document.getElementById('ui-keys')) {
-        document.getElementById('ui-keys').innerText = gameState.keys;
-    }
+    // --- 4. 更新頂部 UI 狀態列 ---
+    const uiDex = document.getElementById('ui-dex');
+    const uiKeys = document.getElementById('ui-keys');
+    if (uiDex) uiDex.innerText = `${gameState.captured.length}/721`;
+    if (uiKeys) uiKeys.innerText = gameState.keys;
 }
 
 function startBattleLogic() {
-    if (gameState.stamina < 1) { alert("體力不足！"); return; }
+    if (gameState.stamina < 1) { 
+        alert("體力不足！"); 
+        return; 
+    }
     
-    // 1. 初始化數據
+    // --- 1. 核心數據重置 (解決進度繼承與 Combo 殘留) ---
+    battleData.combo = 0;             // 清除上一場的 Combo 數
+    battleData.megaProgress = 0;       // 清除上一場的 Mega 進度
+    battleData.isMegaEvolved = false; // 重置進化狀態
+    battleData.isEnding = false;       // 確保戰鬥鎖定解除
+    
     const p = POKEMON_DATA.find(x => x.id === gameState.lastPlayed);
     battleData.maxHP = (gameState.isHardMode) ? 4000 : (p.type === "Legendary" ? 3000 : 2500);
     battleData.currentHP = battleData.maxHP;
     battleData.moves = 15;
     battleData.board = [];
 
-    // 2. 切換畫面
+    // --- 2. UI 狀態重置 ---
+    // 重置進度條視覺
+    const megaBar = document.getElementById('mega-bar-fill');
+    if (megaBar) {
+        megaBar.style.width = "0%";
+        megaBar.classList.remove('mega-full');
+    }
+
+    // 重置 Combo 顯示文字 (防止上一場的數字卡在畫面上)
+    const comboDiv = document.getElementById('combo-display');
+    if (comboDiv) {
+        comboDiv.style.display = 'none';
+        comboDiv.innerHTML = '';
+    }
+
+    // 重置隊長圖片 (換回普通形態，避免上一場 Mega 圖片殘留)
+    const leaderId = gameState.team[0];
+    const leaderImg = document.getElementById('team-img-0'); 
+    if (leaderImg) {
+        // 使用普通圖片路徑
+        leaderImg.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(leaderId)}.png`;
+        leaderImg.style.filter = ""; // 移除發光效果
+    }
+
+    // 3. 切換畫面
     document.getElementById('prep-overlay').style.display = 'none';
     document.getElementById('battle-screen').style.display = 'flex';
     document.getElementById('enemy-sprite').src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(p.id)}.png`;
     
     updateBattleUI();
     initBoard();
-    
+    renderBattleTeam();
     gameState.stamina -= 1;
     save();
 }
@@ -725,76 +804,207 @@ function checkMatches() {
     }
 }
 
+// 取得自定義 Mega 圖片網址的公式
+function getMegaSpriteUrl(pokemonId, branch = 'X') {
+    const baseUrl = "https://paulie0102-bear.github.io/Bear/img/mega/normal/";
+    const idNum = parseInt(pokemonId); 
+    let filename = idNum.toString(); // 預設檔名為 ID.png
+
+    // --- 處理分支進化的特殊檔名 ---
+    // 噴火龍 (006) 與 超夢 (150)
+    if (idNum === 6 || idNum === 150) {
+        filename = idNum + branch.toLowerCase(); // 生成 "6x" 或 "150y"
+    }
+    // 酋雷姆 (646)
+    else if (idNum === 646) {
+        // 假設你的分支選擇器在酋雷姆時會提供 "Black" 或 "White" 字串
+        // 如果沒有選擇器，預設為 Black
+        const kyuremForm = (branch === 'Y') ? 'white' : 'black'; 
+        filename = "646" + kyuremForm; // 生成 "646black"
+    }
+    // 小智忍蛙 (658) 雖然在 megaIds，但檔名可能維持 658 或有特殊後綴
+    // 如果你的倉庫裡 658.png 就是小智忍蛙，則不需要特判。
+
+    return `${baseUrl}${filename}.png`;
+}
+
 function handleElimination(matchSet) {
     battleData.combo++;
-    const representativeIdx = Array.from(matchSet)[0];
-    const pkmnId = battleData.board[representativeIdx].pokemonId; // 目前消除的寶可夢 ID
-    const pkmnInfo = POKEMON_DATA.find(p => p.id === pkmnId);
+    const leaderId = gameState.team[0];
+    const barFill = document.getElementById('mega-bar-fill');
     
-    // 1. 計算基礎傷害
-    let baseDamage = (pkmnInfo && pkmnInfo.type === "Legendary") ? 70 : 50;
-    let formMultiplier = 1.0;
-    let isMegaHit = false; // 紀錄是否觸發 Mega
+    // --- 1. 核心數據掃描 ---
+    const countsPerPkmn = {}; 
+    matchSet.forEach(idx => {
+        const id = battleData.board[idx].pokemonId;
+        if (id) {
+            countsPerPkmn[id] = (countsPerPkmn[id] || 0) + 1;
+        }
+    });
 
-    // 2. 判定 Mega 進化加成 (以隊長為準)
-    const megaCheck = document.getElementById('mega-check');
-    // 只有當消除的寶可夢是隊伍首位 (隊長) 時，才檢查 Mega 加成
-    if (megaCheck && megaCheck.checked && pkmnInfo && pkmnInfo.hasMega) {
-        const isLeader = (gameState.team[0] === pkmnId);
+    // --- 2. 針對「隊長」進行 Mega 進度結算 ---
+    Object.keys(countsPerPkmn).forEach(pkmnId => {
+        const count = countsPerPkmn[pkmnId];
+        const pkmnInfo = POKEMON_DATA.find(p => p.id === pkmnId);
+        const isIdMatch = parseInt(pkmnId) === parseInt(leaderId);
+        const hasItem = gameState.items.includes(`${pkmnId}_mega`);
+        const megaCheck = document.getElementById('mega-check');
+        const isMegaEnabled = megaCheck ? megaCheck.checked : true;
 
-        if (isLeader) {
-            formMultiplier = 1.5; // 基礎 Mega 加成
-            isMegaHit = true;
+        if (isIdMatch && isMegaEnabled && hasItem && pkmnInfo?.hasMega && !battleData.isMegaEvolved) {
+            battleData.megaProgress += count;
+            
+            if (barFill) {
+                let percent = Math.min((battleData.megaProgress / 15) * 100, 100);
+                barFill.style.width = percent + "%";
+            }
 
-            // --- 處理分支進化的特殊數值 ---
-            const branchSelect = document.getElementById('mega-branch');
-            if (branchSelect) {
-                const selectedBranch = branchSelect.value;
-                if (selectedBranch === "X") {
-                    formMultiplier = 1.6; // X 型態稍強
-                } 
-                // Y 型態維持 1.5 或可在此加入其他邏輯
+            if (battleData.megaProgress >= 15) {
+                battleData.isMegaEvolved = true;
+                if (barFill) barFill.classList.add('mega-full');
+                executeMegaImageChange(leaderId);
+            }
+        }
+    });
+
+    // --- 3. 計算總傷害 (已修正：X 與 Y 倍率統一) ---
+    let totalDamage = 0;
+    Object.keys(countsPerPkmn).forEach(pkmnId => {
+        const count = countsPerPkmn[pkmnId];
+        const pkmnInfo = POKEMON_DATA.find(p => p.id === pkmnId);
+        const isLeader = parseInt(pkmnId) === parseInt(leaderId);
+        
+        let baseDamage = (pkmnInfo && pkmnInfo.type === "Legendary") ? 70 : 50;
+        let formMultiplier = 1.0;
+
+        // 只要是 Mega 狀態下的隊長消除，統一 1.5 倍，不再判斷 X 或 Y
+        if (battleData.isMegaEvolved && isLeader) {
+            formMultiplier = 1.5; 
+        }
+
+        let comboMultiplier = 1 + (battleData.combo - 1) * 0.05;
+        totalDamage += (baseDamage * count) * formMultiplier * comboMultiplier;
+    });
+
+    battleData.currentHP = Math.max(0, battleData.currentHP - Math.floor(totalDamage));
+
+    // --- 4. UI 更新與視覺效果 ---
+    updateBattleUI();
+    showCombo();
+    
+    if (battleData.isMegaEvolved && countsPerPkmn[leaderId]) {
+        const comboDiv = document.getElementById('combo-display');
+        if (comboDiv) {
+            // 避免重複堆疊 MEGA! 字樣
+            if (!comboDiv.innerHTML.includes("MEGA!")) {
+                comboDiv.innerHTML += ` <span class="mega-tag">MEGA!</span>`;
             }
         }
     }
 
-    // 3. 計算最終傷害
-    let comboMultiplier = 1 + (battleData.combo - 1) * 0.05;
-    let finalDamage = (baseDamage * matchSet.size) * formMultiplier * comboMultiplier;
-    
-    battleData.currentHP = Math.max(0, battleData.currentHP - Math.floor(finalDamage));
-
-    // 4. 更新 UI 與顯示標記
-    updateBattleUI();
-    
-    // 顯示 Combo 的同時，如果是 Mega 消除則加上標記
-    const comboDiv = document.getElementById('combo-display');
-    showCombo(); // 先執行原本的顯示
-    if (isMegaHit && comboDiv) {
-        comboDiv.innerHTML += ` <span style="color:#ffcc00; font-size:0.7em; text-shadow: 0 0 5px #000;">MEGA!</span>`;
-    }
-
-    // 5. 執行消除視覺效果
     const tiles = document.querySelectorAll('.tile');
     matchSet.forEach(idx => {
         tiles[idx].style.opacity = '0';
         battleData.board[idx].pokemonId = null;
     });
 
-    // 6. 結算判斷
     if (battleData.currentHP <= 0) {
-        battleData.isEnding = true; 
-        setTimeout(() => {
-            checkBattleEnd();
-        }, 500);
+        battleData.isEnding = true;
+        setTimeout(checkBattleEnd, 500);
     } else {
-        setTimeout(() => {
-            if (battleData.currentHP > 0) {
-                refillBoard();
-            } else {
-                checkBattleEnd();
-            }
-        }, 500);
+        setTimeout(refillBoard, 500);
+    }
+}
+
+// 獨立出來的換圖函式，確保圖片能被強制刷新
+function executeMegaImageChange(leaderId) {
+    const branchSelect = document.getElementById('mega-branch');
+    const currentBranch = branchSelect ? branchSelect.value : 'X';
+    const megaImageUrl = getMegaSpriteUrl(leaderId, currentBranch);
+    
+    // 1. 鎖定戰鬥畫面下方的隊伍預覽容器
+    const teamPreview = document.getElementById('battle-team-preview');
+    let leaderImg = null;
+
+    if (teamPreview) {
+        // 抓取容器內的第一張 <img> (即為隊長)
+        leaderImg = teamPreview.querySelector('img');
+    }
+
+    // 2. 如果容器抓不到，才退而求其次找 ID (備援方案)
+    if (!leaderImg) {
+        leaderImg = document.getElementById('team-img-0');
+    }
+
+    if (leaderImg) {
+        // 使用時間戳記強制刷新，避免緩存
+        const timestamp = Date.now();
+        leaderImg.src = megaImageUrl + "?v=" + timestamp; 
+        
+        // 強制瀏覽器重繪渲染
+        leaderImg.style.display = 'none';
+        leaderImg.offsetHeight; 
+        leaderImg.style.display = 'block';
+
+        // 視覺特效：金光濾鏡 + 縮放動畫 (確保你能看出它變了)
+        leaderImg.style.filter = "drop-shadow(0 0 15px #ffcc00) brightness(1.2)";
+        leaderImg.style.transform = "scale(1.2)";
+        leaderImg.style.transition = "transform 0.3s ease-out";
+        
+        console.log("✅ 成功更換戰鬥畫面隊長圖片:", leaderImg.src);
+    } else {
+        // 輸出除錯資訊，幫助定位問題
+        console.error("❌ 換圖失敗：在 #battle-team-preview 內找不到任何 <img> 標籤。");
+        console.log("請檢查戰鬥開始時，隊伍頭像是否有被正確產生成 <img> 並放入 #battle-team-preview 中。");
+    }
+}
+
+// 輔助函式：計算傷害
+// 輔助函式：計算傷害 (X/Y 倍率統一版)
+function calculateAndApplyDamage(pkmnId, count, pkmnInfo, isLeader) {
+    let baseDamage = (pkmnInfo && pkmnInfo.type === "Legendary") ? 70 : 50;
+    let formMultiplier = 1.0;
+
+    // 只要「已 Mega 進化」且「消除的是隊長」，統一套用 1.5 倍
+    if (battleData.isMegaEvolved && isLeader) {
+        formMultiplier = 1.5; 
+        
+        // 取得當前分支只是為了 Console Log 顯示方便
+        const branchSelect = document.getElementById('mega-branch');
+        const currentBranch = branchSelect ? branchSelect.value : 'N/A';
+        console.log(`Mega 攻擊觸發！型態: ${currentBranch}, 統一倍率: ${formMultiplier}`);
+    }
+
+    let comboMultiplier = 1 + (battleData.combo - 1) * 0.05;
+    let damage = (baseDamage * count) * formMultiplier * comboMultiplier;
+    
+    battleData.currentHP = Math.max(0, battleData.currentHP - Math.floor(damage));
+    
+    updateBattleUI();
+}
+
+// 更新進度條 UI
+function updateMegaBar() {
+    const bar = document.getElementById('mega-bar-fill');
+    if (!bar) return;
+    
+    const percent = (battleData.megaProgress / 15) * 100;
+    bar.style.width = `${percent}%`;
+    
+    if (battleData.isMegaEvolved) {
+        bar.classList.add('mega-full'); // 滿了可以變金色
+    } else {
+        bar.classList.remove('mega-full');
+    }
+}
+
+// 進化瞬間的視覺回饋
+function triggerMegaEffect() {
+    // 1. 可以換掉左上角玩家頭像 (若有)
+    // 2. 顯示一個大大的 "MEGA EVOLUTION!" 字樣
+    const comboDiv = document.getElementById('combo-display');
+    if (comboDiv) {
+        comboDiv.innerHTML = `<div style="color:#ffcc00; font-weight:bold; font-size:1.5em; animation: flash 0.5s;">MEGA EVOLUTION!</div>`;
     }
 }
 
@@ -832,9 +1042,34 @@ function refillBoard() {
 
 function renderBoard() {
     const tiles = document.querySelectorAll('.tile');
+    const leaderId = gameState.team[0]; // 取得當前隊長 ID
+
     battleData.board.forEach((data, i) => {
-        tiles[i].style.opacity = '1';
-        tiles[i].innerHTML = `<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(data.pokemonId)}.png">`;
+        const tile = tiles[i];
+        if (!tile) return; // 安全檢查
+
+        tile.style.opacity = '1';
+        
+        let spriteUrl;
+        let filterEffect = "none";
+        
+        // --- 判斷邏輯：是否為 Mega 狀態下的隊長格子 ---
+        if (battleData.isMegaEvolved && data.pokemonId === leaderId) {
+            // 1. 取得 Mega 圖片路徑
+            const branchSelect = document.getElementById('mega-branch');
+            const currentBranch = branchSelect ? branchSelect.value : 'X';
+            spriteUrl = getMegaSpriteUrl(data.pokemonId, currentBranch);
+            
+            // 2. 設定進化後的金光濾鏡
+            filterEffect = "drop-shadow(0 0 5px #ffcc00) brightness(1.1)";
+        } else {
+            // 一般狀態：使用 PokeAPI 圖片
+            spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(data.pokemonId)}.png`;
+            filterEffect = "none";
+        }
+
+        // --- 執行更新 ---
+        tile.innerHTML = `<img src="${spriteUrl}" style="filter: ${filterEffect}; transition: all 0.2s;">`;
     });
 }
 
@@ -935,26 +1170,37 @@ function handleBattleWin() {
     const isLegendary = (p.type === "Legendary");
     const useKey = document.getElementById('use-key').checked;
 
-    // 規則 1: 傳說寶可夢必須有鑰匙
-    if (isLegendary && !useKey) {
-        alert("通關成功！但未開啟傳說之鑰，寶可夢直接離開了。");
-        closeBattle();
-        return;
-    }
+    // 定義一個「繼續執行」的內部函式，避免重複代碼
+    const proceed = () => {
+        // 規則 1: 傳說寶可夢必須有鑰匙
+        if (isLegendary && !useKey) {
+            alert("通關成功！但未開啟傳說之鑰，寶可夢直接離開了。");
+            closeBattle();
+            return;
+        }
 
-    // 規則 2: 公式計算 (20 + 剩餘步數 * 5)
-    let bonusRate = battleData.moves * 5;
-    currentCatchRate = 20 + bonusRate;
-    if (currentCatchRate > 100) currentCatchRate = 100;
+        // 規則 2: 公式計算
+        let bonusRate = battleData.moves * 5;
+        currentCatchRate = 15 + bonusRate;
+        if (currentCatchRate > 100) currentCatchRate = 100;
 
-    // 消耗資源 (若是傳說)
-    if (isLegendary && useKey) {
-        gameState.keys--;
+        // 消耗資源
+        if (isLegendary && useKey) {
+            gameState.keys--;
+        }
+
         save();
-    }
+        updateStatusBar(); 
+        openCatchUI(p, bonusRate);
+    };
 
-    // 顯示 UI
-    openCatchUI(p, bonusRate);
+    // --- 核心修改：判斷是否發放字卡獎勵 ---
+    if (gameState.isHardMode && p.isChampion) {
+        gameState.keys++; // 先在後台加鑰匙
+        showVictoryCard(proceed); // 顯示字卡，點擊後執行 proceed
+    } else {
+        proceed(); // 不是冠軍，直接繼續
+    }
 }
 
 function openCatchUI(p, bonus) {
@@ -970,7 +1216,7 @@ function openCatchUI(p, bonus) {
     // 重置文字顏色與內容 (確保不會殘留上一次的 "成功" 或 "失敗" 樣式)
     rateText.innerText = `捕捉率: ${currentCatchRate}%`;
     rateText.style.color = "white"; 
-    detailText.innerText = `基礎 20% + 步數獎勵 ${bonus}%`;
+    detailText.innerText = `基礎 15% + 步數獎勵 ${bonus}%`;
     detailText.style.color = "#bbb";
 
     // 重置按鈕與球的狀態
@@ -1083,45 +1329,97 @@ function openPrep(p) {
 
     // 3. 判定「隊長」是否具備 Mega 進化資格
     if (formOptions) {
-        formOptions.innerHTML = '';
-        const leaderId = gameState.team[0];
-        const leaderInfo = POKEMON_DATA.find(x => x.id === leaderId);
+    formOptions.innerHTML = '';
+    const leaderId = gameState.team[0];
+    const leaderInfo = POKEMON_DATA.find(x => x.id === leaderId);
 
-        if (leaderInfo && leaderInfo.hasMega) {
-            const hasStone = gameState.items.includes(`${leaderId}_mega`);
-            if (hasStone) {
-                const isBranch = (leaderId === "006" || leaderId === "150");
-                if (isBranch) {
-                    formOptions.innerHTML = `
-                        <div style="display:flex; align-items:center; gap:8px; justify-content:center; background: rgba(255,204,0,0.15); padding: 8px; border-radius: 8px; border: 1px solid #ffcc00;">
-                            <label style="font-size:13px; cursor:pointer; color:#ffcc00; font-weight:bold;">
-                                <input type="checkbox" id="mega-check"> 隊長 Mega 進化
-                            </label>
-                            <select id="mega-branch" style="background:#333; color:white; border:1px solid #ffcc00; border-radius:3px; font-size:12px; padding:2px;">
-                                <option value="X">Mega X型</option>
-                                <option value="Y">Mega Y型</option>
-                            </select>
-                        </div>`;
-                } else {
-                    formOptions.innerHTML = `
-                        <div style="background: rgba(255,204,0,0.1); padding: 8px; border-radius: 5px; border: 1px solid rgba(255,204,0,0.3); text-align:center;">
-                            <label style="font-size:13px; cursor:pointer; color: #ffcc00; font-weight:bold;">
-                                <input type="checkbox" id="mega-check"> 隊長 Mega 進化
-                            </label>
-                        </div>`;
-                }
-            } else {
-                formOptions.innerHTML = `<span style="color:#aaa; font-size:12px;">尚未獲得隊長 Mega 石 (需通關 #${leaderId} 5 次)</span>`;
+    // 先定義一段漂亮的 CSS (只定義一次即可)
+    const megaStyles = `
+        <style>
+            .mega-toggle-container {
+                display: flex; align-items: center; justify-content: center; gap: 12px;
+                background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+                padding: 10px 15px; border-radius: 12px;
+                border: 1px solid #444; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             }
+            .switch {
+                position: relative; display: inline-block; width: 40px; height: 20px;
+            }
+            .switch input { opacity: 0; width: 0; height: 0; }
+            .slider {
+                position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+                background-color: #444; transition: .3s; border-radius: 20px;
+            }
+            .slider:before {
+                position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px;
+                background-color: white; transition: .3s; border-radius: 50%;
+            }
+            input:checked + .slider { background-color: #ffcc00; box-shadow: 0 0 10px #ffcc00; }
+            input:checked + .slider:before { transform: translateX(20px); }
+            .mega-label { color: #eee; font-size: 13px; font-weight: bold; letter-spacing: 1px; }
+            .branch-select {
+                background: #222; color: #ffcc00; border: 1px solid #555;
+                border-radius: 5px; font-size: 12px; padding: 3px 5px; outline: none;
+            }
+            .no-mega-text { color: #666; font-size: 12px; font-style: italic; }
+        </style>
+    `;
+
+    if (leaderInfo && leaderInfo.hasMega) {
+        const hasStone = gameState.items.includes(`${leaderId}_mega`);
+        if (hasStone) {
+            const isBranch = (leaderId === "006" || leaderId === "150");
+            
+            let content = `
+    ${megaStyles}
+    <div class="mega-toggle-container">
+        <span class="mega-label">型態變化</span>
+        <label class="switch">
+            <input type="checkbox" id="mega-check" checked> <span class="slider"></span>
+        </label>
+`;
+
+            if (isBranch) {
+                content += `
+                    <select id="mega-branch" class="branch-select">
+                        <option value="X">MEGA X</option>
+                        <option value="Y">MEGA Y</option>
+                    </select>
+                `;
+            }
+
+            content += `</div>`;
+            formOptions.innerHTML = content;
         } else {
-            formOptions.innerHTML = `<span style="color:#777; font-size:12px;">當前隊長無 Mega 型態</span>`;
+            formOptions.innerHTML = `<div class="no-mega-text">尚未獲得隊長 Mega 石 (需通關 #${leaderId} 5 次)</div>`;
         }
+    } else {
+        formOptions.innerHTML = `<div class="no-mega-text">當前隊長無 Mega 型態</div>`;
     }
+}
 
     // 4. 傳說之鑰選項
-    if (keyOption) {
-        keyOption.style.display = (p.type === "Legendary") ? 'block' : 'none';
+    // 在 openPrep 內部的「4. 傳說之鑰選項」段落修改
+if (keyOption) {
+    if (p.type === "Legendary") {
+        keyOption.style.display = 'block';
+        const keyCheckbox = document.getElementById('use-key');
+        
+        // 如果鑰匙為 0，禁用勾選框並給予視覺提示
+        if (gameState.keys <= 0) {
+            keyCheckbox.checked = false;
+            keyCheckbox.disabled = true;
+            keyOption.style.opacity = "0.5";
+            keyOption.title = "鑰匙不足";
+        } else {
+            keyCheckbox.disabled = false;
+            keyOption.style.opacity = "1";
+            keyOption.title = "";
+        }
+    } else {
+        keyOption.style.display = 'none';
     }
+}
 
     overlay.style.display = 'block';
 }
@@ -1174,6 +1472,29 @@ function openMemberSelector(slotIndex) {
     document.getElementById('selector-overlay').style.display = 'flex';
 }
 
+function renderBattleTeam() {
+    const previewDiv = document.getElementById('battle-team-preview');
+    if (!previewDiv) return;
+
+    previewDiv.innerHTML = ''; // 清空上一場的殘留
+    
+    gameState.team.forEach((id, index) => {
+        const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(id)}.png`;
+        
+        // 幫隊長 (index 0) 加上 id="team-img-0"，這是 executeMegaImageChange 的目標
+        const imgId = (index === 0) ? 'id="team-img-0"' : '';
+        const isLeader = (index === 0);
+
+        // 這裡的 style 配合你原本的 UI 風格
+        previewDiv.innerHTML += `
+            <div style="text-align:center;">
+                <img ${imgId} src="${spriteUrl}" 
+                     style="width:42px; height:42px; background:#222; border-radius:50%; 
+                            border:1px solid ${isLeader ? '#ffcc00' : '#444'}; padding:2px;">
+            </div>
+        `;
+    });
+}
     
 function selectTeamMember(id) {
     // 1. 更新 gameState 資料
@@ -1191,6 +1512,47 @@ function selectTeamMember(id) {
     if (currentStagePkmn) {
         openPrep(currentStagePkmn);
     }
+}
+
+function showVictoryCard(callback) {
+    // 1. 建立全螢幕遮罩
+    const overlay = document.createElement('div');
+    overlay.style = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        z-index: 9999; cursor: pointer; animation: fadeIn 0.5s;
+    `;
+
+    // 2. 內容文字與鑰匙圖示
+    overlay.innerHTML = `
+        <div style="text-align:center; color:#ffcc00; font-family: sans-serif;">
+            <h1 style="font-size:28px; text-shadow:0 0 15px #ffcc00; margin-bottom:10px;">🏆 恭喜通關冠軍聯盟</h1>
+            <div style="font-size:60px; margin: 20px 0; animation: float 2s infinite ease-in-out;">🔑</div>
+            <p style="font-size:18px; color:#fff;">獲得了 <span style="font-weight:bold; color:#ffcc00;">傳說之鑰</span></p>
+            <p style="font-size:12px; color:#888; margin-top:30px; letter-spacing:2px;">( 點擊任意處繼續 )</p>
+        </div>
+        <style>
+            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes float { 
+                0%, 100% { transform: translateY(0) rotate(0deg); } 
+                50% { transform: translateY(-15px) rotate(10deg); } 
+            }
+        </style>
+    `;
+
+    // 3. 點擊事件：關閉並執行回調
+    overlay.onclick = () => {
+        document.body.removeChild(overlay);
+        if (callback) callback();
+    };
+
+    document.body.appendChild(overlay);
+}
+
+
+function closeSelector() {
+    document.getElementById('selector-overlay').style.display = 'none';
 }
     
 function closePrep() {
@@ -1222,12 +1584,12 @@ function updateStamina() {
     const wait = 30 * 60 * 1000; // 30 分鐘
     
     // 邏輯處理：檢查是否過了一個週期
-    if (gameState.stamina < 24) {
+    if (gameState.stamina < 10) {
         const diff = now - gameState.lastUpdate;
         if (diff >= wait) {
             // 計算過了幾個 30 分鐘 (防止掛機太久沒領)
             const gained = Math.floor(diff / wait);
-            gameState.stamina = Math.min(24, gameState.stamina + gained);
+            gameState.stamina = Math.min(10, gameState.stamina + gained);
             gameState.lastUpdate += gained * wait;
             save();
         }
@@ -1244,10 +1606,10 @@ function updateStatusBar() {
     // 計算剩餘倒數秒數
     const now = Date.now();
     const wait = 30 * 60 * 1000;
-    const remaining = gameState.stamina < 24 ? Math.ceil((wait - (now - gameState.lastUpdate)) / 1000) : 0;
+    const remaining = gameState.stamina < 10 ? Math.ceil((wait - (now - gameState.lastUpdate)) / 1000) : 0;
 
     // 更新體力數字
-    document.getElementById('ui-stamina').innerText = `${gameState.stamina}/24`;
+    document.getElementById('ui-stamina').innerText = `${gameState.stamina}/10`;
     
     // 更新倒數計時器
     document.getElementById('ui-timer').innerText = remaining > 0 ? 
@@ -1377,6 +1739,7 @@ function manualLoad() {
 
 <div id="battle-screen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#1a1a1a; z-index:300; flex-direction:column; padding-top:var(--safe-top);">
     
+    
     <div id="battle-header" style="height:35%; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;">
         <div id="enemy-hp-bar" style="width:80%; height:10px; background:#444; border-radius:5px; margin-bottom:10px; overflow:hidden;">
             <div id="enemy-hp-fill" style="width:100%; height:100%; background:#ff4444; transition:width 0.3s;"></div>
@@ -1399,6 +1762,13 @@ function manualLoad() {
         <div id="battle-team-preview" style="display:flex; gap:5px;">
             </div>
     </div>
+    <div class="mega-container">
+    <div class="mega-bar-bg">
+        <div id="mega-bar-fill" class="mega-bar-fill"></div>
+    </div>
+    <div class="mega-text">MEGA EVOLUTION PROGRESS</div>
+</div>
+
 </div>
 
 <div id="catch-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:400; flex-direction:column; justify-content:center; align-items:center; color:white; font-family: sans-serif;">
@@ -1410,8 +1780,8 @@ function manualLoad() {
         </div>
 
         <div style="background:#222; border:2px solid #444; border-radius:20px; padding:20px; margin-bottom:30px;">
-            <div id="catch-rate-text" style="font-size:32px; font-weight:bold; color:var(--accent-color);">捕捉率: 20%</div>
-            <div id="catch-rate-detail" style="font-size:12px; color:#888; margin-top:5px;">基礎 20% + 步數獎勵 --%</div>
+            <div id="catch-rate-text" style="font-size:32px; font-weight:bold; color:var(--accent-color);">捕捉率: 15%</div>
+            <div id="catch-rate-detail" style="font-size:12px; color:#888; margin-top:5px;">基礎 15% + 步數獎勵 --%</div>
         </div>
 
         <div id="ball-box" style="height:80px; display:flex; justify-content:center; align-items:center;">
@@ -1468,15 +1838,19 @@ function manualLoad() {
     </div>
 </div>
 
-<div id="selector-overlay" class="overlay" style="display:none; z-index:200;">
-    <div class="card" style="width:90%; max-height:80vh; overflow-y:auto;">
-        <h3>選擇隊員</h3>
-        <div id="pokemon-list-container" style="display:grid; grid-template-columns: repeat(4, 1x); gap:10px;">
+
+
+<div id="selector-overlay" class="overlay"> <div class="card" style="width:85%; max-height:75vh;">
+        <h3 style="margin-top:0; color:var(--accent-color);">選擇寶可夢</h3>
+        
+        <div id="pokemon-list-container" style="flex:1; overflow-y:auto; width:100%; padding-right:5px;">
             </div>
-        <button onclick="document.getElementById('selector-overlay').style.display='none'" style="margin-top:20px;">取消</button>
+        
+        <button onclick="closeSelector()" style="margin-top:20px; width:100%; padding:12px; background:#444; color:white; border:none; border-radius:30px;">
+            取 消
+        </button>
     </div>
 </div>
-    
     
 <style>
     /* 棋子樣式 */
