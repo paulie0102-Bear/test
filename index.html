@@ -82,17 +82,22 @@ body {
 
 #stage-list {
     display: flex;
-    flex-direction: column-reverse; /* 關鍵：地圖起點在下方 */
+    flex-direction: column-reverse; 
     padding: 15px;
+    /* 關鍵：增加頂部內邊距，把最上面的內容推下來，不被橫幅擋住 */
+    padding-top: 100px; 
     padding-bottom: 100px;
     min-height: 100%;
+    overflow-y: auto;
+    align-items: center;
 }
 
+/* 1. 外部容器：統一長度與佈局 */
 .stage-item {
     position: relative;
     background: #444;
     margin: 10px 0;
-    padding: 15px;
+    padding: 10px; /* 稍微縮小內邊距以適應 320px 寬度 */
     border-radius: 16px;
     display: flex;
     align-items: center;
@@ -100,6 +105,37 @@ body {
     transition: all 0.2s;
     cursor: pointer;
     box-sizing: border-box;
+
+    /* --- 新增：鎖定長度 --- */
+    width: 320px;       /* 統一所有關卡長度 */
+    flex-shrink: 0;     /* 防止被 FlexBox 壓縮 */
+}
+
+/* 2. 圖示：保留你的圓形背景與大小設定 */
+.pkmn-icon {
+    width: 55px; 
+    height: 55px; 
+    margin: 0 10px;
+    object-fit: contain;
+    background: rgba(255, 255, 255, 0.1); /* 你的半透明白背景 */
+    border-radius: 50%;                  /* 你的圓形外觀 */
+    flex-shrink: 0;
+}
+
+/* 3. 名字：保留你的粗體設定，並增加防止溢出處理 */
+.stage-name { 
+    font-size: 16px; 
+    font-weight: bold; 
+    white-space: nowrap;    /* 防止名字換行 */
+    overflow: hidden;       /* 隱藏超出部分 */
+    text-overflow: ellipsis; /* 太長顯示 ... */
+}
+
+/* 4. 輔助資訊 (No.151 那個數字) */
+.stage-no {
+    font-size: 12px;
+    color: #aaa;
+    margin-right: 5px;
 }
 
 .stage-item.locked { opacity: 0.5; filter: grayscale(1); pointer-events: none; }
@@ -145,17 +181,11 @@ body {
     to { box-shadow: 0 0 15px rgba(255, 204, 0, 0.9); transform: scale(1.1); }
 }
 
-.pkmn-icon {
-    width: 55px; height: 55px; margin: 0 10px;
-    object-fit: contain;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    flex-shrink: 0;
-}
+
 
 .stage-info { flex: 1; display: flex; flex-direction: column; pointer-events: none; }
 .stage-no { font-size: 11px; color: #bbb; }
-.stage-name { font-size: 16px; font-weight: bold; }
+
 
 #nav-arrows {
     position: fixed;
@@ -405,6 +435,58 @@ const POKEMON_DATA = Array.from({length: 721}, (_, i) => {
 };
 });
 
+
+
+function getEliteFourData(regionName) {
+    const data = {
+        "關都": [
+            { id: "087", name: "乘龍", stageName: "四天王 科拿" },
+            { id: "068", name: "怪力", stageName: "四天王 希巴" },
+            { id: "094", name: "耿鬼", stageName: "四天王 菊子" },
+            { id: "149", name: "快龍", stageName: "四天王 阿渡" },
+            { id: "009", name: "水箭龜", stageName: "地區冠軍 青綠", isChampion: true }
+        ],
+        "城都": [
+            { id: "178", name: "天然鳥", stageName: "四天王 一樹" },
+            { id: "208", name: "大鋼蛇", stageName: "四天王 阿桔" },
+            { id: "106", name: "艾比郎", stageName: "四天王 希巴" },
+            { id: "229", name: "黑魯加", stageName: "四天王 梨花" },
+            { id: "149", name: "快龍", stageName: "地區冠軍 阿渡", isChampion: true }
+        ],
+        "豐緣": [
+            { id: "262", name: "大狼犬", stageName: "四天王 花月" },
+            { id: "354", name: "詛咒娃娃", stageName: "四天王 芙蓉" },
+            { id: "365", name: "帝牙海獅", stageName: "四天王 波妮" },
+            { id: "373", name: "暴飛龍", stageName: "四天王 源治" },
+            { id: "376", name: "巨金怪", stageName: "地區冠軍 大吾", isChampion: true }
+        ],
+        "神奧": [
+            { id: "402", name: "音箱蟀俠", stageName: "四天王 阿柳" },
+            { id: "464", name: "超甲狂犀", stageName: "四天王 菊野" },
+            { id: "467", name: "鴨嘴炎獸", stageName: "四天王 大葉" },
+            { id: "475", name: "艾路雷朵", stageName: "四天王 悟松" },
+            { id: "445", name: "烈咬陸鯊", stageName: "地區冠軍 竹蘭", isChampion: true }
+        ],
+        "合眾": [
+            { id: "563", name: "死神棺", stageName: "四天王 婉龍" },
+            { id: "539", name: "打擊鬼", stageName: "四天王 連武" },
+            { id: "625", name: "劈斬司令", stageName: "四天王 越橘" },
+            { id: "576", name: "哥德小姐", stageName: "四天王 嘉德麗雅" },
+            { id: "635", name: "三首惡龍", stageName: "地區冠軍 艾莉絲", isChampion: true }
+        ],
+        "卡洛斯": [
+            { id: "630", name: "禿鷹娜", stageName: "四天王 帕琦拉" },
+            { id: "691", name: "毒藻龍", stageName: "四天王 朵拉塞娜" },
+            { id: "689", name: "龜足巨鎧", stageName: "四天王 志米" },
+            { id: "652", name: "布里卡隆", stageName: "四天王 雁鎧" },
+            { id: "282", name: "沙奈朵", stageName: "地區冠軍 卡露乃", isChampion: true }
+        ]
+    };
+
+    // 這裡會精準對應 "關都"、"城都" 等中文名稱
+    return data[regionName] || data["關都"];
+}
+
     /** 遊戲狀態 **/
     let gameState = {
     stamina: 10,
@@ -489,16 +571,42 @@ let currentSelectingSlot = 0;
 
     function switchRegion(index) {
     gameState.currentRegionIdx = index;
-    gameState.isHardMode = false; // 強制重置
+    const currentReg = REGION_CONFIG[index];
+
+    // --- 【新增】安全檢查：檢查新地區是否已全通 ---
+    let isAllCleared = true;
+    for (let i = currentReg.range[0]; i <= currentReg.range[1]; i++) {
+        const stageId = i.toString().padStart(3, '0');
+        const clearCount = gameState.clearCounts ? (gameState.clearCounts[stageId] || 0) : 0;
+        if (clearCount === 0) {
+            isAllCleared = false;
+            break;
+        }
+    }
+
+    // 如果目前是困難模式，但新地區還沒全通，就強制切回普通模式
+    if (gameState.isHardMode && !isAllCleared) {
+        gameState.isHardMode = false;
+        console.log(`偵測到 ${currentReg.name} 尚未全通，已自動重設為普通模式。`);
+    }
+    // --------------------------------------------
 
     // 更新標題
-    document.getElementById('region-title').innerText = REGION_CONFIG[index].name + "地區";
+    const titleEl = document.getElementById('region-title');
+    if (titleEl) titleEl.innerText = currentReg.name + "地區";
     
-    // 更新按鈕文字
+    // 更新按鈕文字與樣式（確保 UI 反映目前的 gameState.isHardMode）
     const btn = document.querySelector('.mode-toggle');
     if (btn) {
-        btn.innerText = "普通";
-        btn.classList.remove('active');
+        btn.innerText = gameState.isHardMode ? "困難" : "普通";
+        btn.style.background = gameState.isHardMode ? "#721c24" : ""; 
+        btn.style.color = gameState.isHardMode ? "#f8d7da" : "";
+        
+        if (gameState.isHardMode) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
     }
 
     renderRegionButtons();
@@ -508,44 +616,94 @@ let currentSelectingSlot = 0;
 
     function toggleDifficulty() {
     const currentReg = REGION_CONFIG[gameState.currentRegionIdx];
-    // 取得當前地區的最後一關 ID，例如 "151"
-    const lastIdOfRegion = currentReg.range[1].toString().padStart(3, '0');
     
-    // --- 判定邏輯修正 ---
-    // 檢查方式：判定「最後一關」是否已經被「捕獲過」或是「通關次數 > 0」
-    // 如果你希望「打贏就算通關」(不一定要抓到)，用 clearCounts 判定最準：
-    const clearCount = gameState.clearCounts ? (gameState.clearCounts[lastIdOfRegion] || 0) : 0;
-    const isRegionCleared = clearCount > 0;
+    // --- 判定邏輯：檢查該地區「所有關卡」是否都通關過 ---
+    let isAllCleared = true;
+    for (let i = currentReg.range[0]; i <= currentReg.range[1]; i++) {
+        const stageId = i.toString().padStart(3, '0');
+        const clearCount = gameState.clearCounts ? (gameState.clearCounts[stageId] || 0) : 0;
+        
+        if (clearCount === 0) {
+            isAllCleared = false;
+            break; // 只要有一關沒過，就不用再查了
+        }
+    }
 
-    // 如果還沒通關
-    if (!isRegionCleared) {
-        alert(`需先擊敗 ${currentReg.name} 地區的最後一關 (No.${currentReg.range[1]} ${POKEMON_NAMES[currentReg.range[1]-1]}) 方可開啟困難模式！`);
+    // 如果沒有全數通關
+    if (!isAllCleared) {
+        alert(`需先通關 ${currentReg.name} 地區的「所有」普通關卡方可開啟困難模式！`);
         return;
     }
 
     // 執行切換
     gameState.isHardMode = !gameState.isHardMode;
     
-    // 更新 UI (直接抓 Class，避開 event.target 的不確定性)
+    // 更新 UI 樣式
     const btn = document.querySelector('.mode-toggle');
     if (btn) {
         btn.innerText = gameState.isHardMode ? "困難" : "普通";
-        btn.style.background = gameState.isHardMode ? "#721c24" : ""; // 困難時變暗紅色
+        btn.style.background = gameState.isHardMode ? "#721c24" : ""; 
         btn.style.color = gameState.isHardMode ? "#f8d7da" : "";
+        
+        // 切換時根據模式加上或移除 active class (如果有對應 CSS 的話)
+        if (gameState.isHardMode) btn.classList.add('active');
+        else btn.classList.remove('active');
     }
     
     renderMap();
+    save(); // 建議切換後存檔，避免重整後跳回普通模式
 }
-    
 
-    function renderMap() {
+function getMegaIconHtml(p) {
+    if (!p.hasMega) return '';
+    
+    // 這裡完全是你原本的判定邏輯
+    const hasStone = gameState.items.some(item => 
+        item === `${p.id}_mega` || item === `${p.id}_mega_x` || item === `${p.id}_mega_y`
+    );
+    
+    const keyStoneUrl = `https://raw.githubusercontent.com/msikma/pokesprite/master/items/key-item/key-stone.png`;
+    
+    return `
+        <div class="mega-stone-icon ${hasStone ? 'owned' : 'not-owned'}" 
+             style="background-image: url('${keyStoneUrl}');">
+        </div>
+    `;
+}    
+
+function renderMap() {
     const list = document.getElementById('stage-list');
-    if (!list) return; // 安全檢查
+    if (!list) return;
+
+    // --- 關鍵修正：清空樣式殘留 ---
     list.innerHTML = '';
-    
+    // 將之前在 JS 裡面設定的 Style 全部重設為空字串，讓它回歸 CSS 檔案的預設值
+    list.style.display = "";
+    list.style.flexDirection = "";
+    list.style.alignItems = "";
+    list.style.gap = "";
+    list.style.padding = "";
+    list.style.overflowY = "";
+    // ----------------------------
+
     const config = REGION_CONFIG[gameState.currentRegionIdx];
-    
-    // 篩選出當前地區的寶可夢
+
+    // --- 分流判定 ---
+    if (gameState.isHardMode) {
+        renderHardModeLayout(list, config);
+    } else {
+        renderNormalModeLayout(list, config);
+        
+        // 【選擇性加入】確保普通模式下自動捲動到頂部，避免被剛才困難模式的捲動位置影響
+        list.scrollTop = 0; 
+    }
+
+    // 更新狀態列
+    updateStatusBar();
+}
+
+// --- 普通模式：保留你原本的所有邏輯與樣式 ---
+function renderNormalModeLayout(list, config) {
     const regionData = POKEMON_DATA.filter(p => {
         const id = parseInt(p.id);
         return id >= config.range[0] && id <= config.range[1];
@@ -555,65 +713,92 @@ let currentSelectingSlot = 0;
         const isUnlocked = gameState.unlocked.includes(p.id);
         const isCaptured = gameState.captured.includes(p.id);
         
-        // --- 1. 判定 Mega 狀態 (使用 Key Stone 鑰石圖片) ---
-        let megaIconHtml = '';
-        if (p.hasMega) {
-            // 判定是否有任何形式的 Mega 石 (支援 X/Y 分支判定)
-            const hasStone = gameState.items.some(item => 
-                item === `${p.id}_mega` || item === `${p.id}_mega_x` || item === `${p.id}_mega_y`
-            );
-            
-            // 使用 GitHub 上更精緻的 Key Stone (鑰石) 圖片
-            const keyStoneUrl = `https://raw.githubusercontent.com/msikma/pokesprite/master/items/key-item/key-stone.png`;
-            
-            megaIconHtml = `
-                <div class="mega-stone-icon ${hasStone ? 'owned' : 'not-owned'}" 
-                     style="background-image: url('${keyStoneUrl}');">
-                </div>
-            `;
-        }
+        // 使用剛才抽離的 Mega 判定函式 (邏輯跟原本一模一樣)
+        const megaHtml = getMegaIconHtml(p);
         
-        const imgId = parseInt(p.id);
-        const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${imgId}.png`;
+        const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(p.id)}.png`;
         
-        // --- 2. 建立關卡 DOM 元素 ---
         const div = document.createElement('div');
         div.id = `stage-${p.id}`;
-        // 套用 CSS 樣式 (由下往上推的邏輯在 CSS 的 column-reverse)
         div.className = `stage-item ${!isUnlocked ? 'locked' : ''} ${gameState.lastPlayed === p.id ? 'current' : ''}`;
         
         div.innerHTML = `
             <div class="ball-icon ${isCaptured ? 'captured' : ''}"></div>
-            
             <img class="pkmn-icon" src="${spriteUrl}" alt="${p.name}" 
                  style="${!isUnlocked ? 'filter: brightness(0) opacity(0.5);' : ''}" 
                  draggable="false">
-            
             <div class="stage-info">
                 <div class="stage-no">No.${p.id}</div>
                 <div class="stage-name">${p.name}</div>
             </div>
-            
-            ${megaIconHtml}
+            ${megaHtml} 
         `;
         
-        // --- 3. 綁定點擊事件 ---
         div.onclick = () => {
             if (!isUnlocked) return;
             gameState.lastPlayed = p.id;
-            save(); // 儲存進度
-            renderMap(); // 刷新地圖邊框
-            openPrep(p); // 打開準備畫面 (在那邊才選 Mega 分支)
+            save();
+            renderMap();
+            openPrep(p);
         };
-        
+        list.appendChild(div);
+    });
+}
+
+// --- 困難模式：全新巨大圖示配置 ---
+function renderHardModeLayout(list, config) {
+    const eliteData = getEliteFourData(config.name); // 取得 5 強資料
+    
+    // --- 佈局修正 ---
+    list.style.display = "flex";
+    list.style.flexDirection = "column-reverse"; // 由下往上排，第一關在最下，冠軍在最上
+    list.style.alignItems = "center";
+    list.style.gap = "20px";
+    list.style.padding = "40px 0"; // 增加上下留白，確保不會被擋住
+    list.style.overflowY = "auto";  // 確保可以滾動
+
+    list.innerHTML = ''; // 清空
+
+    eliteData.forEach((p, index) => {
+        // 解鎖判定 (第一關或前一關已通關)
+        const isPrevClear = index === 0 || (gameState.clearCounts && gameState.clearCounts[eliteData[index-1].id] > 0);
+        const megaHtml = getMegaIconHtml(p);
+
+        const div = document.createElement('div');
+        // 增加一個 ID 方便測試
+        div.id = `hard-stage-${index}`;
+        div.style = `
+            width: 90%; max-width: 450px; background: #1a1a1a; 
+            border: 2px solid ${p.isChampion ? '#ffcc00' : '#555'};
+            border-radius: 12px; padding: 15px; display: flex; align-items: center;
+            cursor: pointer; position: relative; transition: 0.3s; flex-shrink: 0;
+            ${!isPrevClear ? 'filter: grayscale(1) opacity(0.5);' : ''}
+            box-shadow: ${p.isChampion ? '0 0 20px rgba(255,204,0,0.5)' : 'none'};
+        `;
+
+        div.innerHTML = `
+            <div style="font-size: 10px; color: #777; position: absolute; top: 8px; right: 12px;">STAGE 0${index+1}</div>
+            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(p.id)}.png" 
+                 style="width: 70px; height: 70px; background: #222; border-radius: 8px; margin-right: 15px;">
+            <div style="text-align: left;">
+                <div style="color: ${p.isChampion ? '#ffcc00' : '#eee'}; font-weight: bold; font-size: 18px;">${p.stageName}</div>
+                <div style="color: #999; font-size: 13px;">主力：${p.name}</div>
+            </div>
+            ${megaHtml}
+            ${p.isChampion ? '<div style="margin-left:auto; font-size:24px;">👑</div>' : ''}
+        `;
+
+        div.onclick = () => {
+            if (!isPrevClear) return;
+            gameState.lastPlayed = p.id;
+            save();
+            openPrep(p);
+        };
         list.appendChild(div);
     });
 
-    // --- 4. 更新頂部 UI 狀態列 ---
-    const uiDex = document.getElementById('ui-dex');
-    const uiKeys = document.getElementById('ui-keys');
-    if (uiDex) uiDex.innerText = `${gameState.captured.length}/721`;
-    if (uiKeys) uiKeys.innerText = gameState.keys;
+    // 自動捲動到最底部（讓玩家看到第一關）
+    setTimeout(() => { list.scrollTop = list.scrollHeight; }, 100);
 }
 
 function startBattleLogic() {
@@ -629,7 +814,7 @@ function startBattleLogic() {
     battleData.isEnding = false;       // 確保戰鬥鎖定解除
     
     const p = POKEMON_DATA.find(x => x.id === gameState.lastPlayed);
-    battleData.maxHP = (gameState.isHardMode) ? 4000 : (p.type === "Legendary" ? 3000 : 2500);
+    battleData.maxHP = (gameState.isHardMode) ? 5000 : (p.type === "Legendary" ? 3500 : 2500);
     battleData.currentHP = battleData.maxHP;
     battleData.moves = 15;
     battleData.board = [];
@@ -1074,68 +1259,47 @@ function renderBoard() {
 }
 
 function checkBattleEnd() {
-    // 【修改 1】不再檢查 isEnding，改為檢查 UI 是否已經顯示
-    // 這樣可以避免 handleElimination 設了 isEnding 為 true 後導致此函式直接 return 的死鎖問題
     const resultOverlay = document.getElementById('result-overlay');
     if (resultOverlay.style.display === 'flex') return;
 
-    // 勝利條件
     if (battleData.currentHP <= 0) {
         battleData.isEnding = true; 
 
         const pId = gameState.lastPlayed;
         const pInfo = POKEMON_DATA.find(p => p.id === pId);
 
-        // 1. 強制解鎖下一關
+        // --- 1. 解鎖下一關邏輯 (僅限普通模式) ---
         const nextId = (parseInt(pId) + 1).toString().padStart(3, '0');
-        if (parseInt(nextId) <= 721 && !gameState.unlocked.includes(nextId)) {
-            gameState.unlocked.push(nextId);
-        }
-
-        // 2. Mega 石計算與進度顯示 (優化版)
-        let megaRewardMsg = "";
-let progress = ""; 
-
-if (pInfo && pInfo.hasMega) {
-    if (!gameState.clearCounts) gameState.clearCounts = {};
-    
-    // 1. 簡化檢查：統一只檢查是否擁有該 ID 的通用 Mega 石
-    const alreadyOwned = gameState.items.includes(`${pId}_mega`);
-
-    if (!alreadyOwned) {
-        // 還沒拿過才累加次數
-        gameState.clearCounts[pId] = (gameState.clearCounts[pId] || 0) + 1;
-        const count = gameState.clearCounts[pId];
+        let unlockMsg = "";
         
-        // 2. 統一最大次數：不再區分 ID，全部都是 5 次
-        const maxCount = 5;
-
-        // 3. 簡化獲得邏輯：滿 5 次就推入道具並顯示訊息
-        if (count === maxCount) {
-            gameState.items.push(`${pId}_mega`);
-            megaRewardMsg = `<div style="color:#ffcc00; margin-top:10px;">★ 獲得 ${pInfo.name} Mega 石 ★</div>`;
+        if (!gameState.isHardMode && parseInt(nextId) <= 721) {
+            if (!gameState.unlocked.includes(nextId)) {
+                gameState.unlocked.push(nextId);
+                unlockMsg = `下一關 ${nextId} 已解鎖！`; 
+            }
         }
 
-        // 4. 顯示進度
-        progress = `<br><small style="color:#bbb">Mega 挑戰進度：${count}/${maxCount}</small>`;
-    } else {
-        // 已擁有時，進度設為空（達成你取消顯示 X/5 的要求）
-        progress = ""; 
-    }
-}
+        // --- 2. 移除計數邏輯與隱藏進度文字 ---
+        // (此處不再執行 clearCounts++，也不再組合 progress 字串)
+        let finalDesc = unlockMsg;
+        if (finalDesc === "") finalDesc = "成功的擊敗了對手！";
 
-        // 3. 捕捉分流判斷
         const isCaptured = gameState.captured.includes(pId);
         save(); 
 
-        if (isCaptured) {
-            showResultCard("挑戰成功", `下一關 ${nextId} 已解鎖！${progress}${megaRewardMsg}`, () => {
+        // --- 3. 根據狀態決定後續路徑 ---
+        if (isCaptured || gameState.isHardMode) {
+            // 已捕捉或困難模式：跳出字卡後直接結束
+            showResultCard("挑戰成功", finalDesc, () => {
+                // 統一在此呼叫 handleBattleWin 處理後續(計數/鑰匙)
+                handleBattleWin(); 
                 closeBattle(); 
                 battleData.isEnding = false; 
-                renderMap(); // 確保回到地圖時立刻刷新 Mega 石亮起狀態
+                renderMap(); 
             });
         } else {
-            showResultCard("挑戰成功", `下一關 ${nextId} 已解鎖！${progress}${megaRewardMsg}`, () => {
+            // 未捕捉且普通模式：跳出字卡後進入捕捉階段
+            showResultCard("挑戰成功", finalDesc, () => {
                 battleData.isEnding = false; 
                 handleBattleWin(); 
             });
@@ -1143,7 +1307,6 @@ if (pInfo && pInfo.hasMega) {
         return; 
     }
     
-    // 失敗條件
     else if (battleData.moves <= 0) {
         battleData.isEnding = true;
         showResultCard("挑戰失敗", "步數已用盡，請再接再厲！", () => {
@@ -1155,6 +1318,10 @@ if (pInfo && pInfo.hasMega) {
     
 // 稍微修改獎勵邏輯，讓它回傳字串而不是自己跳 alert
 function handleBranchMegaLogic(pId, count) {
+    // --- 【新增】如果是在困難模式下，不觸發 Mega 石解鎖邏輯 ---
+    if (gameState.isHardMode) {
+        return ""; 
+    }
     let msg = "";
     // 統一邏輯：所有具備 Mega 能力的寶可夢，通關 5 次即解鎖
     if (count === 5 && !gameState.items.includes(`${pId}_mega`)) {
@@ -1164,44 +1331,73 @@ function handleBranchMegaLogic(pId, count) {
     }
     return msg;
 }
-// 戰鬥結束時調用
-function handleBattleWin() {
-    const p = POKEMON_DATA.find(x => x.id === gameState.lastPlayed);
-    const isLegendary = (p.type === "Legendary");
-    const useKey = document.getElementById('use-key').checked;
 
-    // 定義一個「繼續執行」的內部函式，避免重複代碼
+
+function handleBattleWin() {
+    const config = REGION_CONFIG[gameState.currentRegionIdx];
+    const eliteData = getEliteFourData(config.name); 
+    const p = POKEMON_DATA.find(x => x.id === gameState.lastPlayed);
+    
+    // 判定是否為冠軍關卡
+    const isChampionStage = gameState.isHardMode && eliteData.some(e => e.id === p.id && e.isChampion);
+    const isLegendary = (p.type === "Legendary");
+    const useKeyElement = document.getElementById('use-key');
+    const useKey = useKeyElement ? useKeyElement.checked : false;
+
+    // --- 1. 立即處理獎勵與進度 (存檔前完成) ---
+    let megaMsg = "";
+    if (!gameState.isHardMode) {
+        // 普通模式：計次 + Mega 判定
+        gameState.clearCounts[p.id] = (gameState.clearCounts[p.id] || 0) + 1;
+        megaMsg = handleBranchMegaLogic(p.id, gameState.clearCounts[p.id]);
+    } else {
+        // 困難模式：如果是冠軍，額外給鑰匙
+        if (isChampionStage) {
+            gameState.keys++;
+        }
+    }
+
+    // 統一執行一次存檔與狀態更新
+    save();
+    updateStatusBar();
+
+    // --- 2. 結算流程 ---
     const proceed = () => {
-        // 規則 1: 傳說寶可夢必須有鑰匙
+        // 困難模式攔截器：直接結束，不進入捕捉
+        if (gameState.isHardMode) {
+            // 如果 checkBattleEnd 已經關過一次，這裡呼叫 closeBattle 是安全的
+            closeBattle(); 
+            return;
+        }
+
+        // 普通模式：判定傳說之鑰
         if (isLegendary && !useKey) {
             alert("通關成功！但未開啟傳說之鑰，寶可夢直接離開了。");
             closeBattle();
             return;
         }
 
-        // 規則 2: 公式計算
-        let bonusRate = battleData.moves * 5;
-        currentCatchRate = 15 + bonusRate;
-        if (currentCatchRate > 100) currentCatchRate = 100;
+        // 計算捕捉率
+        let bonusRate = (battleData && battleData.moves) ? battleData.moves * 5 : 0;
+        currentCatchRate = Math.min(100, 15 + bonusRate);
 
-        // 消耗資源
         if (isLegendary && useKey) {
             gameState.keys--;
+            save(); // 扣除鑰匙後再次存檔
         }
 
-        save();
-        updateStatusBar(); 
-        openCatchUI(p, bonusRate);
+        openCatchUI(p, bonusRate, megaMsg); 
     };
 
-    // --- 核心修改：判斷是否發放字卡獎勵 ---
-    if (gameState.isHardMode && p.isChampion) {
-        gameState.keys++; // 先在後台加鑰匙
-        showVictoryCard(proceed); // 顯示字卡，點擊後執行 proceed
+    // --- 3. 執行字卡展示 ---
+    if (isChampionStage) {
+        // 只有冠軍才顯示特殊獎勵字卡
+        showVictoryCard(proceed); 
     } else {
-        proceed(); // 不是冠軍，直接繼續
+        proceed(); 
     }
 }
+
 
 function openCatchUI(p, bonus) {
     document.getElementById('battle-screen').style.display = 'none';
@@ -1306,8 +1502,8 @@ function openPrep(p) {
     
     // 1. 判定目標 HP (模式分流)
     let hp = 2500;
-    if (gameState.isHardMode) hp = 4000;
-    else if (p.type === "Legendary") hp = 3000;
+    if (gameState.isHardMode) hp = 5000;
+    else if (p.type === "Legendary") hp = 3500;
     if (stageHp) stageHp.innerText = `目標 HP: ${hp} (模式: ${gameState.isHardMode ? '困難' : '普通'})`;
 
     // 2. 顯示隊伍 (點擊觸發隊員更換)
@@ -1333,7 +1529,7 @@ function openPrep(p) {
     const leaderId = gameState.team[0];
     const leaderInfo = POKEMON_DATA.find(x => x.id === leaderId);
 
-    // 先定義一段漂亮的 CSS (只定義一次即可)
+    // 1. 先定義 CSS 樣式 (確保後續內容都能套用)
     const megaStyles = `
         <style>
             .mega-toggle-container {
@@ -1361,24 +1557,25 @@ function openPrep(p) {
                 background: #222; color: #ffcc00; border: 1px solid #555;
                 border-radius: 5px; font-size: 12px; padding: 3px 5px; outline: none;
             }
-            .no-mega-text { color: #666; font-size: 12px; font-style: italic; }
+            /* 讓提示文字也放在容器內，維持質感 */
+            .no-mega-text { color: #888; font-size: 12px; font-style: italic; }
         </style>
     `;
+
+    // 2. 判定內容
+    let content = megaStyles; // 初始化就先放入樣式
 
     if (leaderInfo && leaderInfo.hasMega) {
         const hasStone = gameState.items.includes(`${leaderId}_mega`);
         if (hasStone) {
             const isBranch = (leaderId === "006" || leaderId === "150");
-            
-            let content = `
-    ${megaStyles}
-    <div class="mega-toggle-container">
-        <span class="mega-label">型態變化</span>
-        <label class="switch">
-            <input type="checkbox" id="mega-check" checked> <span class="slider"></span>
-        </label>
-`;
-
+            content += `
+                <div class="mega-toggle-container">
+                    <span class="mega-label">型態變化</span>
+                    <label class="switch">
+                        <input type="checkbox" id="mega-check" checked> <span class="slider"></span>
+                    </label>
+            `;
             if (isBranch) {
                 content += `
                     <select id="mega-branch" class="branch-select">
@@ -1387,39 +1584,64 @@ function openPrep(p) {
                     </select>
                 `;
             }
-
             content += `</div>`;
-            formOptions.innerHTML = content;
         } else {
-            formOptions.innerHTML = `<div class="no-mega-text">尚未獲得隊長 Mega 石 (需通關 #${leaderId} 5 次)</div>`;
+            // 套用 container 樣式讓外觀統一，只是裡面換成提示文字
+            content += `
+                <div class="mega-toggle-container">
+                    <div class="no-mega-text">尚未獲得隊長 Mega 石 (需通關 #${leaderId} 5 次)</div>
+                </div>`;
         }
     } else {
-        formOptions.innerHTML = `<div class="no-mega-text">當前隊長無 Mega 型態</div>`;
+        // 套用 container 樣式
+        content += `
+            <div class="mega-toggle-container">
+                <div class="no-mega-text">當前隊長無 Mega 型態</div>
+            </div>`;
     }
+
+    formOptions.innerHTML = content;
 }
 
-    // 4. 傳說之鑰選項
-    // 在 openPrep 內部的「4. 傳說之鑰選項」段落修改
 if (keyOption) {
-    if (p.type === "Legendary") {
-        keyOption.style.display = 'block';
-        const keyCheckbox = document.getElementById('use-key');
-        
-        // 如果鑰匙為 0，禁用勾選框並給予視覺提示
-        if (gameState.keys <= 0) {
-            keyCheckbox.checked = false;
-            keyCheckbox.disabled = true;
-            keyOption.style.opacity = "0.5";
-            keyOption.title = "鑰匙不足";
-        } else {
-            keyCheckbox.disabled = false;
-            keyOption.style.opacity = "1";
-            keyOption.title = "";
-        }
+        if (p.type === "Legendary") {
+            keyOption.style.display = 'block';
+            
+            // 重新渲染質感開關
+            keyOption.innerHTML = `
+                <div class="mega-toggle-container" style="margin-top:0px; border-top:none;">
+                    <span class="mega-label">使用傳說之鑰 (捕捉判定)</span>
+                    <label class="switch">
+                        <input type="checkbox" id="use-key">
+                        <span class="slider"></span>
+                    </label>
+                    <span style="font-size: 12px; color: #ffcc00; font-weight: bold;">🔑 x${gameState.keys}</span>
+                </div>
+            `;
+
+            const keyCheckbox = document.getElementById('use-key');
+            const container = keyOption.querySelector('.mega-toggle-container');
+            
+            // 判斷鑰匙數量邏輯
+           if (gameState.keys <= 0) {
+        // 情況 A：完全沒有鑰匙
+        keyCheckbox.checked = false;
+        keyCheckbox.disabled = true; // 禁用，點不動
+        container.style.opacity = "0.4";
+        container.style.cursor = "not-allowed";
+        keyOption.title = "鑰匙不足";
     } else {
-        keyOption.style.display = 'none';
+        // 情況 B：有鑰匙
+        keyCheckbox.checked = false; // 【修改處】預設不勾選
+        keyCheckbox.disabled = false; // 但允許玩家點擊開啟
+        container.style.opacity = "1";
+        container.style.cursor = "pointer";
+        keyOption.title = "點擊開啟捕捉判定";
     }
+} else {
+    keyOption.style.display = 'none';
 }
+    }
 
     overlay.style.display = 'block';
 }
@@ -1439,7 +1661,11 @@ function openMemberSelector(slotIndex) {
         container.innerHTML = '<p style="grid-column: span 4; color: #888;">尚未捕獲任何寶可夢</p>';
     } else {
         // 將已獲得的 ID 轉為詳細資料並排序 (可以按編號排)
-        const availablePkmn = gameState.captured.map(id => POKEMON_DATA.find(p => p.id === id)).filter(p => p);
+        // 取得資料後，加上 .sort()
+const availablePkmn = gameState.captured
+    .map(id => POKEMON_DATA.find(p => p.id === id))
+    .filter(p => p)
+    .sort((a, b) => parseInt(a.id) - parseInt(b.id)); // 按 ID 數字大小升序排列
 
         availablePkmn.forEach(p => {
             const isAlreadyInTeam = gameState.team.includes(p.id);
@@ -1723,12 +1949,18 @@ function manualLoad() {
         </div>
 
         <div style="background:#222; border-radius:10px; padding:15px; text-align:left; margin-bottom: 25px;">
-            <div id="prep-form-options" style="display:flex; flex-wrap:wrap; gap:10px;">
-                </div>
-            <div id="prep-key-option" style="margin-top:10px; display:none; border-top:1px solid #444; padding-top:10px;">
-                <label><input type="checkbox" id="use-key"> 使用傳說之鑰 (開啟捕捉判定)</label>
-            </div>
+    <div id="prep-form-options" style="display:flex; flex-wrap:wrap; gap:10px;"></div>
+    
+    <div id="prep-key-option" style="margin-top:10px; display:none; border-top:1px solid #444; padding-top:15px;">
+        <div class="mega-toggle-container" style="display: flex; align-items: center; gap: 10px;">
+            <span class="mega-label">使用傳說之鑰 (開啟捕捉判定)</span>
+            <label class="switch">
+                <input type="checkbox" id="use-key">
+                <span class="slider"></span>
+            </label>
         </div>
+    </div>
+</div>
 
         <div style="display:flex; flex-direction:column; gap:12px;">
             <button onclick="startBattleLogic()" style="padding:18px; background:var(--accent-color); border:none; border-radius:35px; font-size:18px; font-weight:bold; color:black;">開始戰鬥 (⚡ 1)</button>
