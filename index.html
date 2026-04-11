@@ -704,8 +704,13 @@ function renderMap() {
 
 // --- 普通模式：保留你原本的所有邏輯與樣式 ---
 function renderNormalModeLayout(list, config) {
-    // --- 修正：避開手機版左側導航欄 ---
-    list.style.paddingLeft = "65px"; // 預留空間給左側導航
+    // 1. 調整容器佈局：確保避開導航欄且不縮過頭
+    list.style.display = "flex";
+    list.style.flexDirection = "column";
+    list.style.alignItems = "center"; 
+    list.style.paddingLeft = "52px";   // 縮小左側留白，讓方框向左延伸
+    list.style.paddingRight = "12px"; 
+    list.style.paddingTop = "80px";    // 加大頂部距離
     list.style.boxSizing = "border-box";
 
     const regionData = POKEMON_DATA.filter(p => {
@@ -716,20 +721,18 @@ function renderNormalModeLayout(list, config) {
     regionData.forEach(p => {
         const isUnlocked = gameState.unlocked.includes(p.id);
         const isCaptured = gameState.captured.includes(p.id);
-        
-        // 使用剛才抽離的 Mega 判定函式 (邏輯跟原本一模一樣)
         const megaHtml = getMegaIconHtml(p);
-        
         const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(p.id)}.png`;
         
         const div = document.createElement('div');
         div.id = `stage-${p.id}`;
         div.className = `stage-item ${!isUnlocked ? 'locked' : ''} ${gameState.lastPlayed === p.id ? 'current' : ''}`;
         
-        // 強制縮短方框寬度，避開右側溢出
-div.style.width = "calc(100% - 20px)"; 
-div.style.marginRight = "10px";
-div.style.boxSizing = "border-box";
+        // 2. 寬度修正：使用 100% 配合父層 Padding 自動適應
+        div.style.width = "100%"; 
+        div.style.maxWidth = "400px"; 
+        div.style.boxSizing = "border-box";
+        div.style.margin = "0 0 10px 0"; // 只有下方間距
 
         div.innerHTML = `
             <div class="ball-icon ${isCaptured ? 'captured' : ''}"></div>
@@ -756,65 +759,62 @@ div.style.boxSizing = "border-box";
 
 // --- 困難模式：全新巨大圖示配置 ---
 function renderHardModeLayout(list, config) {
-    const eliteData = getEliteFourData(config.name); // 取得 5 強資料
+    const eliteData = getEliteFourData(config.name); 
     
-    // --- 佈局修正：增加左側內邊距 ---
+    // --- 佈局修正：與普通模式保持一致的邊距與對齊 ---
     list.style.display = "flex";
     list.style.flexDirection = "column-reverse"; 
-    list.style.alignItems = "flex-end"; // 改為靠右對齊，主動避開左側
-    list.style.paddingLeft = "65px";    // 同步增加左側留白
-    list.style.paddingRight = "15px";   // 右側也留一點空隙
+    list.style.alignItems = "center";  // 改為 center，讓方塊在剩餘空間置中
+    list.style.paddingLeft = "52px";   // 縮小左側留白 (同步普通模式)
+    list.style.paddingRight = "15px";  
+    list.style.paddingTop = "100px";   // 頂部留白 (冠軍上方)
+    list.style.paddingBottom = "40px"; 
     list.style.boxSizing = "border-box";
     list.style.gap = "20px";
-    list.style.paddingTop = "40px";
-    list.style.paddingBottom = "40px";
     list.style.overflowY = "auto";
 
-    list.innerHTML = ''; // 清空
+    list.innerHTML = ''; 
 
     eliteData.forEach((p, index) => {
-        // 解鎖判定 (第一關或前一關已通關)
         const isPrevClear = index === 0 || (gameState.clearCounts && gameState.clearCounts[eliteData[index-1].id] > 0);
         const megaHtml = getMegaIconHtml(p);
 
         const div = document.createElement('div');
-        // 增加一個 ID 方便測試
         div.id = `hard-stage-${index}`;
-        // 找到 renderHardModeLayout 裡面 eliteData.forEach 內的 div.style
-div.style = `
-    width: calc(100% - 25px); /* 這裡縮短寬度，預留右側空間 */
-    max-width: 380px;        /* 稍微降低上限，讓它在手機上看起來更精悍 */
-    margin-left: auto; 
-    margin-right: 15px;      /* 增加右側留白，避開滾動條或按鈕 */
-    background: #1a1a1a; 
-    border: 2px solid ${p.isChampion ? '#ffcc00' : '#555'};
-    border-radius: 12px; 
-    padding: 12px;           /* 稍微縮減內邊距，把空間留給名字 */
-    display: flex; 
-    align-items: center;
-    cursor: pointer; 
-    position: relative; 
-    transition: 0.3s; 
-    flex-shrink: 0;
-    box-sizing: border-box;  /* 重要：確保 padding 不會撐開寬度 */
-    ${!isPrevClear ? 'filter: grayscale(1) opacity(0.5);' : ''}
-    box-shadow: ${p.isChampion ? '0 0 20px rgba(255,204,0,0.3)' : 'none'};
-`;
+        
+        // --- 核心修正處：不再縮過頭，寬度填滿剩餘空間 ---
+        div.style = `
+            width: 100%;            /* 使用 100% 配合父層 Padding 自動填滿 */
+            max-width: 420px;       /* 困難模式方塊稍微大一點點增加氣勢 */
+            margin: 0; 
+            background: #1a1a1a; 
+            border: 2px solid ${p.isChampion ? '#ffcc00' : '#555'};
+            border-radius: 12px; 
+            padding: 15px; 
+            display: flex; 
+            align-items: center;
+            cursor: pointer; 
+            position: relative; 
+            transition: 0.3s; 
+            flex-shrink: 0;
+            box-sizing: border-box; 
+            ${!isPrevClear ? 'filter: grayscale(1) opacity(0.5);' : ''}
+            box-shadow: ${p.isChampion ? '0 0 20px rgba(255,204,0,0.3)' : 'none'};
+        `;
 
-// 同時微調內部文字空間，防止名字被擠到下一行
-div.innerHTML = `
-    <div style="font-size: 9px; color: #666; position: absolute; top: 5px; right: 10px;">STAGE 0${index+1}</div>
-    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(p.id)}.png" 
-         style="width: 60px; height: 60px; background: #222; border-radius: 8px; margin-right: 10px;">
-    <div style="text-align: left; flex: 1; min-width: 0; overflow: hidden;"> 
-        <div style="color: ${p.isChampion ? '#ffcc00' : '#eee'}; font-weight: bold; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            ${p.stageName}
-        </div>
-        <div style="color: #888; font-size: 12px;">主力：${p.name}</div>
-    </div>
-    ${megaHtml}
-    ${p.isChampion ? '<div style="margin-left:5px; font-size:20px;">👑</div>' : ''}
-`;
+        div.innerHTML = `
+            <div style="font-size: 9px; color: #666; position: absolute; top: 5px; right: 10px;">STAGE 0${index+1}</div>
+            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(p.id)}.png" 
+                 style="width: 60px; height: 60px; background: #222; border-radius: 8px; margin-right: 12px;">
+            <div style="text-align: left; flex: 1; min-width: 0;"> 
+                <div style="color: ${p.isChampion ? '#ffcc00' : '#eee'}; font-weight: bold; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    ${p.stageName}
+                </div>
+                <div style="color: #999; font-size: 13px;">主力：${p.name}</div>
+            </div>
+            ${megaHtml}
+            ${p.isChampion ? '<div style="margin-left:8px; font-size:24px;">👑</div>' : ''}
+        `;
 
         div.onclick = () => {
             if (!isPrevClear) return;
@@ -825,7 +825,6 @@ div.innerHTML = `
         list.appendChild(div);
     });
 
-    // 自動捲動到最底部（讓玩家看到第一關）
     setTimeout(() => { list.scrollTop = list.scrollHeight; }, 100);
 }
 
