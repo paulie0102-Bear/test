@@ -279,7 +279,7 @@ body {
     <div id="status-bar">
         <div class="status-row">
             <span id="region-title">關都地區</span>
-            <span>圖鑑: <b id="ui-dex">0/721</b></span>
+            <span>關卡進度: <b id="ui-dex">0/721</b></span>
             <span>🔑: <b id="ui-keys">0</b></span>
         </div>
         <div class="status-row">
@@ -722,7 +722,7 @@ function renderNormalModeLayout(list, config) {
         const isUnlocked = gameState.unlocked.includes(p.id);
         const isCaptured = gameState.captured.includes(p.id);
         const megaHtml = getMegaIconHtml(p);
-        const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(p.id)}.png`;
+        const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${parseInt(p.id)}.png`;
         
         const div = document.createElement('div');
         div.id = `stage-${p.id}`;
@@ -804,7 +804,7 @@ function renderHardModeLayout(list, config) {
 
         div.innerHTML = `
             <div style="font-size: 9px; color: #666; position: absolute; top: 5px; right: 10px;">STAGE 0${index+1}</div>
-            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(p.id)}.png" 
+            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${parseInt(p.id)}.png" 
                  style="width: 60px; height: 60px; background: #222; border-radius: 8px; margin-right: 12px;">
             <div style="text-align: left; flex: 1; min-width: 0;"> 
                 <div style="color: ${p.isChampion ? '#ffcc00' : '#eee'}; font-weight: bold; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
@@ -866,14 +866,14 @@ function startBattleLogic() {
     const leaderImg = document.getElementById('team-img-0'); 
     if (leaderImg) {
         // 使用普通圖片路徑
-        leaderImg.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(leaderId)}.png`;
+        leaderImg.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${parseInt(leaderId)}.png`;
         leaderImg.style.filter = ""; // 移除發光效果
     }
 
     // 3. 切換畫面
     document.getElementById('prep-overlay').style.display = 'none';
     document.getElementById('battle-screen').style.display = 'flex';
-    document.getElementById('enemy-sprite').src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(p.id)}.png`;
+    document.getElementById('enemy-sprite').src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${parseInt(p.id)}.png`;
     
     updateBattleUI();
     initBoard();
@@ -895,7 +895,7 @@ function initBoard() {
         const div = document.createElement('div');
         div.className = 'tile';
         div.dataset.index = i;
-        div.innerHTML = `<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(randomMemberId)}.png">`;
+        div.innerHTML = `<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${parseInt(randomMemberId)}.png">`;
         
         // 綁定點擊交換邏輯
         div.onclick = () => handleTileClick(i);
@@ -953,8 +953,8 @@ function swapTiles(idx1, idx2) {
     
     // 畫面更新 (重新渲染兩個格子)
     const tiles = document.querySelectorAll('.tile');
-    tiles[idx1].innerHTML = `<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(battleData.board[idx1].pokemonId)}.png">`;
-    tiles[idx2].innerHTML = `<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(battleData.board[idx2].pokemonId)}.png">`;
+    tiles[idx1].innerHTML = `<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${parseInt(battleData.board[idx1].pokemonId)}.png">`;
+    tiles[idx2].innerHTML = `<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${parseInt(battleData.board[idx2].pokemonId)}.png">`;
 }
 
 function updateBattleUI() {
@@ -1018,26 +1018,39 @@ function checkMatches() {
 
 // 取得自定義 Mega 圖片網址的公式
 function getMegaSpriteUrl(pokemonId, branch = 'X') {
-    const baseUrl = "https://paulie0102-bear.github.io/Bear/img/mega/normal/";
-    const idNum = parseInt(pokemonId); 
-    let filename = idNum.toString(); // 預設檔名為 ID.png
+    // 改為指向官方 Home 高畫質圖庫
+    const baseUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/";
+    const idNum = parseInt(pokemonId);
+    
+    // 官方形態 ID 對應表 (根據你提供的 megaIds 列表)
+    const homeMegaMap = {
+        3: 10033, 6: {X: 10034, Y: 10035}, 9: 10036, 15: 10090, 18: 10073,
+        65: 10037, 80: 10071, 94: 10038, 115: 10039, 127: 10040,
+        130: 10041, 142: 10042, 150: {X: 10043, Y: 10044}, 181: 10045, 208: 10072,
+        212: 10046, 214: 10047, 229: 10048, 248: 10049, 254: 10065,
+        257: 10050, 260: 10064, 282: 10051, 302: 10066, 303: 10052,
+        306: 10053, 308: 10054, 310: 10055, 319: 10070, 323: 10087,
+        334: 10067, 354: 10056, 359: 10057, 362: 10074, 373: 10089,
+        376: 10076, 380: 10063, 381: 10062, 382: 10077, 383: 10078, // 原始回歸
+        384: 10079, 428: 10088, 445: 10058, 448: 10059, 460: 10060,
+        475: 10068, 531: 10069, 646: {X: 10022, Y: 10023}, // 黑/白酋雷姆
+        658: 10117, 719: 10075 // 小智忍蛙 / 蒂安希
+    };
 
-    // --- 處理分支進化的特殊檔名 ---
-    // 噴火龍 (006) 與 超夢 (150)
-    if (idNum === 6 || idNum === 150) {
-        filename = idNum + branch.toLowerCase(); // 生成 "6x" 或 "150y"
-    }
-    // 酋雷姆 (646)
-    else if (idNum === 646) {
-        // 假設你的分支選擇器在酋雷姆時會提供 "Black" 或 "White" 字串
-        // 如果沒有選擇器，預設為 Black
-        const kyuremForm = (branch === 'Y') ? 'white' : 'black'; 
-        filename = "646" + kyuremForm; // 生成 "646black"
-    }
-    // 小智忍蛙 (658) 雖然在 megaIds，但檔名可能維持 658 或有特殊後綴
-    // 如果你的倉庫裡 658.png 就是小智忍蛙，則不需要特判。
+    let finalId = idNum;
 
-    return `${baseUrl}${filename}.png`;
+    // 判斷是否在 Mega 表中，如果是則轉換 ID
+    if (homeMegaMap[idNum]) {
+        const mapping = homeMegaMap[idNum];
+        if (typeof mapping === 'object') {
+            const b = branch.toUpperCase();
+            finalId = mapping[b] || mapping['X'];
+        } else {
+            finalId = mapping;
+        }
+    }
+
+    return `${baseUrl}${finalId}.png`;
 }
 
 function handleElimination(matchSet) {
@@ -1276,7 +1289,7 @@ function renderBoard() {
             filterEffect = "drop-shadow(0 0 5px #ffcc00) brightness(1.1)";
         } else {
             // 一般狀態：使用 PokeAPI 圖片
-            spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(data.pokemonId)}.png`;
+            spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${parseInt(data.pokemonId)}.png`;
             filterEffect = "none";
         }
 
@@ -1437,7 +1450,7 @@ function handleBattleWin() {
 function openCatchUI(p, bonus) {
     document.getElementById('battle-screen').style.display = 'none';
     document.getElementById('catch-overlay').style.display = 'flex';
-    document.getElementById('catch-sprite').src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(p.id)}.png`;
+    document.getElementById('catch-sprite').src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${parseInt(p.id)}.png`;
     
     // 取得 UI 元素並恢復初始狀態
     const rateText = document.getElementById('catch-rate-text');
@@ -1545,7 +1558,7 @@ function openPrep(p) {
     if (teamDiv) {
         teamDiv.innerHTML = '';
         gameState.team.forEach((id, index) => {
-            const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(id)}.png`;
+            const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${parseInt(id)}.png`;
             const isLeader = (index === 0);
             teamDiv.innerHTML += `
                 <div style="text-align:center; cursor:pointer;" onclick="openMemberSelector(${index})">
@@ -1704,7 +1717,7 @@ const availablePkmn = gameState.captured
 
         availablePkmn.forEach(p => {
             const isAlreadyInTeam = gameState.team.includes(p.id);
-            const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(p.id)}.png`;
+            const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${parseInt(p.id)}.png`;
             
             // 檢查這隻寶可夢是否具備 Mega 潛力
             const megaIcon = p.hasMega ? 
@@ -1740,7 +1753,7 @@ function renderBattleTeam() {
     previewDiv.innerHTML = ''; // 清空上一場的殘留
     
     gameState.team.forEach((id, index) => {
-        const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(id)}.png`;
+        const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${parseInt(id)}.png`;
         
         // 幫隊長 (index 0) 加上 id="team-img-0"，這是 executeMegaImageChange 的目標
         const imgId = (index === 0) ? 'id="team-img-0"' : '';
@@ -1876,7 +1889,7 @@ function updateStatusBar() {
     document.getElementById('ui-timer').innerText = remaining > 0 ? 
         `${Math.floor(remaining/60).toString().padStart(2,'0')}:${(remaining%60).toString().padStart(2,'0')}` : "MAX";
     
-    // 更新圖鑑與金鑰
+    // 更新關卡進度與金鑰
     document.getElementById('ui-dex').innerText = `${gameState.captured.length}/721`;
     document.getElementById('ui-keys').innerText = gameState.keys;
 }
