@@ -1390,27 +1390,35 @@ function handleBattleWin() {
 
     // --- 2. 結算流程 ---
     const proceed = () => {
-        // 困難模式攔截器：直接結束，不進入捕捉
+        // A. 困難模式攔截器：直接結束
         if (gameState.isHardMode) {
-            // 如果 checkBattleEnd 已經關過一次，這裡呼叫 closeBattle 是安全的
             closeBattle(); 
             return;
         }
 
-        // 普通模式：判定傳說之鑰
+        // B. 【新增】已捕捉判定：如果已經抓過了，就不進入捕捉階段
+        const isAlreadyCaptured = gameState.captured.includes(p.id);
+        if (isAlreadyCaptured) {
+            console.log("此寶可夢已捕捉，跳過捕捉介面");
+            closeBattle();
+            renderMap(); // 重新渲染地圖以更新標記
+            return;
+        }
+
+        // C. 普通模式：判定傳說之鑰 (只有未捕捉時才需要判斷)
         if (isLegendary && !useKey) {
             alert("通關成功！但未開啟傳說之鑰，寶可夢直接離開了。");
             closeBattle();
             return;
         }
 
-        // 計算捕捉率
+        // D. 進入捕捉階段 (計算捕捉率)
         let bonusRate = (battleData && battleData.moves) ? battleData.moves * 5 : 0;
         currentCatchRate = Math.min(100, 15 + bonusRate);
 
         if (isLegendary && useKey) {
             gameState.keys--;
-            save(); // 扣除鑰匙後再次存檔
+            save(); 
         }
 
         openCatchUI(p, bonusRate, megaMsg); 
