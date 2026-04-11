@@ -704,6 +704,10 @@ function renderMap() {
 
 // --- 普通模式：保留你原本的所有邏輯與樣式 ---
 function renderNormalModeLayout(list, config) {
+    // --- 修正：避開手機版左側導航欄 ---
+    list.style.paddingLeft = "65px"; // 預留空間給左側導航
+    list.style.boxSizing = "border-box";
+
     const regionData = POKEMON_DATA.filter(p => {
         const id = parseInt(p.id);
         return id >= config.range[0] && id <= config.range[1];
@@ -749,13 +753,17 @@ function renderNormalModeLayout(list, config) {
 function renderHardModeLayout(list, config) {
     const eliteData = getEliteFourData(config.name); // 取得 5 強資料
     
-    // --- 佈局修正 ---
+    // --- 佈局修正：增加左側內邊距 ---
     list.style.display = "flex";
-    list.style.flexDirection = "column-reverse"; // 由下往上排，第一關在最下，冠軍在最上
-    list.style.alignItems = "center";
+    list.style.flexDirection = "column-reverse"; 
+    list.style.alignItems = "flex-end"; // 改為靠右對齊，主動避開左側
+    list.style.paddingLeft = "65px";    // 同步增加左側留白
+    list.style.paddingRight = "15px";   // 右側也留一點空隙
+    list.style.boxSizing = "border-box";
     list.style.gap = "20px";
-    list.style.padding = "40px 0"; // 增加上下留白，確保不會被擋住
-    list.style.overflowY = "auto";  // 確保可以滾動
+    list.style.paddingTop = "40px";
+    list.style.paddingBottom = "40px";
+    list.style.overflowY = "auto";
 
     list.innerHTML = ''; // 清空
 
@@ -767,8 +775,11 @@ function renderHardModeLayout(list, config) {
         const div = document.createElement('div');
         // 增加一個 ID 方便測試
         div.id = `hard-stage-${index}`;
+        // 建議將 div 的 width 設為 100% (它會被 padding 推擠到正確位置)
         div.style = `
-            width: 90%; max-width: 450px; background: #1a1a1a; 
+            width: 100%; 
+            max-width: 400px; 
+            background: #1a1a1a; 
             border: 2px solid ${p.isChampion ? '#ffcc00' : '#555'};
             border-radius: 12px; padding: 15px; display: flex; align-items: center;
             cursor: pointer; position: relative; transition: 0.3s; flex-shrink: 0;
