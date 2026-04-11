@@ -726,6 +726,11 @@ function renderNormalModeLayout(list, config) {
         div.id = `stage-${p.id}`;
         div.className = `stage-item ${!isUnlocked ? 'locked' : ''} ${gameState.lastPlayed === p.id ? 'current' : ''}`;
         
+        // 強制縮短方框寬度，避開右側溢出
+div.style.width = "calc(100% - 20px)"; 
+div.style.marginRight = "10px";
+div.style.boxSizing = "border-box";
+
         div.innerHTML = `
             <div class="ball-icon ${isCaptured ? 'captured' : ''}"></div>
             <img class="pkmn-icon" src="${spriteUrl}" alt="${p.name}" 
@@ -775,29 +780,41 @@ function renderHardModeLayout(list, config) {
         const div = document.createElement('div');
         // 增加一個 ID 方便測試
         div.id = `hard-stage-${index}`;
-        // 建議將 div 的 width 設為 100% (它會被 padding 推擠到正確位置)
-        div.style = `
-            width: 100%; 
-            max-width: 400px; 
-            background: #1a1a1a; 
-            border: 2px solid ${p.isChampion ? '#ffcc00' : '#555'};
-            border-radius: 12px; padding: 15px; display: flex; align-items: center;
-            cursor: pointer; position: relative; transition: 0.3s; flex-shrink: 0;
-            ${!isPrevClear ? 'filter: grayscale(1) opacity(0.5);' : ''}
-            box-shadow: ${p.isChampion ? '0 0 20px rgba(255,204,0,0.5)' : 'none'};
-        `;
+        // 找到 renderHardModeLayout 裡面 eliteData.forEach 內的 div.style
+div.style = `
+    width: calc(100% - 25px); /* 這裡縮短寬度，預留右側空間 */
+    max-width: 380px;        /* 稍微降低上限，讓它在手機上看起來更精悍 */
+    margin-left: auto; 
+    margin-right: 15px;      /* 增加右側留白，避開滾動條或按鈕 */
+    background: #1a1a1a; 
+    border: 2px solid ${p.isChampion ? '#ffcc00' : '#555'};
+    border-radius: 12px; 
+    padding: 12px;           /* 稍微縮減內邊距，把空間留給名字 */
+    display: flex; 
+    align-items: center;
+    cursor: pointer; 
+    position: relative; 
+    transition: 0.3s; 
+    flex-shrink: 0;
+    box-sizing: border-box;  /* 重要：確保 padding 不會撐開寬度 */
+    ${!isPrevClear ? 'filter: grayscale(1) opacity(0.5);' : ''}
+    box-shadow: ${p.isChampion ? '0 0 20px rgba(255,204,0,0.3)' : 'none'};
+`;
 
-        div.innerHTML = `
-            <div style="font-size: 10px; color: #777; position: absolute; top: 8px; right: 12px;">STAGE 0${index+1}</div>
-            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(p.id)}.png" 
-                 style="width: 70px; height: 70px; background: #222; border-radius: 8px; margin-right: 15px;">
-            <div style="text-align: left;">
-                <div style="color: ${p.isChampion ? '#ffcc00' : '#eee'}; font-weight: bold; font-size: 18px;">${p.stageName}</div>
-                <div style="color: #999; font-size: 13px;">主力：${p.name}</div>
-            </div>
-            ${megaHtml}
-            ${p.isChampion ? '<div style="margin-left:auto; font-size:24px;">👑</div>' : ''}
-        `;
+// 同時微調內部文字空間，防止名字被擠到下一行
+div.innerHTML = `
+    <div style="font-size: 9px; color: #666; position: absolute; top: 5px; right: 10px;">STAGE 0${index+1}</div>
+    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${parseInt(p.id)}.png" 
+         style="width: 60px; height: 60px; background: #222; border-radius: 8px; margin-right: 10px;">
+    <div style="text-align: left; flex: 1; min-width: 0; overflow: hidden;"> 
+        <div style="color: ${p.isChampion ? '#ffcc00' : '#eee'}; font-weight: bold; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            ${p.stageName}
+        </div>
+        <div style="color: #888; font-size: 12px;">主力：${p.name}</div>
+    </div>
+    ${megaHtml}
+    ${p.isChampion ? '<div style="margin-left:5px; font-size:20px;">👑</div>' : ''}
+`;
 
         div.onclick = () => {
             if (!isPrevClear) return;
