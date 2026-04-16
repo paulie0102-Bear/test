@@ -26,56 +26,71 @@ body {
     user-select: none;
 }
 
+@media screen and (max-width: 600px) {
+
 #status-bar {
     position: fixed;
-    top: 0; left: 0; width: 100%;
-    height: calc(var(--status-height) + var(--safe-top));
-    padding-top: var(--safe-top);
+    top: 0; 
+    left: 0; 
+    width: 100%;
+    /* 增加一點高度確保容納兩行，約 60px-70px */
+    height: auto; 
+    min-height: 60px; 
+    padding: var(--safe-top) 50px 5px 10px; /* 右邊留 50px 給齒輪 */
     background: rgba(0, 0, 0, 0.95);
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    justify-content: space-around; /* 讓兩行均勻分布 */
+    align-items: stretch; /* 讓子元素撐開到 100% 寬 */
     z-index: 100;
     border-bottom: 2px solid var(--accent-color);
     box-sizing: border-box;
 }
 
-.status-row { display: flex; gap: 15px; margin-bottom: 5px; }
+.status-row { 
+    display: flex; 
+    justify-content: space-between; /* 讓資訊分開到左右兩端 */
+    align-items: center;
+    width: 100%; 
+    padding: 0 10px; /* 留一點左右內距，不要貼死邊緣 */
+    margin-bottom: 2px; /* 縮小間距，省點空間 */
+    box-sizing: border-box;
+}
 
 #sidebar {
     position: fixed;
     left: 0;
-    top: calc(var(--status-height) + var(--safe-top));
-    bottom: var(--safe-bottom);
-    width: var(--sidebar-width);
-    background: #222;
+    /* 確保從狀態欄下方開始 */
+    top: 80px; /* 直接給個估計值或確定的狀態欄高度 */
+    bottom: 0;
+    width: 70px; /* 手機版建議窄一點 */
+    background: rgba(34, 34, 34, 0.9); /* 微透明更有質感 */
     overflow-y: auto;
     border-right: 1px solid #444;
     z-index: 90;
     scrollbar-width: none;
-    -ms-overflow-style: none;
 }
 #sidebar::-webkit-scrollbar { display: none; }
 
 .side-btn {
-    padding: 22px 5px;
+    padding: 15px 5px; /* 減少上下高度，讓手機畫面一次能看到更多地區 */
     text-align: center;
-    font-size: 12px;
+    font-size: 11px; /* 字體縮小一點點 */
     cursor: pointer;
     border-bottom: 1px solid #333;
-    color: #888;
+    color: #bbb; /* 稍微亮一點，手機比較好讀 */
     touch-action: manipulation;
 }
 .side-btn.active { background: var(--accent-color); color: black; font-weight: bold; }
 .side-btn.unlocked { color: white; }
 
 #map-container {
-    margin-left: var(--sidebar-width);
-    margin-top: calc(var(--status-height) + var(--safe-top));
-    height: calc(100vh - (var(--status-height) + var(--safe-top) + var(--safe-bottom)));
+    margin-left: 70px; /* 必須等於 sidebar 的寬度 */
+    margin-top: 65px;  /* 必須等於 status-bar 的高度 */
+    /* 使用動態高度，扣掉頂部高度 */
+    height: calc(100vh - 65px); 
     overflow-y: scroll;
-    background: #333;
+    background: #1a1a1a; /* 稍微深一點，跟側邊欄區分 */
     position: relative;
     scroll-behavior: smooth;
 }
@@ -111,6 +126,16 @@ body {
     flex-shrink: 0;     /* 防止被 FlexBox 壓縮 */
 }
 
+#settings-trigger {
+    position: fixed;
+    top: 5px; 
+    right: 5px; 
+    z-index: 101; /* 必須大於 status-bar 的 100 */
+    background: rgba(0,0,0,0.3);
+    border-radius: 5px;
+    padding: 2px;
+}
+}
 /* 2. 圖示：保留你的圓形背景與大小設定 */
 .pkmn-icon {
     width: 55px; 
@@ -189,21 +214,23 @@ body {
 
 #nav-arrows {
     position: fixed;
-    right: 20px;
-    bottom: calc(30px + var(--safe-bottom));
+    right: 15px; /* 靠右一點 */
+    bottom: 25px;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 10px; /* 縮短箭頭距離 */
     z-index: 100;
 }
 
 .arrow-btn {
-    width: 60px; height: 60px;
-    background: rgba(0, 0, 0, 0.75);
-    border: 2px solid var(--accent-color);
-    border-radius: 50%;
-    display: flex; justify-content: center; align-items: center;
-    font-size: 30px; cursor: pointer;
+    background: rgba(0, 0, 0, 0.5); /* 半透明背景 */
+    width: 40px;
+    height: 40px;
+    border-radius: 50%; /* 圓形比較像手遊 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #666;
 }
 
 .ball-icon {
@@ -232,16 +259,75 @@ body {
 }
 
 #pokemon-list-container {
-    display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: 12px; width: 100%; margin: 15px 0;
+    /* 移除 display: grid */
+    width: 100%;
+    margin: 15px 0;
+    color: #fff;
+    /* 確保容器可以根據內容自動撐開高度 */
+    min-height: 300px; 
+}
+/* 這是包裹 20 個寶可夢格子的網格 */
+.selector-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    width: 100%;
 }
 
 .selector-item {
-    background: #3d3d3d; border-radius: 12px; padding: 5px; text-align: center;
-    cursor: pointer; border: 2px solid transparent; transition: all 0.2s;
+    position: relative; /* 為了讓 Mega 的 M 標籤定位 */
+    background: #3d3d3d;
+    border-radius: 12px;
+    padding: 8px; /* 稍微增加一點內邊距 */
+    text-align: center;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s;
 }
-.selector-item:active { transform: scale(0.9); background: #555; border-color: var(--accent-color); }
-.selector-item img { width: 100%; height: auto; object-fit: contain; }
+
+/* 保留你原本的按壓特效，並增加選中感 */
+.selector-item:active { 
+    transform: scale(0.95); 
+    background: #555; 
+}
+
+.selector-item img { 
+    width: 60px; /* 固定寬度，防止圖片大小不一導致排版歪掉 */
+    height: 60px; 
+    object-fit: contain; 
+}
+
+/* 移除點擊後的預設外框 */
+.selector-item, .tile-class, button {
+    outline: none !important;
+}
+
+/* 如果是行動端，也建議移除點擊時的高亮灰色區塊 */
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* 地區按鈕與分頁按鈕的通用樣式 */
+#pokemon-list-container button {
+    background: #444;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.2s;
+}
+
+#pokemon-list-container button:hover {
+    background: #666;
+}
+
+#pokemon-list-container button:disabled {
+    background: #222;
+    color: #666;
+    cursor: not-allowed;
+}
 
 .mega-container {
     width: 80%;
@@ -271,19 +357,102 @@ body {
     color: #ccc;
     margin-top: 2px;
 }
+/* 讓返回按鈕在滑鼠移上去時稍微變亮 */
+.side-btn[style*="background: rgb(68, 68, 68)"]:hover {
+    background: #555 !important;
+    filter: brightness(1.2);
+}
 
+/* 點擊時的縮小效果 */
+.side-btn:active {
+    transform: scale(0.95);
+    transition: transform 0.1s;
+}
+
+/* 確保 hr 分隔線在深色背景下看得到 */
+#region-btns hr {
+    opacity: 0.5;
+}
+
+/* 棋盤震動效果 */
+.skill-shake {
+    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+/* 技能標籤樣式 */
+.skill-toast {
+    position: fixed;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 15px 30px;
+    border-radius: 50px;
+    border: 2px solid #ffcb05; /* 寶可夢金色 */
+    font-size: 24px;
+    font-weight: bold;
+    z-index: 9999;
+    animation: toast-in-out 0.8s ease forwards;
+    pointer-events: none;
+    text-shadow: 0 0 10px rgba(255, 203, 5, 0.5);
+}
+
+@keyframes toast-in-out {
+    0% { transform: translate(-50%, -30%); opacity: 0; }
+    20% { transform: translate(-50%, -50%); opacity: 1; }
+    80% { transform: translate(-50%, -50%); opacity: 1; }
+    100% { transform: translate(-50%, -70%); opacity: 0; }
+}
+
+.mega-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: #ffcc00;
+    color: #000;
+    font-size: 9px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-weight: bold;
+    z-index: 1;
+}
+
+/* 美化捲動內容區 */
+#prep-scroll-content::-webkit-scrollbar {
+    width: 4px;
+}
+#prep-scroll-content::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+#prep-scroll-content::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 10px;
+}
+#prep-scroll-content::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-color);
+}
+        
     </style>
 </head>
 <body>
 
     <div id="status-bar">
         <div class="status-row">
-            <span id="region-title">關都地區</span>
-            <span>關卡進度: <b id="ui-dex">0/721</b></span>
+            <span id="region-title">關都</span>
+            <span>圖鑑進度: <b id="ui-dex">0/831</b></span>
             <span>🔑: <b id="ui-keys">0</b></span>
         </div>
         <div class="status-row">
-            <span>⚡ <b id="ui-stamina">10/10</b></span>
+            <span>❤️ <b id="ui-stamina">10/10</b></span>
             <span id="ui-timer">00:00</span>
         </div>
     </div>
@@ -314,8 +483,143 @@ body {
         { name: "豐緣", range: [252, 386], id: "hoenn" },
         { name: "神奧", range: [387, 493], id: "sinnoh" },
         { name: "合眾", range: [494, 649], id: "unova" },
-        { name: "卡洛斯", range: [650, 721], id: "kalos" }
+        { name: "卡洛斯", range: [650, 721], id: "kalos" },
+        { name: "阿羅拉", range: [722, 802], id: "alola" },
+        { name: "皮卡丘", range: [803, 817], id: "pika" },
+        { name: "閃光", range: [818, 831], id: "shiny" }
     ];
+
+
+
+    const MEGA_SKILL_DATABASE = {
+    "搖手指": {
+        name: "搖手指",
+        logic: (p, context) => {
+            // 1. 定義可能抽中的技能池 (這裡的名稱必須跟下方的 Key 完全一致)
+            const pool = ["根源波動", "斷崖之劍", "地震", "大字爆炎", "畫龍點睛", "異次元洞", "千萬伏特"];
+            const randomKey = pool[Math.floor(Math.random() * pool.length)];
+            const targetSkill = MEGA_SKILL_DATABASE[randomKey];
+
+            console.log(`搖手指發動了：${randomKey}`);
+            
+            // 2. 執行抽中的技能
+            if (["根源波動", "斷崖之劍", "地震"].includes(randomKey)) {
+                // 從 context 中傳入的 leaderPositions 抓第一個點作為中心
+                const fallbackP = (context.leaderPositions && context.leaderPositions.length > 0) 
+                                  ? context.leaderPositions[0] 
+                                  : { x: 2, y: 2 };
+                targetSkill.logic(fallbackP, context);
+            } else {
+                targetSkill.logic(null, context);
+            }
+        }
+    },
+    "根源波動": {
+        name: "根源波動",
+        region: "關都",
+        logic: (p, ctx) => {
+            // 橫向消除
+            for (let c = 0; c < ctx.COLS; c++) ctx.matches.add(p.y * ctx.COLS + c);
+        }
+    },
+    "斷崖之劍": {
+        name: "斷崖之劍",
+        region: "城都",
+        logic: (p, ctx) => {
+            // 縱向消除
+            for (let r = 0; r < ctx.ROWS; r++) ctx.matches.add(r * ctx.COLS + p.x);
+        }
+    },
+    "地震": {
+        name: "地震",
+        region: "豐緣",
+        logic: (p, ctx) => {
+            // 周圍爆破
+            for (let r = -1; r <= 1; r++) {
+                for (let c = -1; c <= 1; c++) {
+                    let nr = p.y + r, nc = p.x + c;
+                    if (nr >= 0 && nr < ctx.ROWS && nc >= 0 && nc < ctx.COLS) {
+                        ctx.matches.add(nr * ctx.COLS + nc);
+                    }
+                }
+            }
+        }
+    },
+    "大字爆炎": {
+        name: "大字爆炎",
+        region: "神奧",
+        logic: (p, ctx) => {
+            // 大X型消除
+            for (let i = 0; i < ctx.ROWS; i++) {
+                ctx.matches.add(i * ctx.COLS + i);
+                ctx.matches.add(i * ctx.COLS + (ctx.COLS - 1 - i));
+            }
+        }
+    },
+    "畫龍點睛": {
+        name: "畫龍點睛",
+        region: "合眾",
+        logic: (p, ctx) => {
+            // 隊長全清
+            ctx.board.forEach((tile, idx) => {
+                if (parseInt(tile.pokemonId) === parseInt(ctx.leaderId)) ctx.matches.add(idx);
+            });
+        }
+    },
+    "異次元洞": {
+        name: "異次元洞",
+        region: "卡洛斯",
+        logic: (p, ctx) => {
+            // 再來一次 (洗牌)
+            battleData.triggerBoardReset = true;
+        }
+    },
+    "千萬伏特": {
+    name: "千萬伏特",
+    region: "阿羅拉",
+    logic: (p, ctx) => {
+        const rows = ctx.ROWS;
+        const cols = ctx.COLS;
+        let allValidPos = [];
+
+        // 1. 收集盤面上所有「非空」且「尚未被加入消除名單」的座標
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                const idx = r * cols + c;
+                // 檢查是否已經在本次 matchSet 中，若不在則列入可炸毀目標
+                if (ctx.board[idx] && !ctx.matches.has(idx.toString())) {
+                    allValidPos.push(idx);
+                }
+            }
+        }
+
+        // 2. 隨機洗牌可消除位置
+        allValidPos.sort(() => Math.random() - 0.5);
+
+        // 3. 取出前 10 個並加入消除名單 (ctx.matches)
+        const count = Math.min(allValidPos.length, 10);
+        for (let i = 0; i < count; i++) {
+            const targetIdx = allValidPos[i];
+            // 這裡直接將索引加入 matchSet，後續系統會處理消除
+            ctx.matches.add(targetIdx.toString());
+        }
+
+        console.log(`⚡️ 千萬伏特：額外擊碎了 ${count} 個方塊！`);
+    }
+}
+};
+
+// 建立索引對照表 (地區 ID -> 技能 Key)
+const REGION_SKILL_MAP = [
+    "搖手指", 
+    "根源波動", 
+    "斷崖之劍", 
+    "地震", 
+    "大字爆炎", 
+    "畫龍點睛", 
+    "異次元洞", 
+    "千萬伏特"
+];
 
     /** 1. 在這裡貼上你的名字清單 **/
 const POKEMON_NAMES = [
@@ -391,11 +695,34 @@ const POKEMON_NAMES = [
 ,"堅盾劍怪","粉香香","芳香精","綿綿泡芙","胖甜妮","好啦鱿","烏賊王","龜腳腳","龜足巨鎧","垃垃藻"
 ,"毒藻龍","鐵臂槍蝦","鋼炮臂蝦","傘電蜥","光電傘蜥","寶寶暴龍","怪顎龍","冰雪龍","冰雪巨龍","仙子伊布"
 ,"摔角鷹人","咚咚鼠","小碎鑽","黏黏寶","黏美兒","黏美龍","鑰圈兒","小木靈","朽木妖","南瓜精"
-,"南瓜怪人","冰寶","冰岩怪","嗡蝠","音波龍","哲爾尼亞斯","伊裴爾塔爾","基格爾德","蒂安希","胡帕","波爾凱尼恩"
+,"南瓜怪人","冰寶","冰岩怪","嗡蝠","音波龍","哲爾尼亞斯","伊裴爾塔爾","基格爾德","蒂安希","胡帕","波爾凱尼恩",
+"木木梟","投羽梟","狙射樹梟",
+"火斑喵","炎熱喵","熾焰咆哮虎","球球海獅","花漾海獅","西獅海壬",
+"小篤兒","喇叭啄鳥","銃嘴大鳥","貓鼬少","貓鼬探長",
+"強顎雞母蟲","蟲電寶","鍬農炮蟲","好勝蟹","好勝毛蟹",
+"花舞鳥","萌虻","蝶結萌虻","岩狗狗","鬃岩狼人",
+"弱丁魚","好壞星","超壞星","泥驢仔","重泥挽馬",
+"滴蛛","滴蛛霸","偽螳草","蘭螳花","睡睡菇","燈罩夜菇",
+"夜盜火蜥","焰后蜥","童偶熊","穿著熊",
+"甜竹竹","甜舞妮","甜冷美后","花療環環",
+"智揮猩","投擲猴","膽小蟲","具甲武者",
+"沙丘魔堡娃","噬沙堡爺","拳海參",
+"屬性：空","銀伴戰獸","小隕星","樹枕尾熊",
+"爆焰龜獸","托戈德瑪爾","謎擬Q","磨牙彩皮魚",
+"老翁龍","破破舵輪",
+"心鱗寶","鱗甲龍","杖尾鱗甲龍",
+"卡璞・鳴鳴","卡璞・蝶蝶","卡璞・哞哞","卡璞・鰭鰭",
+"科斯莫古","科斯莫姆","索爾迦雷歐","露奈雅拉",
+"虛吾伊德","爆肌蚊","費洛美螂","電束木","鐵火輝夜","紙御劍","惡食大王",
+"奈克洛茲瑪","瑪機雅娜","瑪夏多", 
+"魔術皮卡丘", "耶誕皮卡丘", "噴火龍皮", "鯉魚王皮", "紅色暴鯉龍皮", "鳳王皮", "洛奇亞皮", 
+"列空坐皮", "黑列空坐皮", "智皮", "智皮", "智皮", "智皮", "智皮", "智皮", 
+"閃光噴火龍", "閃光梗鬼", "閃光鯉魚王", "閃光暴鯉龍", "閃光超夢", "閃光班基拉斯", "閃光鳳王", 
+"閃光沙奈朵", "閃光巨金怪", "閃光列空坐", "閃光蓋諾賽克特","閃光哲爾尼亞斯","閃光伊裴爾塔爾","小軟" 
 ];
 
 /** 2. 修改數據生成邏輯，讓它讀取上面的清單 **/
-const POKEMON_DATA = Array.from({length: 721}, (_, i) => {
+const POKEMON_DATA = Array.from({length: 831}, (_, i) => {
     const idNum = i + 1;
 
     // --- 1. 補齊所有 Mega 進化名單 (包含原始回歸) ---
@@ -405,7 +732,8 @@ const POKEMON_DATA = Array.from({length: 721}, (_, i) => {
   130, 142, 150, 181, 208, 212, 214, 229, 248, 254, 
   257, 260, 282, 302, 303, 306, 308, 310, 319, 323, 
   334, 354, 359, 362, 373, 376, 380, 381, 382, 383, 
-  384, 428, 445, 448, 460, 475, 531, 646, 658, 719
+  384, 428, 445, 448, 460, 475, 531, 646, 648, 658, 718, 719, 720,
+  818, 819, 821, 822, 823, 825, 826, 827, 831
     ];
 
     // --- 2. 補齊所有傳說與幻之寶可夢 (Legendary & Mythical) ---
@@ -419,9 +747,11 @@ const POKEMON_DATA = Array.from({length: 721}, (_, i) => {
         144, 145, 146, 150, 151, 
         243, 244, 245, 249, 250, 251,
         377, 378, 379, 380, 381, 382, 383, 384, 385, 386,
-        480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 494,
-        638, 639, 640, 641, 642, 643, 644, 645, 646, 647, 648, 649,
-        716, 717, 718, 719, 720, 721
+        480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493,
+        494,638, 639, 640, 641, 642, 643, 644, 645, 646, 647, 648, 649,
+        716, 717, 718, 719, 720, 721, 
+        785, 786, 787, 788, 791, 792, 800, 
+        822, 824, 827, 828, 829, 830, 831
     ];
 
     return {
@@ -480,7 +810,14 @@ function getEliteFourData(regionName) {
             { id: "689", name: "龜足巨鎧", stageName: "四天王 志米" },
             { id: "652", name: "布里卡隆", stageName: "四天王 雁鎧" },
             { id: "282", name: "沙奈朵", stageName: "地區冠軍 卡露乃", isChampion: true }
-        ]
+        ],
+        "阿羅拉": [
+    { id: "740", name: "好勝毛蟹", stageName: "四天王 哈勞" },
+    { id: "745", name: "鬃岩狼人", stageName: "四天王 麗姿" },
+    { id: "770", name: "噬沙堡爺", stageName: "四天王 阿塞羅拉" },
+    { id: "733", name: "銃嘴大鳥", stageName: "四天王 卡希麗" },
+    { id: "727", name: "熾焰咆哮虎", stageName: "地區冠軍 庫庫伊博士", isChampion: true }
+]
     };
 
     // 這裡會精準對應 "關都"、"城都" 等中文名稱
@@ -498,7 +835,8 @@ function getEliteFourData(regionName) {
     lastPlayed: "001",
     currentRegionIdx: 0,
     isHardMode: false,
-    
+    unlockedSkillIdx: 0,
+    currentSkillKey: "搖手指",
     // --- 在這裡加入隊伍資料 ---
     // 預設隊伍：妙蛙種子(001)、小火龍(004)、傑尼龜(007)、皮卡丘(025)
     team: ["001", "004", "007", "025"] 
@@ -549,6 +887,17 @@ let currentSelectingSlot = 0;
     setInterval(updateStamina, 1000);
 }
 
+function goBackToMain() {
+    // 1. 儲存副本進度
+    if (typeof save === 'function') {
+        save();
+        console.log("副本進度已儲存...");
+    }
+
+    // 2. 跳轉回上一層的主程式
+    window.location.href = "../index.html";
+}
+
     function renderRegionButtons() {
         const container = document.getElementById('region-btns');
         container.innerHTML = '';
@@ -560,6 +909,22 @@ let currentSelectingSlot = 0;
             btn.onclick = () => { if(isUnlocked) switchRegion(index); };
             container.appendChild(btn);
         });
+        // 2. 【新增】插入分隔線與返回按鈕
+    const hr = document.createElement('hr');
+    hr.style.cssText = "border:0; border-top:1px solid #555; margin:10px 5px;";
+    container.appendChild(hr);
+
+    const backBtn = document.createElement('div');
+    backBtn.className = 'side-btn'; 
+    backBtn.style.background = '#444'; // 深色區分
+    backBtn.style.color = '#ffcc00';   // 金色文字更有質感
+    backBtn.innerHTML = '🏠 返回';
+    backBtn.onclick = () => {
+        if(typeof save === 'function') save();
+        window.location.href = '../index.html'; // 回到上一層
+    };
+    container.appendChild(backBtn);
+
     }
 
     function isRegionUnlocked(index) {
@@ -593,7 +958,7 @@ let currentSelectingSlot = 0;
 
     // 更新標題
     const titleEl = document.getElementById('region-title');
-    if (titleEl) titleEl.innerText = currentReg.name + "地區";
+    if (titleEl) titleEl.innerText = currentReg.name ;
     
     // 更新按鈕文字與樣式（確保 UI 反映目前的 gameState.isHardMode）
     const btn = document.querySelector('.mode-toggle');
@@ -615,8 +980,17 @@ let currentSelectingSlot = 0;
 }
 
     function toggleDifficulty() {
-    const currentReg = REGION_CONFIG[gameState.currentRegionIdx];
+    // 取得當前地區編號
+    const currentRegIdx = gameState.currentRegionIdx;
     
+    // 如果地區索引超過 (假設是 )，則不允許開啟
+    // 或者判斷起始 ID 是否 > 802
+    if (REGION_CONFIG[currentRegIdx].range[0] > 802) {
+        alert("該地區尚未開放困難模式（四天王挑戰）！");
+        return;
+    }
+
+    const currentReg = REGION_CONFIG[currentRegIdx];
     // --- 判定邏輯：檢查該地區「所有關卡」是否都通關過 ---
     let isAllCleared = true;
     for (let i = currentReg.range[0]; i <= currentReg.range[1]; i++) {
@@ -677,7 +1051,6 @@ function renderMap() {
 
     // --- 關鍵修正：清空樣式殘留 ---
     list.innerHTML = '';
-    // 將之前在 JS 裡面設定的 Style 全部重設為空字串，讓它回歸 CSS 檔案的預設值
     list.style.display = "";
     list.style.flexDirection = "";
     list.style.alignItems = "";
@@ -688,18 +1061,39 @@ function renderMap() {
 
     const config = REGION_CONFIG[gameState.currentRegionIdx];
 
-    // --- 分流判定 ---
+    // --- 【新增：安全性分流檢查】 ---
+    if (gameState.isHardMode) {
+        // 取得該地區的四天王資料
+        const eliteData = getEliteFourData(config.name);
+        
+        // 如果該地區超過 721 (無困難模式) 或者抓不到資料
+        if (config.range[0] > 802 || !eliteData || eliteData.length === 0) {
+            console.warn(`偵測到 ${config.name} 不支援困難模式，已強制切回普通模式。`);
+            gameState.isHardMode = false;
+            
+            // 同步更新模式切換按鈕的 UI (如果有按鈕的話)
+            const btn = document.querySelector('.mode-toggle');
+            if (btn) {
+                btn.innerText = "普通";
+                btn.style.background = "";
+                btn.style.color = "";
+                btn.classList.remove('active');
+            }
+        }
+    }
+
+    // --- 正式渲染邏輯 ---
     if (gameState.isHardMode) {
         renderHardModeLayout(list, config);
     } else {
         renderNormalModeLayout(list, config);
-        
-        // 【選擇性加入】確保普通模式下自動捲動到頂部，避免被剛才困難模式的捲動位置影響
         list.scrollTop = 0; 
     }
 
     // 更新狀態列
     updateStatusBar();
+    // 存檔一次，確保 isHardMode 的變更被記錄
+    save();
 }
 
 // --- 普通模式：保留你原本的所有邏輯與樣式 ---
@@ -722,7 +1116,8 @@ function renderNormalModeLayout(list, config) {
         const isUnlocked = gameState.unlocked.includes(p.id);
         const isCaptured = gameState.captured.includes(p.id);
         const megaHtml = getMegaIconHtml(p);
-        const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${parseInt(p.id)}.png`;
+        // 直接使用 p.id (字串格式)，確保 001 不會變成 1
+const spriteUrl = `https://paulie0102-bear.github.io/Bear/shuffle/${p.id}.png`;
         
         const div = document.createElement('div');
         div.id = `stage-${p.id}`;
@@ -761,13 +1156,19 @@ function renderNormalModeLayout(list, config) {
 function renderHardModeLayout(list, config) {
     const eliteData = getEliteFourData(config.name); 
     
-    // --- 佈局修正：與普通模式保持一致的邊距與對齊 ---
+    // --- 【關鍵修正】進入關卡列表時，先清除舊的 Mega 分支設定 ---
+    // 這樣可以防止上一次選的噴火龍 Y 影響到這一次的關卡預覽
+    if (gameState) {
+        gameState.currentMegaBranch = 'X'; // 或是設為 null，由準備畫面重新決定
+    }
+
+    // --- 佈局樣式 ---
     list.style.display = "flex";
     list.style.flexDirection = "column-reverse"; 
-    list.style.alignItems = "center";  // 改為 center，讓方塊在剩餘空間置中
-    list.style.paddingLeft = "40px";   // 縮小左側留白 (同步普通模式)
+    list.style.alignItems = "center";
+    list.style.paddingLeft = "40px";
     list.style.paddingRight = "15px";  
-    list.style.paddingTop = "100px";   // 頂部留白 (冠軍上方)
+    list.style.paddingTop = "100px";
     list.style.paddingBottom = "40px"; 
     list.style.boxSizing = "border-box";
     list.style.gap = "20px";
@@ -777,15 +1178,16 @@ function renderHardModeLayout(list, config) {
 
     eliteData.forEach((p, index) => {
         const isPrevClear = index === 0 || (gameState.clearCounts && gameState.clearCounts[eliteData[index-1].id] > 0);
+        
+        // 取得該關卡頭目的 Mega 圖標 (用於預覽)
         const megaHtml = getMegaIconHtml(p);
 
         const div = document.createElement('div');
         div.id = `hard-stage-${index}`;
         
-        // --- 核心修正處：不再縮過頭，寬度填滿剩餘空間 ---
         div.style = `
-            width: 100%;            /* 使用 100% 配合父層 Padding 自動填滿 */
-            max-width: 420px;       /* 困難模式方塊稍微大一點點增加氣勢 */
+            width: 100%;
+            max-width: 420px;
             margin: 0; 
             background: #1a1a1a; 
             border: 2px solid ${p.isChampion ? '#ffcc00' : '#555'};
@@ -798,14 +1200,17 @@ function renderHardModeLayout(list, config) {
             transition: 0.3s; 
             flex-shrink: 0;
             box-sizing: border-box; 
-            ${!isPrevClear ? 'filter: grayscale(1) opacity(0.5);' : ''}
+            ${!isPrevClear ? 'filter: grayscale(1) opacity(0.5); pointer-events: none;' : ''}
             box-shadow: ${p.isChampion ? '0 0 20px rgba(255,204,0,0.3)' : 'none'};
         `;
 
+        // 格式化 ID 為 001, 006 格式
+        const formattedId = p.id.toString().padStart(3, '0');
+
         div.innerHTML = `
             <div style="font-size: 9px; color: #666; position: absolute; top: 5px; right: 10px;">STAGE 0${index+1}</div>
-            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${parseInt(p.id)}.png" 
-                 style="width: 60px; height: 60px; background: #222; border-radius: 8px; margin-right: 12px;">
+            <img src="https://paulie0102-bear.github.io/Bear/shuffle/${formattedId}.png" 
+                 style="width: 60px; height: 60px; background: #222; border-radius: 8px; margin-right: 12px; object-fit: contain;">
             <div style="text-align: left; flex: 1; min-width: 0;"> 
                 <div style="color: ${p.isChampion ? '#ffcc00' : '#eee'}; font-weight: bold; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                     ${p.stageName}
@@ -819,8 +1224,12 @@ function renderHardModeLayout(list, config) {
         div.onclick = () => {
             if (!isPrevClear) return;
             gameState.lastPlayed = p.id;
+            
+            // --- 【關鍵修正】確保點擊進入準備畫面時，重設分支變數 ---
+            gameState.currentMegaBranch = 'X'; 
+            
             save();
-            openPrep(p);
+            openPrep(p); // 進入戰前準備畫面
         };
         list.appendChild(div);
     });
@@ -839,9 +1248,17 @@ function startBattleLogic() {
     battleData.megaProgress = 0;       // 清除上一場的 Mega 進度
     battleData.isMegaEvolved = false; // 重置進化狀態
     battleData.isEnding = false;       // 確保戰鬥鎖定解除
+
+    const branchSelect = document.getElementById('mega-branch');
+    if (branchSelect) {
+        battleData.selectedMegaBranch = branchSelect.value; 
+    } else {
+        // 如果沒有選單（一般只有單一形態的寶可夢），預設給 X 即可
+        battleData.selectedMegaBranch = 'X';
+    }
     
     const p = POKEMON_DATA.find(x => x.id === gameState.lastPlayed);
-    battleData.maxHP = (gameState.isHardMode) ? 5000 : (p.type === "Legendary" ? 3500 : 2500);
+    battleData.maxHP = (gameState.isHardMode) ? 10000 : (p.type === "Legendary" ? 5000 : 3000);
     battleData.currentHP = battleData.maxHP;
     battleData.moves = 15;
     battleData.board = [];
@@ -862,18 +1279,32 @@ function startBattleLogic() {
     }
 
     // 重置隊長圖片 (換回普通形態，避免上一場 Mega 圖片殘留)
-    const leaderId = gameState.team[0];
-    const leaderImg = document.getElementById('team-img-0'); 
-    if (leaderImg) {
-        // 使用普通圖片路徑
-        leaderImg.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${parseInt(leaderId)}.png`;
-        leaderImg.style.filter = ""; // 移除發光效果
-    }
+    // --- 2. UI 狀態重置 ---
+const leaderId = gameState.team[0];
+const leaderImg = document.getElementById('team-img-0'); 
 
-    // 3. 切換畫面
-    document.getElementById('prep-overlay').style.display = 'none';
-    document.getElementById('battle-screen').style.display = 'flex';
-    document.getElementById('enemy-sprite').src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${parseInt(p.id)}.png`;
+if (leaderImg) {
+    // 優化：統一呼叫 getTileImageUrl 取得路徑
+    // 因為此時 battleData.isMegaEvolved 已在上方重置為 false，
+    // 所以這個函式會自動回傳該 ID 的「普通形態」圖片。
+    leaderImg.src = getTileImageUrl(leaderId);
+    
+    // 重置視覺特效
+    leaderImg.style.filter = ""; 
+    leaderImg.style.transform = "scale(1)"; 
+}
+
+// --- 3. 切換畫面 ---
+document.getElementById('prep-overlay').style.display = 'none';
+document.getElementById('battle-screen').style.display = 'flex';
+
+// 優化：處理敵人（對手）的圖片
+const enemySprite = document.getElementById('enemy-sprite');
+if (enemySprite && p) {
+    // 強制補零確保網址正確 (例如 6 -> 006)
+    const enemyId = p.id.toString().padStart(3, '0');
+    enemySprite.src = `https://paulie0102-bear.github.io/Bear/shuffle/${enemyId}.png`;
+}
     
     updateBattleUI();
     initBoard();
@@ -884,18 +1315,27 @@ function startBattleLogic() {
 
 function initBoard() {
     const boardEl = document.getElementById('board');
+    if (!boardEl) return;
+    
     boardEl.innerHTML = '';
+    battleData.board = []; // 清空舊的資料陣列
     
     // 生成 36 個棋子 (隨機從隊伍 4 人中挑選)
     for (let i = 0; i < 36; i++) {
-        const randomMemberId = gameState.team[Math.floor(Math.random() * 4)];
+        // 從目前的隊伍中隨機挑選一位成員 ID
+        const randomMemberId = gameState.team[Math.floor(Math.random() * gameState.team.length)];
+        
+        // 儲存邏輯數據
         const tileData = { id: i, pokemonId: randomMemberId };
         battleData.board.push(tileData);
         
+        // 建立前端元件
         const div = document.createElement('div');
         div.className = 'tile';
         div.dataset.index = i;
-        div.innerHTML = `<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${parseInt(randomMemberId)}.png">`;
+
+        // --- 優化點：呼叫 getTileImageUrl 確保網址與進化狀態同步 ---
+        div.innerHTML = `<img src="${getTileImageUrl(randomMemberId)}">`;
         
         // 綁定點擊交換邏輯
         div.onclick = () => handleTileClick(i);
@@ -946,15 +1386,43 @@ function handleTileClick(index) {
 
 
 function swapTiles(idx1, idx2) {
-    // 陣列數據交換
+    // 1. 陣列數據交換 (這部分你原本的寫法是對的)
     const temp = battleData.board[idx1].pokemonId;
     battleData.board[idx1].pokemonId = battleData.board[idx2].pokemonId;
     battleData.board[idx2].pokemonId = temp;
     
-    // 畫面更新 (重新渲染兩個格子)
+    // 2. 取得新的 ID 數據
+    const id1 = battleData.board[idx1].pokemonId;
+    const id2 = battleData.board[idx2].pokemonId;
+
+    // 3. 畫面更新 (重新渲染兩個格子)
     const tiles = document.querySelectorAll('.tile');
-    tiles[idx1].innerHTML = `<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${parseInt(battleData.board[idx1].pokemonId)}.png">`;
-    tiles[idx2].innerHTML = `<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${parseInt(battleData.board[idx2].pokemonId)}.png">`;
+
+    // --- 修正重點：將 p.id 改成 id1 與 id2 ---
+    // 同時加入 Mega 判斷，確保交換後如果是 Mega 隊長，圖片不會變回普通版
+    tiles[idx1].innerHTML = `<img src="${getTileImageUrl(id1)}">`;
+    tiles[idx2].innerHTML = `<img src="${getTileImageUrl(id2)}">`;
+}
+
+// 建議額外加上這個輔助函式，統一管理棋盤圖片路徑，避免以後又要改整串網址
+function getTileImageUrl(pokemonId) {
+    if (!pokemonId) return "";
+    
+    const leaderId = gameState.team[0];
+    
+    // 檢查這顆方塊是否就是隊長，且目前處於 Mega 狀態
+    if (battleData.isMegaEvolved && String(pokemonId) === String(leaderId)) {
+        
+        // 【關鍵】確保這裡抓到的 branch 是玩家在戰前準備畫面選的那一個
+        // 優先順序：戰鬥中選擇的分支 > 全域暫存分支 > 預設 X
+        const branch = battleData.selectedMegaBranch || gameState.currentMegaBranch || 'X';
+        
+        console.log(`渲染 Mega 圖片: ID=${pokemonId}, Branch=${branch}`); // 調試用
+        return getMegaSpriteUrl(pokemonId, branch);
+    }
+    
+    // 一般情況
+    return `https://paulie0102-bear.github.io/Bear/shuffle/${pokemonId}.png`;
 }
 
 function updateBattleUI() {
@@ -977,6 +1445,7 @@ function checkMatches() {
 
     let board = battleData.board;
     let toMatch = new Set();
+    let currentTurnMatches = 0; // 新增：用來記錄這一輪同時消除了幾組
 
     // --- 橫向與縱向掃描 (維持你原本的邏輯) ---
     for (let r = 0; r < 6; r++) {
@@ -987,6 +1456,7 @@ function checkMatches() {
             let id3 = board[idx + 2].pokemonId;
             if (id1 && id1 === id2 && id1 === id3) {
                 toMatch.add(idx); toMatch.add(idx + 1); toMatch.add(idx + 2);
+                currentTurnMatches++; // 發現一組橫向連線
             }
         }
     }
@@ -998,12 +1468,13 @@ function checkMatches() {
             let id3 = board[idx + 12].pokemonId;
             if (id1 && id1 === id2 && id1 === id3) {
                 toMatch.add(idx); toMatch.add(idx + 6); toMatch.add(idx + 12);
+                currentTurnMatches++; // 發現一組縱向連線
             }
         }
     }
 
     if (toMatch.size > 0) {
-        handleElimination(toMatch);
+        handleElimination(toMatch, currentTurnMatches);
     } else {
         // --- 【關鍵修正】 Combo 結束時的處理 ---
         battleData.combo = 0;
@@ -1018,47 +1489,86 @@ function checkMatches() {
 
 // 取得自定義 Mega 圖片網址的公式
 function getMegaSpriteUrl(pokemonId, branch = 'X') {
-    // 改為指向官方 Home 高畫質圖庫
-    const baseUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/";
-    const idNum = parseInt(pokemonId);
+    // 指向你自己的 GitHub 圖片庫
+    const baseUrl = "https://paulie0102-bear.github.io/Bear/shuffle/";
     
-    // 官方形態 ID 對應表 (根據你提供的 megaIds 列表)
-    const homeMegaMap = {
-        3: 10033, 6: {X: 10034, Y: 10035}, 9: 10036, 15: 10090, 18: 10073,
-        65: 10037, 80: 10071, 94: 10038, 115: 10039, 127: 10040,
-        130: 10041, 142: 10042, 150: {X: 10043, Y: 10044}, 181: 10045, 208: 10072,
-        212: 10046, 214: 10047, 229: 10048, 248: 10049, 254: 10065,
-        257: 10050, 260: 10064, 282: 10051, 302: 10066, 303: 10052,
-        306: 10053, 308: 10054, 310: 10055, 319: 10070, 323: 10087,
-        334: 10067, 354: 10056, 359: 10057, 362: 10074, 373: 10089,
-        376: 10076, 380: 10063, 381: 10062, 382: 10077, 383: 10078, // 原始回歸
-        384: 10079, 428: 10088, 445: 10058, 448: 10059, 460: 10060,
-        475: 10068, 531: 10069, 646: {X: 10022, Y: 10023}, // 黑/白酋雷姆
-        658: 10117, 719: 10075 // 小智忍蛙 / 蒂安希
-    };
+    // 確保 ID 是補零後的字串 (例如 "006")
+    const formattedId = pokemonId.toString().padStart(3, '0');
+    
+    // 定義哪些 ID 擁有雙形態 (X/Y)
+    // 包含：噴火龍(6)、超夢(150)、酋雷姆(646)
+    const dualForms = ["006", "150", "646", "818", "822"];
+    
+    let fileName = "";
 
-    let finalId = idNum;
-
-    // 判斷是否在 Mega 表中，如果是則轉換 ID
-    if (homeMegaMap[idNum]) {
-        const mapping = homeMegaMap[idNum];
-        if (typeof mapping === 'object') {
-            const b = branch.toUpperCase();
-            finalId = mapping[b] || mapping['X'];
-        } else {
-            finalId = mapping;
-        }
+    if (dualForms.includes(formattedId)) {
+        // 雙狀態處理 (例如：006-mega-x.png, 646-mega-y.png)
+        const suffix = branch.toLowerCase(); // 轉成小寫 x 或 y
+        fileName = `${formattedId}-mega-${suffix}.png`;
+    } else {
+        // 一般 Mega / 原始回歸 / 小智忍蛙 (例如：003-mega.png)
+        fileName = `${formattedId}-mega.png`;
     }
 
-    return `${baseUrl}${finalId}.png`;
+    return `${baseUrl}${fileName}`;
 }
 
-function handleElimination(matchSet) {
-    battleData.combo++;
+function applyMegaSkill(matchSet, leaderId) {
+    if (!battleData.isMegaEvolved) return;
+
+    // 取得發動位置
+    let leaderPositions = [];
+    matchSet.forEach(idx => {
+        if (parseInt(battleData.board[idx].pokemonId) === parseInt(leaderId)) {
+            leaderPositions.push({ x: idx % 6, y: Math.floor(idx / 6) });
+        }
+    });
+
+    if (leaderPositions.length === 0) return;
+
+    // --- 【修改重點：從讀取進度改為讀取「當前裝備」】 ---
+    // 優先使用玩家在準備畫面選定的技能，若無則預設為搖手指
+    const skillKey = gameState.currentSkillKey || "搖手指";
+    const skill = MEGA_SKILL_DATABASE[skillKey];
+
+    // 如果剛好選到的技能還沒解鎖（安全性檢查），則強制回退到搖手指
+    const skillIdx = REGION_SKILL_MAP.indexOf(skillKey);
+    if (skillIdx > (gameState.unlockedSkillIdx || 0)) {
+        console.warn("嘗試使用未解鎖技能，回退至搖手指");
+        applyMegaSkillWithKey("搖手指", matchSet, leaderId); // 或是直接在這裡處理
+        return;
+    }
+    // --------------------------------------------------
+
+    // 播放震動與文字特效
+    playSkillEffect();
+
+    const context = { matches: matchSet, COLS: 6, ROWS: 6, board: battleData.board, leaderId: leaderId };
+
+    // 這些是「全域型技能」，不需要根據每個方塊位置重複執行的
+    const globalSkills = ["搖手指", "大X型消除", "隊長全清", "再來一次", "千萬伏特"];
+
+    if (globalSkills.includes(skillKey)) {
+        // 全域技能：只執行一次邏輯
+        skill.logic(null, context);
+    } else {
+        // 位置型技能：針對每個消除的隊長方塊位置執行（如地震、十字消除）
+        leaderPositions.forEach(p => skill.logic(p, context));
+        }
+}
+
+function handleElimination(matchSet, matchCount = 1) {
+    // 以前是 battleData.combo++; 
+    // 現在改為根據連線組數累加
+    battleData.combo += matchCount;
     const leaderId = gameState.team[0];
-    const barFill = document.getElementById('mega-bar-fill');
-    
-    // --- 1. 核心數據掃描 ---
+
+    // --- 關鍵插入點：先發動 Mega 技能擴張消除範圍 ---
+    if (battleData.isMegaEvolved) {
+        applyMegaSkill(matchSet, leaderId);
+    }
+
+    // --- 之後的數據掃描就會包含被技能炸掉的方塊 ---
     const countsPerPkmn = {}; 
     matchSet.forEach(idx => {
         const id = battleData.board[idx].pokemonId;
@@ -1067,11 +1577,15 @@ function handleElimination(matchSet) {
         }
     });
 
-    // --- 2. 針對「隊長」進行 Mega 進度結算 ---
+
+    const barFill = document.getElementById('mega-bar-fill');
+    
+        // --- 2. 針對「隊長」進行 Mega 進度結算 ---
     Object.keys(countsPerPkmn).forEach(pkmnId => {
         const count = countsPerPkmn[pkmnId];
-        const pkmnInfo = POKEMON_DATA.find(p => p.id === pkmnId);
+        // 修正：使用 parseInt 確保比對 ID 時不會因為字串/數字型態出錯
         const isIdMatch = parseInt(pkmnId) === parseInt(leaderId);
+        const pkmnInfo = POKEMON_DATA.find(p => parseInt(p.id) === parseInt(pkmnId));
         const hasItem = gameState.items.includes(`${pkmnId}_mega`);
         const megaCheck = document.getElementById('mega-check');
         const isMegaEnabled = megaCheck ? megaCheck.checked : true;
@@ -1087,22 +1601,29 @@ function handleElimination(matchSet) {
             if (battleData.megaProgress >= 15) {
                 battleData.isMegaEvolved = true;
                 if (barFill) barFill.classList.add('mega-full');
-                executeMegaImageChange(leaderId);
+                
+                // 【新增】觸發 Mega 時，立即把棋盤上剩下的隊長棋子換成 Mega 圖
+                updateLeaderTilesToMega(leaderId);
+                
+                // 呼叫原本處理上方大圖變化的函式
+                if (typeof executeMegaImageChange === 'function') {
+                    executeMegaImageChange(leaderId);
+                }
             }
         }
     });
 
-    // --- 3. 計算總傷害 (已修正：X 與 Y 倍率統一) ---
+    // --- 3. 計算總傷害 ---
     let totalDamage = 0;
     Object.keys(countsPerPkmn).forEach(pkmnId => {
         const count = countsPerPkmn[pkmnId];
-        const pkmnInfo = POKEMON_DATA.find(p => p.id === pkmnId);
+        const pkmnInfo = POKEMON_DATA.find(p => parseInt(p.id) === parseInt(pkmnId));
         const isLeader = parseInt(pkmnId) === parseInt(leaderId);
         
         let baseDamage = (pkmnInfo && pkmnInfo.type === "Legendary") ? 70 : 50;
         let formMultiplier = 1.0;
 
-        // 只要是 Mega 狀態下的隊長消除，統一 1.5 倍，不再判斷 X 或 Y
+        // 只要是 Mega 狀態下的隊長消除，統一 1.5 倍
         if (battleData.isMegaEvolved && isLeader) {
             formMultiplier = 1.5; 
         }
@@ -1120,7 +1641,6 @@ function handleElimination(matchSet) {
     if (battleData.isMegaEvolved && countsPerPkmn[leaderId]) {
         const comboDiv = document.getElementById('combo-display');
         if (comboDiv) {
-            // 避免重複堆疊 MEGA! 字樣
             if (!comboDiv.innerHTML.includes("MEGA!")) {
                 comboDiv.innerHTML += ` <span class="mega-tag">MEGA!</span>`;
             }
@@ -1139,6 +1659,30 @@ function handleElimination(matchSet) {
     } else {
         setTimeout(refillBoard, 500);
     }
+}
+
+function updateLeaderTilesToMega(leaderId) {
+    // 1. 取得大圖元素
+    const leaderImg = document.getElementById('team-img-0');
+    if (!leaderImg) return;
+
+    // 2. 從「大圖」獲取正確的網址 (它已經包含 -y 且包含 ?v= 隨機數)
+    const correctlyEvolvedUrl = leaderImg.src; 
+
+    // 3. 獲取棋盤格元素
+    const tiles = document.querySelectorAll('.tile');
+
+    // 4. 強制同步
+    battleData.board.forEach((tile, idx) => {
+        // 使用 == 避免字串 "006" 與 數字 6 的型別衝突
+        if (tile.pokemonId == leaderId) {
+            const img = tiles[idx].querySelector('img');
+            if (img) {
+                console.log(`[同步中] 索引 ${idx} 強制換成大圖網址`);
+                img.src = correctlyEvolvedUrl; 
+            }
+        }
+    });
 }
 
 // 獨立出來的換圖函式，確保圖片能被強制刷新
@@ -1184,7 +1728,6 @@ function executeMegaImageChange(leaderId) {
     }
 }
 
-// 輔助函式：計算傷害
 // 輔助函式：計算傷害 (X/Y 倍率統一版)
 function calculateAndApplyDamage(pkmnId, count, pkmnInfo, isLeader) {
     let baseDamage = (pkmnInfo && pkmnInfo.type === "Legendary") ? 70 : 50;
@@ -1240,9 +1783,30 @@ function showCombo() {
 }
 
 function refillBoard() {
+    // --- 技能：卡洛斯地區「再來一次」 ---
+    if (battleData.triggerBoardReset) {
+        battleData.triggerBoardReset = false; // 重置旗標
+        
+        // 1. 清空盤面
+        battleData.board.forEach(tile => tile.pokemonId = null);
+        
+        // 2. 重新填滿隨機方塊 (呼叫你原本初始化盤面的函式)
+        initBoard(); 
+        
+        // 3. 全面更新 UI 與棋盤視覺
+        renderBoard(); // 確保畫面上出現新方塊
+        updateBattleUI(); // 更新介面狀態
+        
+        // 4. 強制結束此回合判定，不觸發天降 checkMatches
+        return; 
+    }
+
+    // --- 以下為正常的方塊掉落邏輯 ---
     if (battleData.currentHP <= 0) return;
+
     for (let c = 0; c < 6; c++) {
         let emptySpaces = 0;
+        // 垂直掉落運算
         for (let r = 5; r >= 0; r--) {
             let idx = r * 6 + c;
             if (battleData.board[idx].pokemonId === null) {
@@ -1252,6 +1816,7 @@ function refillBoard() {
                 battleData.board[idx].pokemonId = null;
             }
         }
+        // 頂部遞補新方塊
         for (let r = 0; r < emptySpaces; r++) {
             battleData.board[r * 6 + c].pokemonId = gameState.team[Math.floor(Math.random() * 4)];
         }
@@ -1259,7 +1824,7 @@ function refillBoard() {
 
     renderBoard();
 
-    // 觸發天降判定，讓 checkMatches 重新判斷狀態
+    // 正常的連鎖判定：觸發天降判定，讓 checkMatches 重新判斷
     setTimeout(() => {
         checkMatches();
     }, 300);
@@ -1271,26 +1836,19 @@ function renderBoard() {
 
     battleData.board.forEach((data, i) => {
         const tile = tiles[i];
-        if (!tile) return; // 安全檢查
+        if (!tile) return; 
 
         tile.style.opacity = '1';
         
-        let spriteUrl;
-        let filterEffect = "none";
+        // --- 優化點：直接呼叫 getTileImageUrl 處理所有網址判斷 ---
+        // 這樣就不需要在這裡寫一堆 if/else 判斷 Mega
+        const spriteUrl = getTileImageUrl(data.pokemonId);
         
-        // --- 判斷邏輯：是否為 Mega 狀態下的隊長格子 ---
+        // --- 處理濾鏡特效 ---
+        // 只有「進化狀態」且「是隊長」的格子才加金光
+        let filterEffect = "none";
         if (battleData.isMegaEvolved && data.pokemonId === leaderId) {
-            // 1. 取得 Mega 圖片路徑
-            const branchSelect = document.getElementById('mega-branch');
-            const currentBranch = branchSelect ? branchSelect.value : 'X';
-            spriteUrl = getMegaSpriteUrl(data.pokemonId, currentBranch);
-            
-            // 2. 設定進化後的金光濾鏡
             filterEffect = "drop-shadow(0 0 5px #ffcc00) brightness(1.1)";
-        } else {
-            // 一般狀態：使用 PokeAPI 圖片
-            spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${parseInt(data.pokemonId)}.png`;
-            filterEffect = "none";
         }
 
         // --- 執行更新 ---
@@ -1305,40 +1863,58 @@ function checkBattleEnd() {
     if (battleData.currentHP <= 0) {
         battleData.isEnding = true; 
 
-        const pId = gameState.lastPlayed;
-        const pInfo = POKEMON_DATA.find(p => p.id === pId);
+        const pId = gameState.lastPlayed; // 當前關卡的 ID (字串，如 "721")
+        const pIntId = parseInt(pId);
 
         // --- 1. 解鎖下一關邏輯 (僅限普通模式) ---
-        const nextId = (parseInt(pId) + 1).toString().padStart(3, '0');
+        const MAX_TOTAL_ID = 831; // 遊戲總關卡上限
+        const nextId = (pIntId + 1).toString().padStart(3, '0');
         let unlockMsg = "";
         
-        if (!gameState.isHardMode && parseInt(nextId) <= 721) {
+        if (!gameState.isHardMode && pIntId + 1 <= MAX_TOTAL_ID) {
             if (!gameState.unlocked.includes(nextId)) {
                 gameState.unlocked.push(nextId);
                 unlockMsg = `下一關 ${nextId} 已解鎖！`; 
             }
         }
 
-        // --- 2. 移除計數邏輯與隱藏進度文字 ---
-        // (此處不再執行 clearCounts++，也不再組合 progress 字串)
-        let finalDesc = unlockMsg;
-        if (finalDesc === "") finalDesc = "成功的擊敗了對手！";
+        // --- 【關鍵插入：地區通關與技能覺醒邏輯】 ---
+        const currentReg = REGION_CONFIG[gameState.currentRegionIdx];
+        const skillList = ["搖手指", "根源波動", "斷崖之劍", "地震", "大字爆炎", "畫龍點睛", "異次元洞", "千萬伏特"];
+
+        // 檢查條件：
+        // A. 擊敗的是當前地區最後一隻 (pIntId === currentReg.range[1])
+        // B. 還有新技能可以解鎖 (unlockedSkillIdx < 6)
+        // C. 雖然總關卡到 831，但技能解鎖只支援到 721 (卡洛斯結束)
+        if (pIntId === currentReg.range[1] && pIntId <= 802) {
+            // 只有第一次通關該地區時才升級技能索引
+            if (gameState.currentRegionIdx === gameState.unlockedSkillIdx && gameState.unlockedSkillIdx < skillList.length - 1) {
+                
+                gameState.unlockedSkillIdx++; 
+                const newSkillName = skillList[gameState.unlockedSkillIdx];
+                
+                const skillAlert = `★ 力量覺醒：解鎖新技能「${newSkillName}」！`;
+                unlockMsg = unlockMsg ? `${unlockMsg} ${skillAlert}` : skillAlert;
+                
+                console.log(`地區通關！新技能解鎖: ${newSkillName}`);
+            }
+        }
+
+        // --- 2. 描述文字處理 ---
+        let finalDesc = unlockMsg || "成功的擊敗了對手！";
 
         const isCaptured = gameState.captured.includes(pId);
         save(); 
 
         // --- 3. 根據狀態決定後續路徑 ---
         if (isCaptured || gameState.isHardMode) {
-            // 已捕捉或困難模式：跳出字卡後直接結束
             showResultCard("挑戰成功", finalDesc, () => {
-                // 統一在此呼叫 handleBattleWin 處理後續(計數/鑰匙)
                 handleBattleWin(); 
                 closeBattle(); 
                 battleData.isEnding = false; 
                 renderMap(); 
             });
         } else {
-            // 未捕捉且普通模式：跳出字卡後進入捕捉階段
             showResultCard("挑戰成功", finalDesc, () => {
                 battleData.isEnding = false; 
                 handleBattleWin(); 
@@ -1384,6 +1960,17 @@ function handleBattleWin() {
     const useKeyElement = document.getElementById('use-key');
     const useKey = useKeyElement ? useKeyElement.checked : false;
 
+    // --- 【核心修正：解鎖下一關邏輯】 ---
+    const currentIndex = POKEMON_DATA.findIndex(x => x.id === p.id);
+    if (currentIndex !== -1 && currentIndex < POKEMON_DATA.length - 1) {
+        const nextPokemon = POKEMON_DATA[currentIndex + 1];
+        // 如果下一隻還沒解鎖，就把它加進去
+        if (!gameState.unlocked.includes(nextPokemon.id)) {
+            gameState.unlocked.push(nextPokemon.id);
+            console.log(`解鎖下一關：No.${nextPokemon.id} ${nextPokemon.name}`);
+        }
+    }
+
     // --- 1. 立即處理獎勵與進度 (存檔前完成) ---
     let megaMsg = "";
     if (!gameState.isHardMode) {
@@ -1422,6 +2009,7 @@ function handleBattleWin() {
         if (isLegendary && !useKey) {
             alert("通關成功！但未開啟傳說之鑰，寶可夢直接離開了。");
             closeBattle();
+            renderMap();
             return;
         }
 
@@ -1446,11 +2034,32 @@ function handleBattleWin() {
     }
 }
 
+// 視覺特效處理器
+function playSkillEffect() {
+    // 1. 取得棋盤元素
+    const board = document.getElementById('board');
+    
+    // 2. 執行震動特效
+    if (board) {
+        board.classList.add('skill-shake');
+        
+        // 500ms 後移除震動類名，以便下次再次觸發
+        setTimeout(() => {
+            // 這裡使用 optional chaining (?.) 或檢查確保元素依然存在
+            document.getElementById('board')?.classList.remove('skill-shake');
+        }, 500);
+    } else {
+        // 如果是在測試環境或找不到棋盤，僅在控制台記錄而不報錯
+        console.warn("提醒：找不到 id='board' 的元素，已跳過震動特效。");
+    }
+
+    // 原本的 skill-toast (文字特效) 已完全移除
+}
 
 function openCatchUI(p, bonus) {
     document.getElementById('battle-screen').style.display = 'none';
     document.getElementById('catch-overlay').style.display = 'flex';
-    document.getElementById('catch-sprite').src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${parseInt(p.id)}.png`;
+    document.getElementById('catch-sprite').src = `https://paulie0102-bear.github.io/Bear/shuffle/${p.id}.png`;
     
     // 取得 UI 元素並恢復初始狀態
     const rateText = document.getElementById('catch-rate-text');
@@ -1505,9 +2114,9 @@ function executeCatchLogic() {
     // 2. 處理捕捉結果與 UI 更新
     if (success) {
         // 成功邏輯
-        rateText.innerText = "成功捕獲！";
+        rateText.innerText = "成功收服！";
         rateText.style.color = "var(--accent-color)";
-        detailText.innerText = "已加入你的收藏名單";
+        detailText.innerText = "已加入寶可夢圖鑑";
         
         if (!gameState.captured.includes(pId)) {
             gameState.captured.push(pId);
@@ -1532,9 +2141,55 @@ function exitCatch() {
     renderMap(); // 刷新地圖紅白球狀態
 }
 
-function openPrep(p) {
-    const overlay = document.getElementById('prep-overlay');
+function cycleSkill() {
+    const skillKeys = ["搖手指", "根源波動", "斷崖之劍", "地震", "大字爆炎", "畫龍點睛", "異次元洞", "千萬伏特"];
     
+    // 找到當前技能的索引
+    let currentIdx = skillKeys.indexOf(gameState.currentSkillKey);
+    
+    // 下一個索引
+    currentIdx++;
+    
+    // 如果超過玩家已解鎖的上限，就回到 0 (搖手指)
+    if (currentIdx > gameState.unlockedSkillIdx) {
+        currentIdx = 0;
+    }
+    
+    // 更新選定技能並存檔
+    gameState.currentSkillKey = skillKeys[currentIdx];
+    save(); 
+    
+    // 重新渲染準備畫面，讓玩家看到變化 (假設你傳入的是當前關卡 p)
+    // 這裡我們直接呼叫 openPrep，但需要拿到原本的關卡資料
+    // 建議：在 openPrep 開頭把 p 存到一個暫存變數，方便這裡呼叫
+    if (window.currentStageData) {
+        openPrep(window.currentStageData);
+    }
+}
+
+
+function openPrep(p) {
+    window.currentStageData = p;
+    const overlay = document.getElementById('prep-overlay');
+
+    // 清空並初始化整體結構，確保按鈕永遠在最下面，中間可以捲動
+    overlay.innerHTML = `
+        <div id="prep-header" style="margin-bottom: 10px;">
+            <div id="prep-stage-name"></div>
+            <div id="prep-stage-hp" style="text-align:center; font-size:12px; color:#aaa; margin-top:5px;"></div>
+        </div>
+        
+        <div id="prep-scroll-content" style="max-height: 50vh; overflow-y: auto; padding-right: 5px; margin-bottom: 15px;">
+            <div id="prep-team-slots" style="display:flex; justify-content:space-around; background:#1a1a1a; padding:10px; border-radius:12px; border:1px solid #333; margin-bottom:10px;"></div>
+            <div id="prep-form-options"></div>
+            <div id="prep-key-option"></div>
+        </div>
+        
+        <div id="prep-footer" style="display:flex; flex-direction:column; gap:10px;">
+            <button onclick="startBattleLogic()" style="width:100%; padding:12px; background:var(--accent-color); border:none; border-radius:35px; font-size:17px; font-weight:bold; color:black; cursor:pointer;">開始戰鬥 (❤️ 1)</button>
+            <button onclick="closePrep()" style="width:100%; padding:12px; background:transparent; border:1px solid #555; color:#888; border-radius:35px; font-size:15px; cursor:pointer;">返回地圖</button>
+        </div>
+    `;
     // 安全檢查：確保元素存在
     const stageName = document.getElementById('prep-stage-name');
     const stageHp = document.getElementById('prep-stage-hp');
@@ -1542,37 +2197,89 @@ function openPrep(p) {
     const formOptions = document.getElementById('prep-form-options');
     const keyOption = document.getElementById('prep-key-option');
 
-    // --- 修正：找回關卡專屬的 Mega 標記 ---
-    if (stageName) {
-        let megaTag = p.hasMega ? `<span style="background:linear-gradient(135deg,#ffcc00,#ff6600); color:black; padding:2px 6px; border-radius:4px; font-size:10px; margin-left:8px; font-weight:bold; box-shadow:0 0 5px rgba(255,204,0,0.5);">MEGA</span>` : "";
-        stageName.innerHTML = p.name + megaTag;
-    }
+// --- 修正：使用 flex-nowrap 確保手機與電腦都水平排列 ---
+if (stageName) {
+    const bossSpriteUrl = `https://paulie0102-bear.github.io/Bear/shuffle/${p.id}.png`;
+    
+    let megaTag = p.hasMega ? `<span style="background:linear-gradient(135deg,#ffcc00,#ff6600); color:black; padding:1px 4px; border-radius:4px; font-size:10px; margin-left:5px; font-weight:bold; white-space:nowrap;">MEGA</span>` : "";
+    
+    // 增加 white-space: nowrap 和 flex-nowrap
+    stageName.innerHTML = `
+        <div style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 10px; padding: 5px 0; width: 100%; flex-wrap: nowrap;">
+            <img src="${bossSpriteUrl}" style="width: 45px; height: 45px; flex-shrink: 0; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
+            <div style="text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                <div style="font-size: 16px; font-weight: bold; color: #fff; line-height: 1.2; display: flex; align-items: center;">
+                    <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.name}</span>
+                    ${megaTag}
+                </div>
+                <div style="font-size: 9px; color: #888; margin-top: 1px;">BOSS TARGET</div>
+            </div>
+        </div>
+    `;
+}
     
     // 1. 判定目標 HP (模式分流)
-    let hp = 2500;
-    if (gameState.isHardMode) hp = 5000;
-    else if (p.type === "Legendary") hp = 3500;
+    let hp = 3000;
+    if (gameState.isHardMode) hp = 10000;
+    else if (p.type === "Legendary") hp = 5000;
     if (stageHp) stageHp.innerText = `目標 HP: ${hp} (模式: ${gameState.isHardMode ? '困難' : '普通'})`;
 
     // 2. 顯示隊伍 (點擊觸發隊員更換)
     if (teamDiv) {
-        teamDiv.innerHTML = '';
-        gameState.team.forEach((id, index) => {
-            const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${parseInt(id)}.png`;
-            const isLeader = (index === 0);
-            teamDiv.innerHTML += `
-                <div style="text-align:center; cursor:pointer;" onclick="openMemberSelector(${index})">
-                    <img src="${spriteUrl}" style="width:55px; height:55px; background:#222; border-radius:50%; 
-                         border:${isLeader ? '3px solid #ffcc00' : '1px solid #666'}; padding:2px;">
-                    <div style="font-size:10px; margin-top:5px; color:${isLeader ? '#ffcc00' : '#ccc'}; font-weight:${isLeader ? 'bold' : 'normal'}">
-                        ${isLeader ? '隊長 (Mega)' : '隊員 ' + (index + 1)}
-                    </div>
-                </div>`;
-        });
-    }
+    teamDiv.innerHTML = '';
+    gameState.team.forEach((id, index) => {
+        // --- 修正重點：將 p.id 改為 id ---
+        // 因為 id 已經是 "001" 字串格式，所以直接帶入即可
+        const spriteUrl = `https://paulie0102-bear.github.io/Bear/shuffle/${id}.png`;
+        const isLeader = (index === 0);
+        
+        teamDiv.innerHTML += `
+            <div style="text-align:center; cursor:pointer;" onclick="openMemberSelector(${index})">
+                <img src="${spriteUrl}" style="width:55px; height:55px; background:#222; border-radius:50%; 
+                     border:${isLeader ? '3px solid #ffcc00' : '1px solid #666'}; padding:2px;">
+                <div style="font-size:10px; margin-top:5px; color:${isLeader ? '#ffcc00' : '#ccc'}; font-weight:${isLeader ? 'bold' : 'normal'}">
+                    ${isLeader ? '隊長 (Mega)' : '隊員 ' + (index + 1)}
+                </div>
+            </div>`;
+    });
+}
 
-    // 3. 判定「隊長」是否具備 Mega 進化資格
+
+   
     if (formOptions) {
+    const existingSkill = overlay.querySelector('.skill-preview-box');
+    if (existingSkill) existingSkill.remove();
+
+    // 取得所有技能 Key
+    const skillKeys = ["搖手指", "根源波動", "斷崖之劍", "地震", "大字爆炎", "畫龍點睛", "異次元洞", "千萬伏特"];
+    
+    // 確保當前選中的技能是合法的（防止舊存檔錯誤）
+    if (!gameState.currentSkillKey) gameState.currentSkillKey = "搖手指";
+    
+    const skillKey = gameState.currentSkillKey;
+    const skillData = MEGA_SKILL_DATABASE[skillKey];
+    const skillIdx = skillKeys.indexOf(skillKey);
+
+    const skillHtml = `
+        <div class="mega-toggle-container skill-preview-box" 
+             onclick="cycleSkill()" 
+             style="margin: 10px 0; flex-direction: column; align-items: flex-start; gap: 4px; border-color: #ffcc00; cursor: pointer; position: relative;">
+            
+            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                <span class="mega-label" style="color: #ffcc00; font-size: 11px;">◈ 已裝備技能 (點擊切換)</span>
+                <span style="background: #333; color: #eee; font-size: 10px; padding: 1px 6px; border-radius: 4px;">
+                    解鎖進度: ${gameState.unlockedSkillIdx + 1} / 8
+                </span>
+            </div>
+            
+            <div style="color: #ffcc00; font-weight: bold; font-size: 16px;">${skillKey}</div>
+            <div style="color: #ccc; font-size: 11px; line-height: 1.4;">${getSkillDescription(skillKey)}</div>
+            
+            <div style="position: absolute; right: 10px; bottom: 10px; color: #ffcc00; font-size: 12px;">Next ❯</div>
+        </div>
+    `;
+
+    formOptions.insertAdjacentHTML('beforebegin', skillHtml);
     formOptions.innerHTML = '';
     const leaderId = gameState.team[0];
     const leaderInfo = POKEMON_DATA.find(x => x.id === leaderId);
@@ -1616,7 +2323,7 @@ function openPrep(p) {
     if (leaderInfo && leaderInfo.hasMega) {
         const hasStone = gameState.items.includes(`${leaderId}_mega`);
         if (hasStone) {
-            const isBranch = (leaderId === "006" || leaderId === "150");
+            const isBranch = (leaderId === "006" || leaderId === "150"|| leaderId === "646"|| leaderId === "818"|| leaderId === "822");
             content += `
                 <div class="mega-toggle-container">
                     <span class="mega-label">型態變化</span>
@@ -1693,81 +2400,121 @@ if (keyOption) {
 
     overlay.style.display = 'block';
 }
-/**
- * 打開隊員選擇清單
- * @param {number} slotIndex - 正在更換哪一個位置 (0~3)
- */
+
+// 輔助函式：根據技能 Key 回傳中文描述
+function getSkillDescription(key) {
+    const descMap = {
+        "搖手指": "【天選之人】隨機發動其他的招式，未來無人能掌握。",
+        "根源波動": "【橫向消除】遠古大海的波動橫掃，消除整橫列方塊。",
+        "斷崖之劍": "【縱向消除】地底突起的巨石刃，垂直貫穿整縱欄。",
+        "地震": "【周圍爆破】引發強烈地震，炸開中心點周圍 3x3 方塊。",
+        "大字爆炎": "【大X型消除】大字型烈焰燃燒，消除交叉範圍內的方塊。",
+        "畫龍點睛": "【隊長全清】究極招式從天而降，消除畫面上所有隊長。",
+        "異次元洞": "【重新洗牌】透過異次元空間，清空並重新填充所有方塊。",
+        "千萬伏特":"【羈絆力量】閃電從天而降，隨機落在10個寶可夢上。"
+    };
+    return descMap[key] || "神秘招式";
+}
+
+
+let currentRegionFilter = "kanto"; 
+let currentPage = 1;
+const ITEMS_PER_PAGE = 15;
+
 function openMemberSelector(slotIndex) {
     currentSelectingSlot = slotIndex;
-    const container = document.getElementById('pokemon-list-container');
-    if (!container) return;
-
-    container.innerHTML = '';
-
-    // 取得所有已捕獲的寶可夢
-    if (!gameState.captured || gameState.captured.length === 0) {
-        container.innerHTML = '<p style="grid-column: span 4; color: #888;">尚未捕獲任何寶可夢</p>';
-    } else {
-        // 將已獲得的 ID 轉為詳細資料並排序 (可以按編號排)
-        // 取得資料後，加上 .sort()
-const availablePkmn = gameState.captured
-    .map(id => POKEMON_DATA.find(p => p.id === id))
-    .filter(p => p)
-    .sort((a, b) => parseInt(a.id) - parseInt(b.id)); // 按 ID 數字大小升序排列
-
-        availablePkmn.forEach(p => {
-            const isAlreadyInTeam = gameState.team.includes(p.id);
-            const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${parseInt(p.id)}.png`;
-            
-            // 檢查這隻寶可夢是否具備 Mega 潛力
-            const megaIcon = p.hasMega ? 
-                `<span style="position:absolute; top:2px; right:2px; background:#ffcc00; color:black; font-size:8px; padding:1px 3px; border-radius:3px; font-weight:bold;">M</span>` : "";
-
-            container.innerHTML += `
-                <div class="selector-item" 
-                     style="position:relative; background:#333; border:1px solid ${isAlreadyInTeam ? '#444' : '#666'}; 
-                            border-radius:8px; padding:10px; text-align:center; 
-                            opacity:${isAlreadyInTeam ? '0.5' : '1'}; 
-                            cursor:${isAlreadyInTeam ? 'not-allowed' : 'pointer'};
-                            transition: transform 0.1s;"
-                     onclick="${isAlreadyInTeam ? '' : `selectTeamMember('${p.id}')`}"
-                     onmouseover="${isAlreadyInTeam ? '' : "this.style.borderColor='#ffcc00'; this.style.transform='scale(1.05)'"}"
-                     onmouseout="this.style.borderColor='${isAlreadyInTeam ? '#444' : '#666'}'; this.style.transform='scale(1)'">
-                    
-                    ${megaIcon}
-                    <img src="${spriteUrl}" style="width:50px; height:50px; margin-bottom:5px;">
-                    <div style="font-size:11px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                        ${p.name}
-                    </div>
-                </div>`;
-        });
-    }
-
+    renderSelectorUI(); // 這裡處理所有渲染邏輯
     document.getElementById('selector-overlay').style.display = 'flex';
 }
 
-function renderBattleTeam() {
-    const previewDiv = document.getElementById('battle-team-preview');
-    if (!previewDiv) return;
+function renderSelectorUI() {
+    const container = document.getElementById('pokemon-list-container');
+    if (!container) return;
 
-    previewDiv.innerHTML = ''; // 清空上一場的殘留
+    // 1. 取得當前選定地區的範圍
+    const region = REGION_CONFIG.find(r => r.id === currentRegionFilter);
     
-    gameState.team.forEach((id, index) => {
-        const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${parseInt(id)}.png`;
-        
-        // 幫隊長 (index 0) 加上 id="team-img-0"，這是 executeMegaImageChange 的目標
-        const imgId = (index === 0) ? 'id="team-img-0"' : '';
-        const isLeader = (index === 0);
+    // 2. 篩選與排序 (確保 001 格式正確)
+    const filteredPkmn = (gameState.captured || [])
+        .map(id => POKEMON_DATA.find(p => p.id === id))
+        .filter(p => p && parseInt(p.id) >= region.range[0] && parseInt(p.id) <= region.range[1])
+        .sort((a, b) => parseInt(a.id) - parseInt(b.id));
 
-        // 這裡的 style 配合你原本的 UI 風格
-        previewDiv.innerHTML += `
-            <div style="text-align:center;">
-                <img ${imgId} src="${spriteUrl}" 
-                     style="width:42px; height:42px; background:#222; border-radius:50%; 
-                            border:1px solid ${isLeader ? '#ffcc00' : '#444'}; padding:2px;">
-            </div>
-        `;
+    // 3. 分頁計算
+    const totalPages = Math.ceil(filteredPkmn.length / ITEMS_PER_PAGE) || 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+    const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+    const pageItems = filteredPkmn.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+
+    // 4. 地區標籤 HTML (原本沒有的功能，新增)
+    let regionHtml = `<div class="region-tabs-container" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:15px; justify-content:center;">`;
+    REGION_CONFIG.forEach(r => {
+        const isActive = currentRegionFilter === r.id;
+        regionHtml += `
+            <button onclick="changeRegion('${r.id}')" 
+                style="background:${isActive ? '#ffcc00' : '#444'}; color:${isActive ? '#000' : '#fff'}; 
+                border:none; padding:6px 10px; border-radius:6px; cursor:pointer; font-size:12px; flex: 0 1 auto;">
+                ${r.name}
+            </button>`;
     });
+    regionHtml += `</div>`;
+
+    // 5. 寶可夢網格 HTML (保留你原本的 Inline Style 和 hover 特效)
+    let listHtml = pageItems.map(p => {
+    const isAlreadyInTeam = gameState.team.includes(p.id);
+    const spriteUrl = `https://paulie0102-bear.github.io/Bear/shuffle/${p.id}.png`;
+    const megaIcon = p.hasMega ? `<span style="position:absolute; top:2px; right:2px; background:rgba(255, 204, 0, 0.9); font-size:10px; padding:1px 2px; border-radius:4px; z-index:1;">🧬</span>` : "";
+    
+    return `
+        <div class="selector-item" 
+             style="position:relative; background:#333; border:1px solid ${isAlreadyInTeam ? '#444' : '#666'}; border-radius:8px; padding:8px; text-align:center; opacity:${isAlreadyInTeam ? '0.5' : '1'}; cursor:${isAlreadyInTeam ? 'not-allowed' : 'pointer'}; overflow:hidden;"
+             onclick="${isAlreadyInTeam ? '' : `selectTeamMember('${p.id}')`}">
+            ${megaIcon}
+            <img src="${spriteUrl}" loading="lazy" style="width:55px; height:55px; object-fit:contain;">
+            <div style="font-size:12px; color:#fff; width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:4px;" title="${p.name}">
+                ${p.name}
+            </div>
+        </div>`;
+}).join('');
+
+const navHtml = `
+    <div style="display:flex; justify-content:center; align-items:center; gap:20px; margin-top:15px;">
+        <button onclick="changePage(-1)" ${currentPage === 1 ? 'disabled' : ''} style="padding:5px 15px;"> < </button>
+        <span style="color:#fff;">${currentPage} / ${totalPages}</span>
+        <button onclick="changePage(1)" ${currentPage === totalPages ? 'disabled' : ''} style="padding:5px 15px;"> > </button>
+    </div>`;
+
+// 2. 修改：將 repeat(4, 1fr) 改為 repeat(3, 1fr)
+// 3. 修改：將 span 4 改為 span 3
+container.innerHTML = regionHtml + 
+    `<div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px;">${listHtml || '<p style="grid-column:span 3; color:#888; text-align:center;">此區尚未捕獲</p>'}</div>` + 
+    navHtml;
+}
+
+// 輔助函式 (必須一起加入)
+function changePage(step) { currentPage += step; renderSelectorUI(); }
+function changeRegion(regionId) { currentRegionFilter = regionId; currentPage = 1; renderSelectorUI(); }
+
+function renderBattleTeam() {
+    // 1. 取得隊長 ID
+    const leaderId = gameState.team[0];
+    if (!leaderId) return;
+
+    // 2. 直接鎖定隊長的圖片元件 (我們在新佈局中給它的 ID 是 team-img-0)
+    const leaderImg = document.getElementById('team-img-0');
+    
+    if (leaderImg) {
+        // 使用你的圖片工廠函式，確保抓到正確的 GitHub 路徑
+        // 且因為戰鬥剛開始時 isMegaEvolved 為 false，它會回傳普通形態圖
+        leaderImg.src = getTileImageUrl(leaderId);
+        
+        // 重置可能的 Mega 特效（防止上一場殘留）
+        leaderImg.style.filter = "none";
+        leaderImg.style.transform = "scale(1)";
+    }
+
+    // 3. (選修) 如果你還是想在後台處理其他隊員的數據，可以在這裡做
+    // 但因為 HTML 已經不顯示隊員了，所以不需要再操作 previewDiv.innerHTML
 }
     
 function selectTeamMember(id) {
@@ -1890,7 +2637,7 @@ function updateStatusBar() {
         `${Math.floor(remaining/60).toString().padStart(2,'0')}:${(remaining%60).toString().padStart(2,'0')}` : "MAX";
     
     // 更新關卡進度與金鑰
-    document.getElementById('ui-dex').innerText = `${gameState.captured.length}/721`;
+    document.getElementById('ui-dex').innerText = `${gameState.captured.length}/831`;
     document.getElementById('ui-keys').innerText = gameState.keys;
 }
     function scrollToLastPlayed() {
@@ -2010,10 +2757,15 @@ function manualLoad() {
     </div>
 </div>
 
-        <div style="display:flex; flex-direction:column; gap:12px;">
-            <button onclick="startBattleLogic()" style="padding:18px; background:var(--accent-color); border:none; border-radius:35px; font-size:18px; font-weight:bold; color:black;">開始戰鬥 (⚡ 1)</button>
-            <button onclick="closePrep()" style="padding:12px; background:transparent; border:1px solid #555; color:#888; border-radius:35px;">返回地圖</button>
-        </div>
+        <div style="display:flex; flex-direction:column; gap:10px; width: 100%; margin-top: 5px;">
+    <button onclick="startBattleLogic()" style="width: 100%; padding: 12px; background: var(--accent-color); border: none; border-radius: 35px; font-size: 17px; font-weight: bold; color: black; cursor: pointer;">
+        開始戰鬥 (❤️ 1)
+    </button>
+    
+    <button onclick="closePrep()" style="width: 100%; padding: 12px; background: transparent; border: 1px solid #555; color: #888; border-radius: 35px; font-size: 15px; cursor: pointer;">
+        返回地圖
+    </button>
+</div>
     </div>
 </div>
 
@@ -2024,7 +2776,7 @@ function manualLoad() {
         <div id="enemy-hp-bar" style="width:80%; height:10px; background:#444; border-radius:5px; margin-bottom:10px; overflow:hidden;">
             <div id="enemy-hp-fill" style="width:100%; height:100%; background:#ff4444; transition:width 0.3s;"></div>
         </div>
-        <div id="enemy-hp-text" style="font-size:12px; color:#ccc;">HP: 2500 / 2500</div>
+        <div id="enemy-hp-text" style="font-size:12px; color:#ccc;">HP: 3000 / 3000</div>
         <img id="enemy-sprite" src="" style="width:120px; height:120px; object-fit:contain; margin:10px 0;">
         <div id="combo-text" style="position:absolute; right:20px; top:50%; font-size:24px; color:var(--accent-color); font-weight:bold; display:none;">0 COMBO</div>
     </div>
@@ -2034,19 +2786,27 @@ function manualLoad() {
             </div>
     </div>
 
-    <div id="battle-footer" style="height:15%; display:flex; justify-content:space-around; align-items:center; padding-bottom:var(--safe-bottom);">
-        <div style="text-align:center;">
-            <div style="font-size:12px; color:#aaa;">剩餘步數</div>
-            <div id="moves-left" style="font-size:24px; font-weight:bold; color:var(--accent-color);">15</div>
+    <div id="battle-footer" style="height:15%; display:flex; justify-content:space-between; align-items:center; padding: 0 25px; padding-bottom:var(--safe-bottom);">
+    
+    <div style="text-align:left;">
+        <div style="font-size:11px; color:#888; letter-spacing:1px;">MOVES</div>
+        <div id="moves-left" style="font-size:32px; font-weight:bold; color:#ffcc00; line-height:1;">15</div>
+    </div>
+
+    <div id="leader-mega-zone" style="display:flex; align-items:center; gap:12px; background: rgba(255,255,255,0.05); padding: 8px 15px; border-radius: 40px 15px 15px 40px; border-left: 3px solid #ffcc00;">
+        
+        <div style="position:relative; width:55px; height:55px;">
+            <img id="team-img-0" src="" style="width:100%; height:100%; background:#222; border-radius:50%; border:2px solid #ffcc00; object-fit:contain;">
+            <div style="position:absolute; bottom:-5px; right:-5px; background:#ffcc00; color:#000; font-size:10px; font-weight:bold; padding:2px 5px; border-radius:4px;"></div>
         </div>
-        <div id="battle-team-preview" style="display:flex; gap:5px;">
+
+        <div style="width: 120px;">
+            <div style="font-size:9px; color:#ffcc00; margin-bottom:4px; font-weight:bold; letter-spacing:1px;">MEGA PROGRESS</div>
+            <div class="mega-bar-bg" style="width:100%; height:8px; background:#333; border-radius:4px; overflow:hidden; border:1px solid #444;">
+                <div id="mega-bar-fill" style="width:0%; height:100%; background:linear-gradient(90deg, #ffcc00, #ffee00); transition:width 0.3s;"></div>
             </div>
+        </div>
     </div>
-    <div class="mega-container">
-    <div class="mega-bar-bg">
-        <div id="mega-bar-fill" class="mega-bar-fill"></div>
-    </div>
-    <div class="mega-text">MEGA EVOLUTION PROGRESS</div>
 </div>
 
 </div>
@@ -2109,7 +2869,7 @@ function manualLoad() {
         </div>
 
         <div style="display:flex; flex-direction:column; gap:12px; margin-top: 10px;">
-            <button onclick="manualSave()" class="side-btn unlocked" style="width:100%; cursor:pointer; padding:12px; border-radius:8px; font-weight: bold; border: none; background: #ffcc00; color: #000;">手動儲存存檔</button>
+            <button onclick="manualSave()" class="side-btn unlocked" style="width:100%; cursor:pointer; padding:12px; border-radius:8px; font-weight: bold; border: none; background: #ffcc00; color: #000;">儲存存檔</button>
             
             <button onclick="manualLoad()" class="side-btn" style="width:100%; cursor:pointer; padding:12px; border-radius:8px; font-weight: bold; border: 1px solid #666; background: #444; color: #fff;">讀取存檔檔案</button>
             
