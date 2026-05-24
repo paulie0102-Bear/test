@@ -12,8 +12,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <style>
         :root {
-    --bg-day: #e8f5e9; --bg-night: #1a2a1a;
-    --primary-green: #81c784; --primary-flower: #f48fb1;
+    --bg-day: #e8f5e9; 
+    --bg-night: #1a2a1a;
+    --primary-green: #81c784; 
+    --primary-flower: #f48fb1;
 }
 
 /* 🌟 全域優化：禁用 iOS 長按選單，提升遊戲感 */
@@ -37,14 +39,23 @@ input, textarea, [contenteditable="true"] {
     user-select: text; 
 }
 
+/* 🔄 整合後的 body：合二為一，避免屬性衝突 */
 body {
-    margin: 0; padding: 0; font-family: "PingFang TC", sans-serif;
-    transition: background 1s; 
+    margin: 0; 
+    padding: 0; 
+    font-family: "PingFang TC", sans-serif;
+    transition: background 1s, all 1.5s ease; 
     overflow: hidden;
-    display: flex; flex-direction: column; align-items: center; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
     height: 100vh;
     /* 🌟 適應 iOS 安全區域 (防止內容被瀏海或底條遮住) */
     padding-top: env(safe-area-inset-top);
+    
+    /* 🌟 背景流動動畫 */
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
 }
 
 /* 背景裝飾 */
@@ -81,10 +92,10 @@ body {
     50% { opacity: 1; transform: scale(1.1); }
 }
 
-        /* 進度條 */
-    #top-bar { 
+/* 進度條 */
+#top-bar { 
     width: 100%; 
-    padding: calc(15px + env(safe-area-inset-top)) 110px 5px; /* 👈 左右留出 110px 的安全通道 */
+    padding: calc(15px + env(safe-area-inset-top)) 110px 5px; /* 左右留出 110px 的安全通道 */
     max-width: 400px; 
     z-index: 10; 
     box-sizing: border-box;
@@ -177,11 +188,11 @@ body {
 #growth-timer { 
     font-weight: bold; 
     font-size: 24px; 
-    color: #ff5252; /* 稍微加深一點點粉紅/紅色，在白底上更好閱讀 */
-    text-shadow: 0 1px 3px rgba(0,0,0,0.1); /* 減輕陰影，讓畫面在白底卡片上更乾淨 */
+    color: #ff5252; 
+    text-shadow: 0 1px 3px rgba(0,0,0,0.1); 
     text-align: center; 
     width: 100%; 
-    margin: 12px 0; /* 🌟 加上上下間距，推開 GIF 和 正在祈願 的文字 */
+    margin: 12px 0; /* 加上上下間距，推開 GIF 和 正在祈願 的文字 */
 }
 
 /* 🌟 全螢幕種植艙的「關閉/返回」按鈕預設樣式 */
@@ -196,7 +207,7 @@ body {
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
-/* 🚫 平常在角落小圖示時，把文字和關閉鈕通通藏起來（保持圓鈕乾淨） */
+/* 🚫 平常在角落小圖示時，把文字和關閉鈕通通藏起來 */
 #flower-pot #growth-timer,
 #flower-pot #close-pot-btn,
 #flower-pot #hint-text,
@@ -215,13 +226,13 @@ body {
 
 #flower-pot.expanded #growth-timer {
     display: block;
-    margin-bottom: 20px; /* 讓計時器排在植物上方，並留點空隙 */
+    margin-bottom: 20px; 
 }
 
 #flower-pot.expanded #hint-text {
     display: block;
     color: #ffffff; /* 變更為白色，在暗色背景才看得清楚 */
-    margin-top: 20px; /* 排在植物下方，保持距離 */
+    margin-top: 20px; 
     text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
@@ -236,135 +247,139 @@ body {
 /* 對話氣泡 */
 #message-bubble {
     position: absolute;
-    top: 12%;                 /* 稍微往下一點點，視覺上比較平衡 */
-    left: 50%;                /* 搭配 transform 讓它水平居中 */
+    top: 12%;                 
+    left: 50%;                
     transform: translateX(-50%); 
-    
-    background: rgba(255, 255, 255, 0.95); /* 加一點微透明感，更有質感 */
-    color: #444;              /* 稍微深灰，讀起來比純黑更溫柔 */
-    padding: 22px 28px;       /* 增加內距，讓文字有呼吸空間 */
-    border-radius: 25px;      /* 圓角再圓一點，看起來更親切 */
-    box-shadow: 0 12px 35px rgba(0,0,0,0.12); /* 陰影再柔和一點 */
-    
+    background: rgba(255, 255, 255, 0.95); 
+    color: #444;              
+    padding: 22px 28px;       
+    border-radius: 25px;      
+    box-shadow: 0 12px 35px rgba(0,0,0,0.12); 
     max-width: 85%;
-    width: 280px;             /* 給一個建議寬度，讓換行更自然 */
+    width: 280px;             
     opacity: 0;
-    transition: all 0.5s ease; /* 增加過場的平滑度 */
+    transition: all 0.5s ease; 
     pointer-events: none;
     z-index: 600;             /* 確保顯示在全螢幕種植艙的前方 */
-
-    /* 🌟 重點排版設定 */
-    white-space: pre-line;   /* 讓 JS 裡的 \n 換行符號生效 */
-    line-height: 1.8;        /* 拉高行距，避免長句子擠在一起 */
-    text-align: center;      /* 文字置中 */
-    font-size: 15px;         /* 設定一個舒適的字體大小 */
-    border: 1px solid rgba(255,255,255,0.5); /* 淡淡的白邊，模仿玻璃質感 */
+    white-space: pre-line;   
+    line-height: 1.8;        
+    text-align: center;      
+    font-size: 15px;         
+    border: 1px solid rgba(255,255,255,0.5); 
 }
 
-        /* 天燈 */
-        .sky-lantern {
-            position: absolute; bottom: -100px; width: 60px; height: 80px;
-            background: #ff6b6b; border-radius: 10px 10px 5px 5px;
-            animation: flyUp 8s forwards linear; color: white; font-size: 10px; text-align: center; padding: 10px 5px; z-index: 1;
-        }
-        @keyframes flyUp { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(-120vh) translateX(50px) rotate(10deg); opacity: 0; } }
+/* 天燈 */
+.sky-lantern {
+    position: absolute; 
+    bottom: -100px; 
+    width: 60px; 
+    height: 80px;
+    background: #ff6b6b; 
+    border-radius: 10px 10px 5px 5px;
+    animation: flyUp 8s forwards linear; 
+    color: white; 
+    font-size: 10px; 
+    text-align: center; 
+    padding: 10px 5px; 
+    z-index: 1;
+}
+@keyframes flyUp { 
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; } 
+    100% { transform: translateY(-120vh) translateX(50px) rotate(10deg); opacity: 0; } 
+}
 
-        /* 控制按鈕 */
-        .controls { padding: 10px 20px 30px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 400px; }
-        button { border: none; padding: 12px; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; }
-        button:active { transform: translateY(2px); filter: brightness(0.9); }
+/* 控制按鈕與基礎點擊 */
+button { border: none; padding: 12px; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; }
+button:active { transform: translateY(2px); filter: brightness(0.9); }
 
-        /* 彈窗 */
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
-        .modal-content { background: white; color: #333; padding: 20px; border-radius: 25px; width: 100%; max-width: 380px; text-align: center; max-height: 90vh; overflow-y: auto; }
-        
-        .scroll-list { display: grid; grid-template-columns: repeat(1, 1fr); gap: 10px; margin-top: 15px; }
-        .album-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .item-card { background: #fdfdfd; padding: 15px; border-radius: 18px; border: 1px solid #f0f0f0; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .item-card img { width: 65px; height: 65px; }
-        
-        .emotion-input-group { margin: 12px 0; display: flex; align-items: center; }
-        .emotion-input-group label { font-size: 14px; width: 70px; text-align: left; }
-        input[type=range] { flex: 1; accent-color: var(--primary-green); }
-        
-        /* 隱藏的檔案選擇器 */
-        #import-input { display: none; }
-        textarea { width: 100%; height: 100px; padding: 10px; border-radius: 10px; border: 1px solid #ddd; resize: none; font-family: inherit; }
-        
-        /* 儲存容量進度條專用樣式 */
-        .storage-progress-area { background: #f9f9f9; padding: 15px; border-radius: 15px; margin-bottom: 15px; text-align: left; border: 1px solid #eee; }
-    </style>
-    <style>
-       /* 🫧 泡泡與樹葉的基礎樣式 */
+/* 🛠️ 彈窗系統核心優化：將基礎 modal 的層級直接拉高，避免被 DIY 物件穿透 */
+.modal { 
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    background: rgba(0,0,0,0.7); 
+    display: none; 
+    justify-content: center; 
+    align-items: center; 
+    z-index: 99998 !important; /* 👈 黑色遮罩層級，剛好在選單內容(99999)正下方 */
+    padding: 20px; 
+}
+.modal-content { 
+    background: white; 
+    color: #333; 
+    padding: 20px; 
+    border-radius: 25px; 
+    width: 100%; 
+    max-width: 380px; 
+    text-align: center; 
+    max-height: 90vh; 
+    overflow-y: auto; 
+}
+
+.scroll-list { display: grid; grid-template-columns: repeat(1, 1fr); gap: 10px; margin-top: 15px; }
+.album-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.item-card { background: #fdfdfd; padding: 15px; border-radius: 18px; border: 1px solid #f0f0f0; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+.item-card img { width: 65px; height: 65px; }
+
+.emotion-input-group { margin: 12px 0; display: flex; align-items: center; }
+.emotion-input-group label { font-size: 14px; width: 70px; text-align: left; }
+input[type=range] { flex: 1; accent-color: var(--primary-green); }
+
+/* 隱藏的檔案選擇器 */
+#import-input { display: none; }
+textarea { width: 100%; height: 100px; padding: 10px; border-radius: 10px; border: 1px solid #ddd; resize: none; font-family: inherit; }
+
+/* 儲存容量進度條專用樣式 */
+.storage-progress-area { background: #f9f9f9; padding: 15px; border-radius: 15px; margin-bottom: 15px; text-align: left; border: 1px solid #eee; }
+
+/* 🫧 泡泡與樹葉的基礎樣式 */
 .pop-item {
     position: fixed;
-    font-size: 45px; /* 增大尺寸，讓手機好點擊 */
+    font-size: 45px; 
     cursor: pointer;
-    z-index: 9999;  /* 確保在最上層 */
+    z-index: 9999;  
     user-select: none;
     -webkit-user-select: none;
     transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
-    
-    /* 讓元素有飄浮動效 */
     animation: bubbleFloat 4s ease-in-out infinite;
-    
-    /* 讓點擊反應更靈敏 */
     touch-action: manipulation; 
 }
 
-/* 💥 點擊破裂特效 (當 JS 加入 .popped 類別時觸發) */
 .pop-item.popped {
-    transform: scale(2.5); /* 瞬間放大 */
-    opacity: 0;           /* 變透明 */
-    pointer-events: none; /* 防止重複點擊 */
+    transform: scale(2.5); 
+    opacity: 0;           
+    pointer-events: none; 
 }
 
-/* ☁️ 飄浮動畫：模擬在空氣中輕微晃動的感覺 */
 @keyframes bubbleFloat {
-    0%, 100% { 
-        transform: translate(0, 0) rotate(0deg); 
-    }
-    33% { 
-        transform: translate(15px, -25px) rotate(8deg); 
-    }
-    66% { 
-        transform: translate(-15px, 15px) rotate(-8deg); 
-    }
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    33% { transform: translate(15px, -25px) rotate(8deg); }
+    66% { transform: translate(-15px, 15px) rotate(-8deg); }
 }
 
-/* 📱 針對小螢幕的微調：如果覺得太大可以縮小一點 */
 @media (max-width: 380px) {
-    .pop-item {
-        font-size: 38px;
-    }
+    .pop-item { font-size: 38px; }
 }
 
-/* 🌟 背景流動動畫 */
+/* 背景流動動畫 */
 @keyframes gradientBG {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
 }
 
-body {
-    background-size: 400% 400% !important;
-    animation: gradientBG 15s ease infinite;
-    transition: all 1.5s ease;
-}
-
 /* 🎨 五大升級版背景樣式 */
 body.theme-morning { 
     background: linear-gradient(45deg, #eacda3, #d6ae7b, #eacda3) !important; 
-    /* 這裡使用了更沉穩的米橘與古銅金，模擬日出前那一刻 */
     color: #5d4037; 
 }
-body.theme-night-study { background: linear-gradient(45deg, #0f2027, #203a43, #2c5364); color: #a5d6a7; }
-/* 🌊 星靈海域：從淺藍到深藍，模擬海底光影 */
+body.theme-night-study { 
+    background: linear-gradient(45deg, #0f2027, #203a43, #2c5364) !important; 
+    color: #a5d6a7; 
+}
 body.theme-ocean { 
-    background: linear-gradient(45deg, #4facfe, #00f2fe, #4facfe) !important; /* 陽光淺海 */
-    /* 修正版：更深邃、舒壓的藍色漸層 */
     background: linear-gradient(135deg, #1cb5e0 0%, #000851 100%) !important;
-    color: #e0f7fa; 
+    color: #ffffff !important; /* 👈 修正：在深海模式下，全域字體改成白色才看得清 */
     text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
 }
 
@@ -374,59 +389,37 @@ body.theme-ocean #points-display {
     background: rgba(255, 255, 255, 0.2);
     padding: 2px 8px;
     border-radius: 12px;
+    color: #ffffff !important; /* 👈 修正：防止被上層覆蓋成深藍色 */
 }
 
 body.theme-zen { 
-    background: linear-gradient(135deg, #d3cbb8 0%, #6d6027 100%) !important;
-    /* 備選方案（更深沉的純木質感）： */
     background: linear-gradient(135deg, #8b5a2b 0%, #4a2c2a 100%) !important; 
-    color: #f5f5f5; /* 改為淺米色文字，對比更好看 */
+    color: #f5f5f5; 
 }
-/* 讓文字在這些背景上更好讀 */
+body.theme-cloud { 
+    background: linear-gradient(45deg, #89f7fe, #66a6ff, #89f7fe) !important; 
+    color: #01579b; 
+}
 
-body.theme-cloud { background: linear-gradient(45deg, #89f7fe, #66a6ff, #89f7fe); color: #01579b; }
 body.theme-morning #garden-name, 
 body.theme-zen #garden-name,
 body.theme-zen #points-display {
-    background: rgba(255, 255, 255, 0.15); /* 輕微透明感 */
+    background: rgba(255, 255, 255, 0.15); 
     border: 1px solid rgba(255, 255, 255, 0.2);
     color: #fff;
 }
-/* 讓泡泡在深色背景更明顯 */
 body.theme-night-study .pop-item { filter: drop-shadow(0 0 10px rgba(255,255,255,0.5)); }
 
-
 /* 商店專用樣式 */
-.shop-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
-    margin-top: 15px;
-}
-
-.bg-card {
-    background: #f9f9f9;
-    padding: 15px;
-    border-radius: 18px;
-    border: 2px solid #eee;
-    text-align: center;
-    position: relative;
-}
-
+.shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 15px; }
+.bg-card { background: #f9f9f9; padding: 15px; border-radius: 18px; border: 2px solid #eee; text-align: center; position: relative; }
 .bg-card.owned { border-color: var(--primary-green); }
 .bg-card.active { background: #e8f5e9; border-color: #4caf50; }
-
-.bg-preview {
-    width: 100%;
-    height: 60px;
-    border-radius: 10px;
-    margin-bottom: 8px;
-    border: 1px solid rgba(0,0,0,0.1);
-}
+.bg-preview { width: 100%; height: 60px; border-radius: 10px; margin-bottom: 8px; border: 1px solid rgba(0,0,0,0.1); }
 
 .coin-badge {
     background: rgba(0, 0, 0, 0.6); 
-    color: #ffd700;                
+    color: #ffd700;                                 
     padding: 5px 12px;
     border-radius: 20px;
     font-weight: bold;
@@ -436,18 +429,13 @@ body.theme-night-study .pop-item { filter: drop-shadow(0 0 10px rgba(255,255,255
     gap: 5px;
     border: 1.5px solid rgba(255, 215, 0, 0.5); 
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.3), inset 0 0 5px rgba(255, 215, 0, 0.2); 
-    
     position: fixed;
-    top: calc(12px + env(safe-area-inset-top)); /* 配合手機安全區域 */
-    left: 15px; /* 👈 改為左上角 */
-    right: auto; /* 清除原本的右邊定位 */
-    z-index: 100; /* 確保在主畫面清晰可見，但低於全螢幕遮罩 */
+    top: calc(12px + env(safe-area-inset-top)); 
+    left: 15px; 
+    right: auto; 
+    z-index: 100; 
 }
-
-#coin-count {
-    color: #ffffff; /* 數字用純白，對比度最高 */
-    text-shadow: 0 0 2px #000;
-}
+#coin-count { color: #ffffff; text-shadow: 0 0 2px #000; }
 
 /* 隨機小卡背景遮罩 */
 #purify-modal {
@@ -461,218 +449,102 @@ body.theme-night-study .pop-item { filter: drop-shadow(0 0 10px rgba(255,255,255
     cursor: pointer; 
 }
 
-
-/* 小卡內容本體 - 優化後的版本 */
 .purify-card {
     background: white;
-    padding: 15px;      /* 縮小內邊距，把空間讓給拼圖 */
+    padding: 15px;      
     border-radius: 15px;
     text-align: center;
-    width: 90%;         /* 讓卡片在手機上自動伸展 */
-    max-width: 320px;    /* 限制電腦版的最大寬度 */
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2); /* 改深色陰影在白底上比較明顯 */
+    width: 90%;         
+    max-width: 320px;    
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2); 
     cursor: default;
-    overflow: hidden;    /* 🌟 重要：防止內容溢出卡片 */
+    overflow: hidden;    
     animation: cardPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    
-    /* 讓內容垂直置中 */
     display: flex;
     flex-direction: column;
     align-items: center;
 }
-
-.purify-card img {
-    max-width: 200px;
-    height: auto;
-    display: block;
-    margin: 0 auto 10px;
-}
-
-.purify-card p {
-    color: #555;
-    font-weight: bold;
-    margin: 0;
-}
+.purify-card img { max-width: 200px; height: auto; display: block; margin: 0 auto 10px; }
+.purify-card p { color: #555; font-weight: bold; margin: 0; }
 
 @keyframes cardPop {
     from { transform: scale(0.8); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
 }
 
-/* 拼圖容器：只設寬度，高度讓它自動跟著圖片比例走 */
 #puzzle-board {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-gap: 2px;
-    width: 100%;       /* 🌟 改為 100%，它會填滿 purify-card 的可用寬度 */
-    max-width: 260px;  /* 🌟 設定一個手機安全上限 */
+    width: 100%;       
+    max-width: 260px;  
     margin: 10px auto;
     background: #eee;
-    touch-action: none; /* 🌟 防止手機滑動拼圖時觸發網頁捲動 */
+    touch-action: none; 
 }
-
-/* 拼圖碎片 */
-.puzzle-piece {
-    width: 100%;
-    /* 核心：確保碎片寬高比跟原圖一致 */
-    aspect-ratio: auto; 
-    background-size: cover; /* 關鍵：讓背景自動填滿但不變形 */
-    background-repeat: no-repeat;
-    cursor: pointer;
-    border-radius: 4px;
-}
-
-/* 被選中的碎片效果 */
-.puzzle-piece.selected {
-    outline: 3px solid #ffd700;
-    transform: scale(1.05);
-    z-index: 10;
-    box-shadow: 0 0 10px rgba(0,0,0,0.3);
-}
-
-/* 切換按鈕樣式 */
-.puzzle-btn {
-    background: #8b5a2b;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 20px;
-    margin-top: 10px;
-    cursor: pointer;
-}
+.puzzle-piece { width: 100%; aspect-ratio: auto; background-size: cover; background-repeat: no-repeat; cursor: pointer; border-radius: 4px; }
+.puzzle-piece.selected { outline: 3px solid #ffd700; transform: scale(1.05); z-index: 10; box-shadow: 0 0 10px rgba(0,0,0,0.3); }
+.puzzle-btn { background: #8b5a2b; color: white; border: none; padding: 8px 15px; border-radius: 20px; margin-top: 10px; cursor: pointer; }
 
 /* 龍貓祈願小卡容器 */
 #totoro-card {
     position: absolute;
-    top: 50%;
-    left: 50%;
+    top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    
-    /* 修正 1：設定最大寬度，避免在手機版溢出 */
     width: 250px; 
     max-width: 85vw; 
-    
     background: white;
-    border-radius: 20px; /* 圓角稍微加大，更有吉卜力風的圓潤感 */
+    border-radius: 20px; 
     box-shadow: 0 10px 40px rgba(0,0,0,0.15);
     padding: 20px;
     text-align: center;
-    z-index: 1000; /* 確保層級夠高 */
-    
-    /* 修正 2：改用較溫暖的邊框顏色 */
+    z-index: 1000; 
     border: 3px solid #a8d5ba; 
-    
     display: none; 
-    flex-direction: column; /* 確保內容垂直居中 */
+    flex-direction: column; 
     align-items: center;
 }
+#totoro-card img { width: 100%; height: auto; max-height: 250px; object-fit: contain; border-radius: 12px; background-color: #fcfcfc; }
+#close-card-btn { margin-top: 15px; width: 100%; padding: 10px; border: none; border-radius: 25px; background-color: #78a5a3; color: white; font-weight: bold; cursor: pointer; transition: background 0.3s; }
+#close-card-btn:hover { background-color: #5a8280; }
 
-#totoro-card img {
-    /* 修正 3：解決不同尺寸 GIF 的核心代碼 */
-    width: 100%;
-    height: auto;      /* 高度自動，維持原始比例 */
-    max-height: 250px; /* 防止過長的 GIF 佔滿螢幕 */
-    
-    object-fit: contain; /* 確保整張圖完整顯示且不變形 */
-    border-radius: 12px;
-    background-color: #fcfcfc; /* 比例不合時的微弱底色 */
-}
+.blur-content { filter: blur(8px); pointer-events: none; transition: filter 0.5s ease; }
 
-/* 修正 4：美化關閉按鈕（如果有的話）*/
-#close-card-btn {
-    margin-top: 15px;
-    width: 100%;
-    padding: 10px;
-    border: none;
-    border-radius: 25px;
-    background-color: #78a5a3;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-
-#close-card-btn:hover {
-    background-color: #5a8280;
-}
-
-/* 當卡片顯示時，背景模糊效果 */
-.blur-content {
-    filter: blur(8px); /* 增加模糊度，驚喜感更強 */
-    pointer-events: none; 
-    transition: filter 0.5s ease; /* 增加平滑過渡 */
-}
-
-/* ==========================================================================
-   🎯 補強：調配種子情緒彈窗 (#plant-modal) 專屬高空圖層與排版
-   ========================================================================== */
-
-/* 🌟 強制將情緒彈窗的圖層拉到 2000，完美壓在全螢幕盆栽(500)之上 */
+/* 🌟 情緒彈窗專屬樣式（已被全面提升層級） */
 #plant-modal.modal {
-    z-index: 2000 !important;
-    backdrop-filter: blur(4px); /* 順便幫背景加上高級的毛玻璃模糊 */
+    z-index: 99999 !important; /* 👈 情緒調整彈窗也要能蓋在最上面 */
+    backdrop-filter: blur(4px); 
     -webkit-backdrop-filter: blur(4px);
 }
+#plant-modal .modal-content { background: #ffffff; border-radius: 24px; padding: 25px 20px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35); animation: modalPopIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+#plant-modal .emotion-input-group { display: flex; align-items: center; justify-content: space-between; margin: 14px 0; gap: 12px; }
+#plant-modal .emotion-input-group label { font-size: 15px; font-weight: bold; width: 65px; text-align: left; margin: 0; }
+#plant-modal input[type="range"] { flex: 1; margin: 0; cursor: pointer; accent-color: #aed581; }
 
-/* ⬜ 讓裡面的白底對話框在手機上更精緻 */
-#plant-modal .modal-content {
-    background: #ffffff;
-    border-radius: 24px;
-    padding: 25px 20px;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35);
-    animation: modalPopIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-/* 🎚️ 修正滑桿群組：讓 Emoji 標籤與滑桿漂亮地橫向兩端對齊 */
-#plant-modal .emotion-input-group {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin: 14px 0;
-    gap: 12px;
-}
-
-/* 🏷️ 讓 Emoji 標籤有固定寬度，滑桿才會對齊排好 */
-#plant-modal .emotion-input-group label {
-    font-size: 15px;
-    font-weight: bold;
-    width: 65px; 
-    text-align: left;
-    margin: 0;
-}
-
-/* 🟢 讓情緒滑桿的寬度自動伸展並填滿 */
-#plant-modal input[type="range"] {
-    flex: 1;
-    margin: 0;
-    cursor: pointer;
-    accent-color: #aed581; /* 讓滑桿圓點顏色與妳的「開始種植」按鈕一致 */
-}
-
-/* 🎬 彈窗浮現的 Q 彈小動畫 */
 @keyframes modalPopIn {
     from { transform: scale(0.85); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
 }
 
-/* ==========================================================================
-   🌱 龍貓小卡與盆栽全螢幕狀態自動連動
-   ========================================================================== */
-
-/* 🚫 情況一：當盆栽在右下角小圓鈕狀態時（沒有 .expanded）*/
-/* 不管 JS 的 display 寫什麼，一律強制把小卡藏起來，絕對不露餡 */
-#flower-pot:not(.expanded) #totoro-card {
-    display: none !important;
-}
-
-/* 🌟 情況二：當盆栽被放大成全螢幕種植艙時（有 .expanded）*/
-/* 只有在這個時候，才允許小卡浮現，並使用 flex 垂直居中排版 */
+/* 🌱 龍貓小卡與盆栽全螢幕狀態自動連動 */
+#flower-pot:not(.expanded) #totoro-card { display: none !important; }
 #flower-pot.expanded #totoro-card {
-    position: absolute; /* 改用 absolute，它就會以全螢幕的盆栽為基地來對齊 */
-    top: 50%;
-    left: 50%;
+    position: absolute; 
+    top: 50%; left: 50%;
     transform: translate(-50%, -50%);
     display: flex;
+}
+
+/* 🌟 一勞永逸的最高級別面板強制設定（直接壓制 DIY 元件） */
+#save-modal .modal-content, 
+#shop-modal .modal-content, 
+#album-modal .modal-content, 
+#lantern-modal .modal-content, 
+#diy-workshop-modal .modal-content,
+.game-modal .modal-content, 
+.popup-window .modal-content {
+    position: relative;
+    z-index: 99999 !important; /* 👈 選單本體在最上層 */
 }
 
     </style>
@@ -963,10 +835,11 @@ function saveGameDataToDB(data) {
     });
 }
 
-    async function autoSave() { 
+   async function autoSave() { 
     await saveGameDataToDB(gameState);
     if(document.getElementById('save-modal') && document.getElementById('save-modal').style.display === 'flex') {
-        updateStorageProgress();
+        // 🌟 加上 await，確保空間計算順利執行
+        await updateStorageProgress();
     }
 }
 
@@ -1394,26 +1267,39 @@ function handleShopAction(id) {
 
 
     // --- 系統功能 ---
-    function updateStorageProgress() {
-        const limit = 5120;
-        let total = 0;
+    async function updateStorageProgress() {
+    const bar = document.getElementById('storage-bar');
+    if (!bar) return;
+
+    // 檢查瀏覽器是否支援這個現代 API
+    if (navigator.storage && navigator.storage.estimate) {
         try {
-            for (let x in localStorage) {
-                if (!localStorage.hasOwnProperty(x)) continue;
-                total += ((localStorage[x].length + x.length) * 2) / 1024;
-            }
-        } catch(e) { total = 0; }
-        
-        const percentage = Math.min((total / limit) * 100, 100).toFixed(1);
-        const bar = document.getElementById('storage-bar');
-        if(bar) {
+            // 📊 向系統查詢真實的使用量 (單位是 Byte)
+            const estimate = await navigator.storage.estimate();
+            
+            // 換算成 KB (除以 1024)
+            const usageKB = (estimate.usage / 1024).toFixed(1);
+            const quotaKB = (estimate.quota / 1024).toFixed(1);
+            
+            // 計算使用百分比
+            const percentage = Math.min((estimate.usage / estimate.quota) * 100, 100).toFixed(1);
+            
+            // 🔄 更新畫面上的進度條
             bar.style.width = percentage + "%";
             bar.style.background = percentage > 80 ? '#f44336' : '#4caf50';
+            
+            // 🔄 更新文字說明
             document.getElementById('storage-usage-text').innerText = percentage + "%";
-            document.getElementById('storage-kb-info').innerText = `已使用: ${total.toFixed(1)} KB / ${limit} KB`;
+            document.getElementById('storage-kb-info').innerText = `真實用量: ${usageKB} KB / 系統配額: ${quotaKB} KB`;
+            
+        } catch (e) {
+            console.error("無法估算儲存空間:", e);
         }
+    } else {
+        // 如果是太舊的手機，不支援此 API
+        document.getElementById('storage-kb-info').innerText = "此瀏覽器不支援空間監控";
     }
-
+}
     function exportSaveFile() {
         const dataStr = JSON.stringify(gameState, null, 2);
         const blob = new Blob([dataStr], { type: "application/json" });
@@ -1429,22 +1315,24 @@ function handleShopAction(id) {
     const file = event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = function(e) {
+    
+    // 🌟 修正點 1：在 reader.onload 的 function 前面加上 async
+    reader.onload = async function(e) { 
         try {
             const imported = JSON.parse(e.target.result);
             
             // 檢查是否為有效存檔 (至少要有等級)
             if (imported && imported.gardenLv !== undefined) {
                 
-                // 🌟 關鍵修改：合併新舊資料
-                // 先拿目前程式碼中定義的「完整預設值」當底
-                // 再把「匯入的舊資料」覆蓋進去
-                // 這樣就算舊存檔沒錢、沒背景，也會維持新版的預設值 (0元、default)
+                // 合併新舊資料
                 gameState = { ...gameState, ...imported };
                 
-                autoSave();
+                // 🌟 修正點 2：在 autoSave() 前面加上 await
+                // 這樣瀏覽器就會在這裡「卡住」，絕對會等 DB 寫入成功後，才往下走！
+                await autoSave();
+                
                 alert("進度匯入成功！即將重新載入...");
-                location.reload();
+                location.reload(); // 現在存完檔再重新整理，百分之百安全、不會漏字！
             } else {
                 alert("存檔格式不正確。");
             }
@@ -1524,7 +1412,11 @@ harvest = function() {
 
     function openPlantModal() { if (gameState.plantStatus === 'idle') { document.getElementById('plant-modal').style.display = 'flex'; validateEmotions(); } else showBubble("有一顆心靈正在萌芽..."); }
     function closeModal() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
-    function openSaveMenu() { updateStorageProgress(); document.getElementById('save-modal').style.display = 'flex'; }
+    // 🌟 修正點：加上 async 和 await
+async function openSaveMenu() { 
+    await updateStorageProgress(); // ⏳ 確保系統算好最新容量後，才往下走
+    document.getElementById('save-modal').style.display = 'flex'; 
+}
     function updateTheme() {
     // 只有在玩家使用「預設日夜」模式時，才執行自動切換
     if (gameState.currentBg !== 'default') return;
@@ -2159,6 +2051,29 @@ document.addEventListener('click', (e) => {
 });
 
 init();
+// 🌟 在遊戲初始化時執行這個函式
+async function requestPersistentStorage() {
+    if (navigator.storage && navigator.storage.persist) {
+        // 檢查目前是否已經是永久儲存
+        const isPersisted = await navigator.storage.persisted();
+        console.log(`目前存檔狀態是否為永久性防刪除？ ${isPersisted ? "是的" : "不是"}`);
+        
+        if (!isPersisted) {
+            // 如果不是，主動向手機系統申請免死金牌
+            const granted = await navigator.storage.persist();
+            if (granted) {
+                console.log("🎉 成功取得手機系統的『永久保留』特權！存檔不會被自動刪除。");
+            } else {
+                console.log("⚠️ 手機系統拒絕了永久保留請求（通常在無痕模式，或手機空間極度不足時會發生）。");
+            }
+        }
+    }
+}
+
+// 可以在妳網頁載入時直接呼叫它
+window.addEventListener('DOMContentLoaded', () => {
+    requestPersistentStorage();
+});
 
 </script>
 
