@@ -44,7 +44,7 @@ body {
     margin: 0; 
     padding: 0; 
     font-family: "PingFang TC", sans-serif;
-    transition: background 1s, all 1.5s ease; 
+    transition: background 1s, all 1s ease; 
     overflow: hidden;
     display: flex; 
     flex-direction: column; 
@@ -56,6 +56,8 @@ body {
     /* 🌟 背景流動動畫 */
     background-size: 400% 400%;
     animation: gradientBG 15s ease infinite;
+    overscroll-behavior-y: none !important;
+
 }
 
 /* 背景裝飾 */
@@ -547,6 +549,7 @@ body.theme-night-study .pop-item { filter: drop-shadow(0 0 10px rgba(255,255,255
     z-index: 99999 !important; /* 👈 選單本體在最上層 */
 }
 
+
     </style>
 </head>
 <body class="day">
@@ -943,7 +946,7 @@ function harvest() {
 
     showBubble(message);
     
-    // 🌟 關鍵修正：收成後先保持在 'harvested' 狀態，這樣 updateUI() 才會繼續畫出這朵花
+    // 變更為收成完畢狀態，updateUI 看到這個狀態會維持圖片，但把龍貓卡藏起來
     gameState.plantStatus = 'harvested'; 
     
     checkLevelUp(); 
@@ -1015,7 +1018,9 @@ if (document.querySelectorAll('.diy-movable-object').length === 0 && gameState.c
 }
 
     // ... 下方原本的植物圖片與提示文字邏輯保持不變 ...
-    const img = document.getElementById('flower-img');
+// ... 前面的背景、金幣、經驗條保持不變 ...
+
+const img = document.getElementById('flower-img');
 const hint = document.getElementById('hint-text');
 const flowerNameDisp = document.getElementById('flower-name-display');
 const totoroCard = document.getElementById('totoro-card'); 
@@ -1039,64 +1044,49 @@ else if (gameState.plantStatus === 'nurturing') {
     if(totoroCard) totoroCard.style.display = 'none';
 }
 else if (gameState.plantStatus === 'growing') { 
-    // --- 🌸 整合後的龍貓隨機邏輯 ---
     img.src = ASSETS.sprout; 
     hint.innerText = "情緒正在萌芽中..."; 
     flowerNameDisp.innerText = "培育中..."; 
-    img.classList.add('blur-content'); // 使用你 CSS 定義的模糊
+    img.classList.add('blur-content'); 
 
     if (totoroCard) {
-        // 只有卡片沒顯示時才抽新圖，避免倒數時圖片一直閃
         if (totoroCard.style.display === 'none' || totoroCard.style.display === '') {
             const config = ASSETS.totoroConfig;
             const randomNum = Math.floor(Math.random() * config.count) + 1;
             totoroGif.src = `${config.baseUrl}${randomNum}.gif`;
         }
-        totoroCard.style.display = 'flex'; // 建議用 flex 配合居中 CSS
+        totoroCard.style.display = 'flex'; 
         if(closeBtn) closeBtn.style.display = 'none'; // 成長中不能關閉
     }
 } 
-else if (gameState.plantStatus === 'ready' || gameState.plantStatus === 'harvested') { 
-    // 🌟 核心修正：不管是「已成熟」還是「剛收成完」，都要繼續維持盛開的花朵圖片與文字
+else if (gameState.plantStatus === 'ready') { 
+    // 🌟 成熟狀態：圖片顯示，且「首度」亮起龍貓卡
     img.src = gameState.currentFlowerImg; 
-    
-    if (gameState.plantStatus === 'ready') {
-        hint.innerText = "點擊收成這份心情 ✨"; 
-        flowerNameDisp.innerText = "已盛開： " + gameState.currentFlowerName; 
-    } else {
-        // 🌟 剛收成完狀態 (harvested) 的文字提示
-        hint.innerText = "🌸 點擊任意空白處返回花園"; 
-        flowerNameDisp.innerText = "感謝這份心情的陪伴 💖"; 
-    }
+    img.classList.add('blur-content'); // 成熟時先模糊，讓玩家看龍貓卡
+    hint.innerText = "請先點擊小卡解鎖結果"; 
+    flowerNameDisp.innerText = "植物已盛開！"; 
 
-    if (totoroCard) {
-        // 讓龍貓卡片跟著一起顯示
+    if(totoroCard) {
         totoroCard.style.display = 'flex';
-        if (closeBtn) {
+        if(closeBtn) {
             closeBtn.style.display = 'block';
-            // 點擊龍貓卡的關閉鈕，效果等同於點擊空白處：關閉全螢幕、變回空盆栽
-            closeBtn.onclick = (e) => {
-                if (e && e.stopPropagation) e.stopPropagation(); // 防止事件冒泡
-                
-                // 1. 隱藏龍貓卡與對話氣泡
-                totoroCard.style.display = 'none';
-                const bubble = document.getElementById('message-bubble');
-                if (bubble) bubble.style.opacity = '0';
-                
-                // 2. 讓花盆縮回角落
-                const pot = document.getElementById('flower-pot');
-                if (pot) pot.classList.remove('expanded');
-                
-                // 3. 如果是收成完點擊關閉，才正式轉為 idle 空閒狀態，並更新 UI 為空盆栽
-                if (gameState.plantStatus === 'harvested') {
-                    gameState.plantStatus = 'idle';
-                    updateUI();
-                    autoSave();
-                }
-            };
+            closeBtn.innerText = "查看結果 ✨";
+            // 注意：這裡不寫 onclick，因為我們已經在步驟一的 handlePlantClick 裡統一處理點擊事件了
         }
     }
-}}
+}
+else if (gameState.plantStatus === 'harvested') {
+    // 🌟 新增的收成完狀態：龍貓卡退場，大圖清晰展現，等待點擊空白處退出
+    img.src = gameState.currentFlowerImg; 
+    img.classList.remove('blur-content'); // 揭開神祕面紗，變清晰！
+    hint.innerText = "🌸 點擊任意空白處返回花園"; 
+    flowerNameDisp.innerText = "已盛開： " + gameState.currentFlowerName; 
+    
+    if(totoroCard) totoroCard.style.display = 'none'; // 龍貓卡功成身退，消失
+}
+
+if (typeof autoSave === 'function') autoSave();
+}
 
     function createLvlHighDecorations() {
     // 1. 先移除舊的裝飾
@@ -1381,24 +1371,45 @@ function handleShopAction(id) {
 }
     // 重新改寫點擊邏輯，讓它支援手遊式放大縮小
 function handlePlantClick(event) {
+    // 安全檢查：如果沒傳入 event 物件就不處理
+    if (!event) return;
+    
     const pot = document.getElementById('flower-pot');
     const isExpanded = pot.classList.contains('expanded');
-    
-    // 🚪 狀況一：點擊「返回花園」按鈕 OR 已經收成完畢點擊任意空白處
-    if (
-        (event && event.target.id === 'close-pot-btn') || 
-        (isExpanded && gameState.plantStatus === 'harvested')
-    ) {
-        if (event && event.stopPropagation) event.stopPropagation();
+    const targetId = event.target.id;
+    const targetClass = event.target.className;
+
+    // 🛑 情況 A：如果玩家點擊的是「龍貓卡內部」或「對話氣泡」，絕對不要觸發任何花盆縮放或收成
+    if (event.target.closest('#totoro-card') || event.target.closest('#message-bubble')) {
+        // 如果點到的是龍貓卡上面的「查看結果/關閉」按鈕，單獨處理它，並阻止冒泡
+        if (targetId === 'close-card-btn') {
+            event.stopPropagation();
+            // 關閉龍貓小卡，解凍植物
+            const totoroCard = document.getElementById('totoro-card');
+            if (totoroCard) totoroCard.style.display = 'none';
+            const img = document.getElementById('flower-img');
+            if (img) {
+                img.classList.remove('blur-content');
+                img.style.filter = "none";
+            }
+            // 故意不改 plantStatus，讓它維持在 ready，這樣玩家才能點擊植物進行收成
+        }
+        return; 
+    }
+
+    // 🚪 情況 B：點擊右上角「返回花園」按鈕，或是「已經收成完(harvested)」點擊全螢幕任意空白處
+    if (targetId === 'close-pot-btn' || (isExpanded && gameState.plantStatus === 'harvested')) {
+        event.stopPropagation(); // 阻止冒泡
         
-        // 縮回角落
-        pot.classList.remove('expanded');
+        pot.classList.remove('expanded'); // 縮回角落
         
-        // 隱藏對話氣泡（假設妳的氣泡隱藏是將 opacity 設為 0）
+        // 隱藏對話氣泡與龍貓卡
         const bubble = document.getElementById('message-bubble');
         if (bubble) bubble.style.opacity = '0';
+        const totoroCard = document.getElementById('totoro-card');
+        if (totoroCard) totoroCard.style.display = 'none';
         
-        // 🌟 正式重設遊戲狀態為空閒，並更新 UI 變回空盆栽
+        // 如果是收成完退場，正式重設為空閒狀態，變回空盆栽
         if (gameState.plantStatus === 'harvested') {
             gameState.plantStatus = 'idle';
             updateUI();
@@ -1407,33 +1418,42 @@ function handlePlantClick(event) {
         return;
     }
 
-    // 📱 狀況二：如果目前是縮小的「角落小圖示」 ➔ 點擊把它「放大」
+    // 📱 情況 C：目前是縮小的「角落小圖示」 ➔ 點擊只負責「放大」，不觸發任何遊戲邏輯
     if (!isExpanded) {
         pot.classList.add('expanded');
         
-        // 放大時的溫馨提示
+        // 放大時的對話提示
         if (gameState.plantStatus === 'idle') {
             showBubble("🌱 進入觀賞艙！點擊土壤播下此刻的心情吧。");
         } else if (gameState.plantStatus === 'ready') {
-            showBubble("✨ 植物已經成熟囉！點擊它來進行收成！");
+            showBubble("✨ 植物已經成熟囉！解開龍貓卡後點擊它收成！");
         } else if (gameState.plantStatus === 'growing') {
             showBubble("🍃 心靈正在萌芽成長中，靜靜等待它盛開吧。");
+        } else if (gameState.plantStatus === 'harvested') {
+            showBubble("🌸 點擊任意空白處返回花園");
         }
         return; 
     }
 
-    // 🎮 狀況三：已經是全螢幕放大的情況下 ➔ 點擊植物本體觸發功能
+    // 🎮 情況 D：已經在全螢幕放大狀態下，且點擊的是「植物本體/土壤」 ➔ 執行培育邏輯
     if (gameState.plantStatus === 'ready') {
-        harvest(); // 熟了，觸發收成（圖片會留著，狀態變成 harvested）
+        // 檢查龍貓卡是否還開著，如果開著，提示玩家先點按鈕
+        const totoroCard = document.getElementById('totoro-card');
+        if (totoroCard && totoroCard.style.display === 'flex') {
+            showBubble("🧙‍♂️ 請先點擊龍貓卡下方的按鈕查看結果喔！");
+        } else {
+            harvest(); // 龍貓卡關了，點擊植物順利收成！
+        }
     } else if (gameState.plantStatus === 'idle') {
-        openPlantModal(); // 空閒，打開情緒滑桿
+        openPlantModal(); // 空土壤，打開心情滑桿
     } else if (gameState.plantStatus === 'growing') {
         showBubble("植物還在努力長大中，再等一下下吧 🫧");
     }
 }
 
-// 確保 HTML 綁定了 event
+// 確保屬性綁定正確
 document.getElementById('flower-pot').setAttribute('onclick', 'handlePlantClick(event)');
+
 
     function openPlantModal() { if (gameState.plantStatus === 'idle') { document.getElementById('plant-modal').style.display = 'flex'; validateEmotions(); } else showBubble("有一顆心靈正在萌芽..."); }
     function closeModal() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
@@ -1897,6 +1917,9 @@ function spawnDiyObject(imgSrc, name, savedProps = null) {
     obj.style.cursor = 'move';
     obj.style.zIndex = '100';
     obj.style.userSelect = 'none';
+    
+    // 🌟 【新增防刷新 CSS】一生成物件，就直接禁止它觸發手機瀏覽器的預設手勢
+    obj.style.touchAction = 'none'; 
 
     obj.innerHTML = `
         <img src="${imgSrc}" alt="${name}" style="width:80px; pointer-events:none; display:block;">
@@ -1926,6 +1949,12 @@ function spawnDiyObject(imgSrc, name, savedProps = null) {
 
     const doDrag = (e) => {
         if (!isDragging) return;
+
+        // 🌟 【關鍵阻擋】如果是手機觸控移動，強行拔掉瀏覽器想刷新網頁或滾動頁面的預設行為
+        if (e.touches && e.cancelable) {
+            e.preventDefault(); 
+        }
+
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
         obj.style.left = `${clientX - startX}px`;
@@ -1940,13 +1969,17 @@ function spawnDiyObject(imgSrc, name, savedProps = null) {
         }
     };
 
+    // 桌機滑鼠監聽
     obj.addEventListener('mousedown', startDrag);
     document.addEventListener('mousemove', doDrag);
     document.addEventListener('mouseup', stopDrag);
 
-    // 行動端觸控支援
+    // 行動端觸控監聽
     obj.addEventListener('touchstart', startDrag);
-    document.addEventListener('touchmove', doDrag);
+    
+    // 🌟 【核心修正】這裡最後的 { passive: false } 絕對不能少！
+    // 這樣瀏覽器才肯放權讓 e.preventDefault() 生效，不再亂噴下拉重新整理
+    document.addEventListener('touchmove', doDrag, { passive: false });
     document.addEventListener('touchend', stopDrag);
 
     gardenArea.appendChild(obj);
