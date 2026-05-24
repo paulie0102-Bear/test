@@ -148,7 +148,11 @@ body {
     width: 90px; 
     height: 90px; 
     cursor: pointer; 
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Q彈的手遊展開感 */
+    
+    /* 🌟 核心修正 1：設定動畫基準點在右下角（靠近原本在角落的位置） */
+    transform-origin: right bottom; 
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+    
     z-index: 90; /* 確保在一般裝飾上方，但低於彈窗 */
     background: rgba(255, 255, 255, 0.85);
     border-radius: 50%;
@@ -161,16 +165,21 @@ body {
 }
 
 /* 🔄 當被點擊放大時的「全螢幕種植艙」狀態 */
+/* 🔄 當被點擊放大時的「全螢幕種植艙」狀態 */
 #flower-pot.expanded {
     position: fixed;
-    top: 0; left: 0;
+    
+    /* 🌟 修正：移除原本的 top:0; left:0; 改成與原本一致的右下定位 */
+    bottom: 0 !important; 
+    right: 0 !important;
+    
     width: 100vw; 
     height: 100vh;
     border-radius: 0;
     border: none;
-    background: rgba(0, 0, 0, 0.75); /* 遮罩暗色背景 */
+    background: rgba(0, 0, 0, 0.85); 
     box-shadow: none;
-    z-index: 500; /* 覆蓋全螢幕 */
+    z-index: 500; 
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -268,7 +277,7 @@ body {
     opacity: 0;
     transition: all 0.5s ease; 
     pointer-events: none;
-    z-index: 600;             /* 確保顯示在全螢幕種植艙的前方 */
+    z-index: 1000000;             /* 確保顯示在全螢幕種植艙的前方 */
     white-space: pre-line;   
     line-height: 1.8;        
     text-align: center;      
@@ -847,7 +856,6 @@ function saveGameDataToDB(data) {
    async function autoSave() { 
     await saveGameDataToDB(gameState);
     if(document.getElementById('save-modal') && document.getElementById('save-modal').style.display === 'flex') {
-        // 🌟 加上 await，確保空間計算順利執行
         await updateStorageProgress();
     }
 }
@@ -979,12 +987,9 @@ function harvest() {
     if(nameDisp) nameDisp.innerText = `Lv.${gameState.gardenLv} ${gameState.gardenLv >= 5 ? '繁盛花園' : '新手花園'}`;
     
     // --- 🌸 背景商店與裝飾修改開始 ---
-    
-    // 1. 更新代幣顯示 (記得在 HTML 增加這個 ID)
     const coinCountDisp = document.getElementById('coin-count');
     if (coinCountDisp) coinCountDisp.innerText = gameState.coins || 0;
 
-    // 2. 處理背景樣式
     Object.values(BACKGROUNDS).forEach(bg => { 
         if(bg.class) document.body.classList.remove(bg.class); 
     });
@@ -992,108 +997,110 @@ function harvest() {
 
     const currentBgData = BACKGROUNDS[gameState.currentBg];
 
-    // 判斷背景：如果有購買背景就穿背景，沒有就走日夜模式
     if (currentBgData && gameState.currentBg !== 'default') {
         document.body.classList.add(currentBgData.class);
         window.currentRenderMode = gameState.currentBg; 
     } else {
-        updateTheme(); // 這會幫 body 加上 'day' 或 'night'
+        updateTheme(); 
         window.currentRenderMode = document.body.classList.contains('day') ? 'day' : 'night';
     }
 
-    // 3. 處理等級 5 以上的粒子裝飾
     const isHighLevel = gameState.gardenLv >= 5;
     if (isHighLevel) {
-        // 當前背景模式變了，才重新產生粒子
         if (window.lastRenderedMode !== window.currentRenderMode) {
             createLvlHighDecorations(); 
             window.lastRenderedMode = window.currentRenderMode;
         }
     } else {
-        // 未滿 5 等，清空所有裝飾
         document.querySelectorAll('.decoration-emoji').forEach(d => d.remove());
         window.lastRenderedMode = null;
     }
-    
     // --- 🌸 背景商店與裝飾修改結束 ---
-    // 🌟 在 updateUI 結尾或載入完成後執行：將上一次存檔擺放的物件重新渲染出來
-if (document.querySelectorAll('.diy-movable-object').length === 0 && gameState.currentLayoutObjects) {
-    gameState.currentLayoutObjects.forEach(obj => {
-        spawnDiyObject(obj.img, obj.name, obj);
-    });
-}
 
-    // ... 下方原本的植物圖片與提示文字邏輯保持不變 ...
-// ... 前面的背景、金幣、經驗條保持不變 ...
-
-const img = document.getElementById('flower-img');
-const hint = document.getElementById('hint-text');
-const flowerNameDisp = document.getElementById('flower-name-display');
-const totoroCard = document.getElementById('totoro-card'); 
-const totoroGif = document.getElementById('totoro-gif');
-const closeBtn = document.getElementById('close-card-btn');
-
-// 先統一重置模糊效果
-img.classList.remove('blur-content');
-img.style.filter = "none";
-
-if (gameState.plantStatus === 'idle') { 
-    img.src = ASSETS.soil; 
-    hint.innerText = "點擊土壤播下此刻的心情"; 
-    flowerNameDisp.innerText = ""; 
-    if(totoroCard) totoroCard.style.display = 'none'; 
-} 
-else if (gameState.plantStatus === 'nurturing') {
-    img.src = ASSETS.sprout; 
-    hint.innerText = "✨ 正在細心呵護中... (點擊泡泡！)"; 
-    flowerNameDisp.innerText = "給予養分中..."; 
-    if(totoroCard) totoroCard.style.display = 'none';
-}
-else if (gameState.plantStatus === 'growing') { 
-    img.src = ASSETS.sprout; 
-    hint.innerText = "情緒正在萌芽中..."; 
-    flowerNameDisp.innerText = "培育中..."; 
-    img.classList.add('blur-content'); 
-
-    if (totoroCard) {
-        if (totoroCard.style.display === 'none' || totoroCard.style.display === '') {
-    const config = ASSETS.totoroConfig;
-    const randomNum = Math.floor(Math.random() * config.count) + 1;
-    
-    // 🌟 修正：在網址後面加上時間戳 (?t=數字)，強制瀏覽器每次都完美重刷 GIF
-    totoroGif.src = `${config.baseUrl}${randomNum}.gif?t=${Date.now()}`;
-}
-        totoroCard.style.display = 'flex'; 
-        if(closeBtn) closeBtn.style.display = 'none'; // 成長中不能關閉
+    if (document.querySelectorAll('.diy-movable-object').length === 0 && gameState.currentLayoutObjects) {
+        gameState.currentLayoutObjects.forEach(obj => {
+            spawnDiyObject(obj.img, obj.name, obj);
+        });
     }
-} 
-else if (gameState.plantStatus === 'ready') { 
-    // 🌟 成熟狀態：圖片顯示，且「首度」亮起龍貓卡
-    img.src = gameState.currentFlowerImg; 
-    img.classList.add('blur-content'); // 成熟時先模糊，讓玩家看龍貓卡
-    hint.innerText = "請先點擊小卡解鎖結果"; 
-    flowerNameDisp.innerText = "植物已盛開！"; 
 
-    if(totoroCard) {
-        totoroCard.style.display = 'flex';
-        if(closeBtn) {
-            closeBtn.style.display = 'block';
-            closeBtn.innerText = "查看結果 ✨";
-            // 注意：這裡不寫 onclick，因為我們已經在步驟一的 handlePlantClick 裡統一處理點擊事件了
+    const img = document.getElementById('flower-img');
+    const hint = document.getElementById('hint-text');
+    const flowerNameDisp = document.getElementById('flower-name-display');
+    const totoroCard = document.getElementById('totoro-card'); 
+    const totoroGif = document.getElementById('totoro-gif');
+    const closeBtn = document.getElementById('close-card-btn');
+
+    // 先統一重置模糊效果
+    img.classList.remove('blur-content');
+    img.style.filter = "none";
+
+    if (gameState.plantStatus === 'idle') { 
+        img.src = ASSETS.soil; 
+        hint.innerText = "點擊土壤播下此刻的心情"; 
+        flowerNameDisp.innerText = ""; 
+        if(totoroCard) totoroCard.style.display = 'none'; 
+        
+        // 回到閒置狀態時，把龍貓卡記憶點清空
+        gameState.currentTotoroId = null; 
+        if(totoroGif) totoroGif.src = ''; 
+    }
+    else if (gameState.plantStatus === 'nurturing') {
+        img.src = ASSETS.sprout; 
+        hint.innerText = "✨ 正在細心呵護中... (點擊泡泡！)"; 
+        flowerNameDisp.innerText = "給予養分中..."; 
+        if(totoroCard) totoroCard.style.display = 'none';
+    }
+    else if (gameState.plantStatus === 'growing') { 
+        img.src = ASSETS.sprout; 
+        hint.innerText = "情緒正在萌芽中..."; 
+        flowerNameDisp.innerText = "培育中..."; 
+        img.classList.add('blur-content'); 
+
+        if (totoroCard) {
+            // 🌟 核心修正：把 config 提到 if 外面，確保下方不論何時都能讀取到它！
+            const config = ASSETS.totoroConfig;
+
+            // 檢查系統有沒有「記住」這次種植的龍貓小卡號碼
+            if (!gameState.currentTotoroId) {
+                // 如果是空的（代表這是點擊種植後的第一次），我們才抽號碼，並牢牢記在 gameState 裡！
+                gameState.currentTotoroId = Math.floor(Math.random() * config.count) + 1;
+                
+                // 抽完立刻記錄與自動存檔
+                if (typeof autoSave === 'function') autoSave();
+            }
+            
+            // 🌟 修正後：現在這裡可以安全地讀取 config 變數，不會再噴出 ReferenceError 了！
+            totoroGif.src = `${config.baseUrl}${gameState.currentTotoroId}.gif?t=${Date.now()}`;
+            
+            // 強制讓小卡顯示
+            totoroCard.style.display = 'flex'; 
+            if(closeBtn) closeBtn.style.display = 'none'; 
         }
     }
-}
-else if (gameState.plantStatus === 'harvested') {
-    // 🌟 新增的收成完狀態：龍貓卡退場，大圖清晰展現，等待點擊空白處退出
-    img.src = gameState.currentFlowerImg; 
-    img.classList.remove('blur-content'); // 揭開神祕面紗，變清晰！
-    hint.innerText = "🌸 點擊任意空白處返回花園"; 
-    flowerNameDisp.innerText = "已盛開： " + gameState.currentFlowerName; 
-    
-    if(totoroCard) totoroCard.style.display = 'none'; // 龍貓卡功成身退，消失
-}
+    else if (gameState.plantStatus === 'ready') { 
+        img.src = gameState.currentFlowerImg; 
+        img.classList.add('blur-content'); 
+        hint.innerText = "點擊採收"; 
+        flowerNameDisp.innerText = "植物已盛開！"; 
 
-if (typeof autoSave === 'function') autoSave();
+        if(totoroCard) {
+            totoroCard.style.display = 'flex';
+            if(closeBtn) {
+                closeBtn.style.display = 'block';
+                closeBtn.innerText = "查看結果 ✨";
+            }
+        }
+    }
+    else if (gameState.plantStatus === 'harvested') {
+        img.src = gameState.currentFlowerImg; 
+        img.classList.remove('blur-content'); 
+        hint.innerText = "🌸 點擊任意空白處返回花園"; 
+        flowerNameDisp.innerText = "已盛開： " + gameState.currentFlowerName; 
+        
+        if(totoroCard) totoroCard.style.display = 'none'; 
+    }
+
+    if (typeof autoSave === 'function') autoSave();
 }
 
     function createLvlHighDecorations() {
@@ -1287,39 +1294,38 @@ function handleShopAction(id) {
 
 
     // --- 系統功能 ---
-    async function updateStorageProgress() {
+async function updateStorageProgress() {
     const bar = document.getElementById('storage-bar');
     if (!bar) return;
 
-    // 檢查瀏覽器是否支援這個現代 API
-    if (navigator.storage && navigator.storage.estimate) {
-        try {
-            // 📊 向系統查詢真實的使用量 (單位是 Byte)
-            const estimate = await navigator.storage.estimate();
-            
-            // 換算成 KB (除以 1024)
-            const usageKB = (estimate.usage / 1024).toFixed(1);
-            const quotaKB = (estimate.quota / 1024).toFixed(1);
-            
-            // 計算使用百分比
-            const percentage = Math.min((estimate.usage / estimate.quota) * 100, 100).toFixed(1);
-            
-            // 🔄 更新畫面上的進度條
-            bar.style.width = percentage + "%";
-            bar.style.background = percentage > 80 ? '#f44336' : '#4caf50';
-            
-            // 🔄 更新文字說明
-            document.getElementById('storage-usage-text').innerText = percentage + "%";
-            document.getElementById('storage-kb-info').innerText = `真實用量: ${usageKB} KB / 系統配額: ${quotaKB} KB`;
-            
-        } catch (e) {
-            console.error("無法估算儲存空間:", e);
-        }
-    } else {
-        // 如果是太舊的手機，不支援此 API
-        document.getElementById('storage-kb-info').innerText = "此瀏覽器不支援空間監控";
+    try {
+        // 🌟 核心修正：直接將當前的 gameState 轉成 JSON 字串，計算最精準的「真實存檔長度」
+        const jsonString = JSON.stringify(gameState);
+        
+        // 1 個字元 = 1 Byte，除以 1024 換算成最直覺的 KB
+        const actualSizeBytes = new Blob([jsonString]).size;
+        const usageKB = (actualSizeBytes / 1024).toFixed(2); // 精確到小數點後兩位
+        
+        // 🌟 自訂一個健康的「遊戲虛擬配額限制」（例如設定 512 KB，對文字存檔來說非常大）
+        // 這樣百分比才會隨著妳的動作做出敏銳的上下起伏
+        const virtualQuotaKB = 512.0; 
+        
+        // 計算使用百分比
+        const percentage = Math.min((usageKB / virtualQuotaKB) * 100, 100).toFixed(1);
+        
+        // 🔄 更新畫面上的進度條
+        bar.style.width = percentage + "%";
+        bar.style.background = percentage > 80 ? '#f44336' : '#4caf50';
+        
+        // 🔄 更新文字說明
+        document.getElementById('storage-usage-text').innerText = percentage + "%";
+        document.getElementById('storage-kb-info').innerText = `真實用量: ${usageKB} KB / 虛擬配額: ${virtualQuotaKB} KB`;
+        
+    } catch (e) {
+        console.error("無法估算精準儲存空間:", e);
     }
 }
+
     function exportSaveFile() {
         const dataStr = JSON.stringify(gameState, null, 2);
         const blob = new Blob([dataStr], { type: "application/json" });
@@ -1426,15 +1432,18 @@ function handlePlantClick(event) {
         return;
     }
 
-    // 📱 情況 C：目前是縮小的「角落小圖示」 ➔ 點擊只負責「放大」，不觸發任何遊戲邏輯
+    // 📱 情況 C：目前是縮小的「角落小圖示」 ➔ 點擊負責「放大」
     if (!isExpanded) {
         pot.classList.add('expanded');
+        
+        // 🌟 核心修正：放大的一瞬間，立刻驅動 updateUI() 更新內部元件（如龍貓卡）的顯示狀態！
+        updateUI();
         
         // 放大時的對話提示
         if (gameState.plantStatus === 'idle') {
             showBubble("🌱 進入觀賞艙！點擊土壤播下此刻的心情吧。");
         } else if (gameState.plantStatus === 'ready') {
-            showBubble("✨ 植物已經成熟囉！解開龍貓卡後點擊它收成！");
+            showBubble("✨ 植物已經成熟囉！點擊它收成！");
         } else if (gameState.plantStatus === 'growing') {
             showBubble("🍃 心靈正在萌芽成長中，靜靜等待它盛開吧。");
         } else if (gameState.plantStatus === 'harvested') {
@@ -1448,7 +1457,7 @@ function handlePlantClick(event) {
         // 檢查龍貓卡是否還開著，如果開著，提示玩家先點按鈕
         const totoroCard = document.getElementById('totoro-card');
         if (totoroCard && totoroCard.style.display === 'flex') {
-            showBubble("🧙‍♂️ 請先點擊龍貓卡下方的按鈕查看結果喔！");
+            showBubble("🧙‍♂️ 請先點擊下方的按鈕查看結果喔！");
         } else {
             harvest(); // 龍貓卡關了，點擊植物順利收成！
         }
@@ -1461,7 +1470,6 @@ function handlePlantClick(event) {
 
 // 確保屬性綁定正確
 document.getElementById('flower-pot').setAttribute('onclick', 'handlePlantClick(event)');
-
 
     function openPlantModal() { if (gameState.plantStatus === 'idle') { document.getElementById('plant-modal').style.display = 'flex'; validateEmotions(); } else showBubble("有一顆心靈正在萌芽..."); }
     function closeModal() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
@@ -1915,16 +1923,14 @@ function spawnDiyObject(imgSrc, name, savedProps = null) {
     const gardenArea = document.getElementById('garden-area') || document.body; 
     const objId = savedProps ? savedProps.id : 'diy_' + Date.now();
     
-    // 🌟 這裡計算偏下方、靠中央的比例，讓不同手機尺寸都能生在安全區
     const defaultX = window.innerWidth * 0.4;
-    const defaultY = window.innerHeight * 0.65; // 65% 高度，屬於畫面中偏下
+    const defaultY = window.innerHeight * 0.65; 
 
     const obj = document.createElement('div');
     obj.id = objId;
     obj.className = 'diy-movable-object';
     obj.style.position = 'absolute';
     
-    // 🌟 調整：如果是新生成的物件，使用 defaultX 和 defaultY
     obj.style.left = savedProps ? `${savedProps.x}px` : `${defaultX}px`;
     obj.style.top = savedProps ? `${savedProps.y}px` : `${defaultY}px`;
     
@@ -1932,8 +1938,6 @@ function spawnDiyObject(imgSrc, name, savedProps = null) {
     obj.style.cursor = 'move';
     obj.style.zIndex = '100';
     obj.style.userSelect = 'none';
-    
-    // 禁止觸發手機瀏覽器的預設手勢
     obj.style.touchAction = 'none'; 
 
     obj.innerHTML = `
@@ -1958,6 +1962,12 @@ function spawnDiyObject(imgSrc, name, savedProps = null) {
         startX = clientX - obj.offsetLeft;
         startY = clientY - obj.offsetTop;
         e.stopPropagation();
+
+        // 🌟 核心修正：只有在「確定開始拖拽」時，才動態把監聽器掛到全域，避免平時堆疊
+        document.addEventListener('mousemove', doDrag);
+        document.addEventListener('mouseup', stopDrag);
+        document.addEventListener('touchmove', doDrag, { passive: false });
+        document.addEventListener('touchend', stopDrag);
     };
 
     const doDrag = (e) => {
@@ -1971,31 +1981,36 @@ function spawnDiyObject(imgSrc, name, savedProps = null) {
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
         obj.style.left = `${clientX - startX}px`;
         obj.style.top = `${clientY - startY}px`;
-        saveCurrentStateToMemory(); 
+        
+        // 🌟 優化：拖曳時只更新物件自身的快取數據，不頻繁操作整個陣列
+        if (savedProps) {
+            savedProps.x = clientX - startX;
+            savedProps.y = clientY - startY;
+        }
     };
 
     const stopDrag = () => {
-        if(isDragging) {
+        if (isDragging) {
             isDragging = false;
+            
+            // 🌟 核心修正：手放開時，立刻把全域的監聽器「卸載」乾淨！不留任何背景垃圾
+            document.removeEventListener('mousemove', doDrag);
+            document.removeEventListener('mouseup', stopDrag);
+            document.removeEventListener('touchmove', doDrag);
+            document.removeEventListener('touchend', stopDrag);
+            
+            // 手放開停止的一瞬間，同步一次數據並存檔
+            saveCurrentStateToMemory();
             autoSave(); 
         }
     };
 
-    // 桌機滑鼠監聽
+    // 物件本身只監聽「開始點擊/觸碰」
     obj.addEventListener('mousedown', startDrag);
-    document.addEventListener('mousemove', doDrag);
-    document.addEventListener('mouseup', stopDrag);
-
-    // 行動端觸控監聽
     obj.addEventListener('touchstart', startDrag);
-    
-    // 🌟 修正：把剛剛漏掉的 { passive: false } 補在 document 監聽上，做雙重保險
-    document.addEventListener('touchmove', doDrag, { passive: false });
-    document.addEventListener('touchend', stopDrag);
 
     gardenArea.appendChild(obj);
 
-    // 如果是新生成的，要存入狀態（同步改成新版的預設座標）
     if (!savedProps) {
         gameState.currentLayoutObjects.push({
             id: objId, img: imgSrc, name: name, x: defaultX, y: defaultY, scale: 1
@@ -2018,6 +2033,7 @@ function resizeDiyObject(id, amount) {
 function removeDiyObject(id) {
     const obj = document.getElementById(id);
     if (obj) obj.remove();
+    // 🌟 確實從存檔陣列過濾掉
     gameState.currentLayoutObjects = gameState.currentLayoutObjects.filter(o => o.id !== id);
     autoSave();
 }
@@ -2027,8 +2043,8 @@ function saveCurrentStateToMemory() {
     gameState.currentLayoutObjects.forEach(itemData => {
         const obj = document.getElementById(itemData.id);
         if (obj) {
-            itemData.x = parseInt(obj.style.left);
-            itemData.y = parseInt(obj.style.top);
+            itemData.x = parseInt(obj.style.left) || 0;
+            itemData.y = parseInt(obj.style.top) || 0;
         }
     });
 }
