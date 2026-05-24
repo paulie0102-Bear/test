@@ -44,20 +44,26 @@ body {
     margin: 0; 
     padding: 0; 
     font-family: "PingFang TC", sans-serif;
-    transition: background 1s, all 1s ease; 
+    transition: background 1s, all 0.4s ease; 
+    
+    /* 🌟 重點 1：改成 100% 並加上 border-box，確保 padding 不會撐破 100% 高度 */
+    height: 100%;
+    min-height: 100vh;
+    box-sizing: border-box; 
     overflow: hidden;
+    
     display: flex; 
     flex-direction: column; 
     align-items: center; 
-    height: 100vh;
-    /* 🌟 適應 iOS 安全區域 (防止內容被瀏海或底條遮住) */
     padding-top: env(safe-area-inset-top);
     
-    /* 🌟 背景流動動畫 */
     background-size: 400% 400%;
     animation: gradientBG 15s ease infinite;
+    
+    /* 🌟 重點 2：直接鎖死整個網頁的預設觸控手勢 */
+    overscroll-behavior: none !important;
     overscroll-behavior-y: none !important;
-
+    touch-action: none; 
 }
 
 /* 背景裝飾 */
@@ -1979,7 +1985,7 @@ function spawnDiyObject(imgSrc, name, savedProps = null) {
     
     // 🌟 【核心修正】這裡最後的 { passive: false } 絕對不能少！
     // 這樣瀏覽器才肯放權讓 e.preventDefault() 生效，不再亂噴下拉重新整理
-    document.addEventListener('touchmove', doDrag, { passive: false });
+    document.addEventListener('touchmove', doDrag);
     document.addEventListener('touchend', stopDrag);
 
     gardenArea.appendChild(obj);
@@ -2132,6 +2138,16 @@ async function requestPersistentStorage() {
 window.addEventListener('DOMContentLoaded', () => {
     requestPersistentStorage();
 });
+
+// 🛑 終極防火牆：直接對整個視窗的觸控移動進行審查
+window.addEventListener('touchmove', function(e) {
+    // 只要是在拖曳物件狀態下，或是點擊到了 DIY 物件，就絕對不允許瀏覽器滾動或重新整理
+    if (e.target.closest('.diy-movable-object') || e.target.classList.contains('diy-movable-object')) {
+        if (e.cancelable) {
+            e.preventDefault();
+        }
+    }
+}, { passive: false }); // 🌟 用 window + passive: false 強制蓋過瀏覽器的預設流暢優化
 
 </script>
 
