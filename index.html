@@ -1516,10 +1516,10 @@ const originalHarvest = harvest;
 harvest = function() {
     originalHarvest(); // 執行妳原本寫好的完整收成邏輯
     
-    // 收成完後，等 1.5 秒讓玩家看完盛開小語，自動縮回角落
+    // 收成完後，等 5 秒讓玩家看完盛開小語，自動縮回角落
     setTimeout(() => {
         document.getElementById('flower-pot').classList.remove('expanded');
-    }, 1500);
+    }, 5000);
 };
 
     function openPlantModal() { if (gameState.plantStatus === 'idle') { document.getElementById('plant-modal').style.display = 'flex'; validateEmotions(); } else showBubble("有一顆心靈正在萌芽..."); }
