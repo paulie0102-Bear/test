@@ -1057,10 +1057,12 @@ else if (gameState.plantStatus === 'growing') {
 
     if (totoroCard) {
         if (totoroCard.style.display === 'none' || totoroCard.style.display === '') {
-            const config = ASSETS.totoroConfig;
-            const randomNum = Math.floor(Math.random() * config.count) + 1;
-            totoroGif.src = `${config.baseUrl}${randomNum}.gif`;
-        }
+    const config = ASSETS.totoroConfig;
+    const randomNum = Math.floor(Math.random() * config.count) + 1;
+    
+    // 🌟 修正：在網址後面加上時間戳 (?t=數字)，強制瀏覽器每次都完美重刷 GIF
+    totoroGif.src = `${config.baseUrl}${randomNum}.gif?t=${Date.now()}`;
+}
         totoroCard.style.display = 'flex'; 
         if(closeBtn) closeBtn.style.display = 'none'; // 成長中不能關閉
     }
@@ -1910,21 +1912,28 @@ function toggleDiyWorkshop() {
 
 // 2. 生成物件到畫面上
 function spawnDiyObject(imgSrc, name, savedProps = null) {
-    const gardenArea = document.getElementById('garden-area') || document.body; // 請確保有主遊戲畫面區塊
+    const gardenArea = document.getElementById('garden-area') || document.body; 
     const objId = savedProps ? savedProps.id : 'diy_' + Date.now();
     
+    // 🌟 這裡計算偏下方、靠中央的比例，讓不同手機尺寸都能生在安全區
+    const defaultX = window.innerWidth * 0.4;
+    const defaultY = window.innerHeight * 0.65; // 65% 高度，屬於畫面中偏下
+
     const obj = document.createElement('div');
     obj.id = objId;
     obj.className = 'diy-movable-object';
     obj.style.position = 'absolute';
-    obj.style.left = savedProps ? `${savedProps.x}px` : '100px';
-    obj.style.top = savedProps ? `${savedProps.y}px` : '200px';
+    
+    // 🌟 調整：如果是新生成的物件，使用 defaultX 和 defaultY
+    obj.style.left = savedProps ? `${savedProps.x}px` : `${defaultX}px`;
+    obj.style.top = savedProps ? `${savedProps.y}px` : `${defaultY}px`;
+    
     obj.style.transform = `scale(${savedProps ? savedProps.scale : 1})`;
     obj.style.cursor = 'move';
     obj.style.zIndex = '100';
     obj.style.userSelect = 'none';
     
-    // 🌟 【新增防刷新 CSS】一生成物件，就直接禁止它觸發手機瀏覽器的預設手勢
+    // 禁止觸發手機瀏覽器的預設手勢
     obj.style.touchAction = 'none'; 
 
     obj.innerHTML = `
@@ -1936,12 +1945,10 @@ function spawnDiyObject(imgSrc, name, savedProps = null) {
         </div>
     `;
 
-    // 點擊與拖曳邏輯 (滑鼠與觸控皆支援)
     let isDragging = false;
     let startX, startY;
 
     const startDrag = (e) => {
-        // 隱藏其他物件的控制鈕，顯示當前的
         document.querySelectorAll('.diy-controls').forEach(c => c.style.display = 'none');
         obj.querySelector('.diy-controls').style.display = 'flex';
         
@@ -1956,7 +1963,6 @@ function spawnDiyObject(imgSrc, name, savedProps = null) {
     const doDrag = (e) => {
         if (!isDragging) return;
 
-        // 🌟 【關鍵阻擋】如果是手機觸控移動，強行拔掉瀏覽器想刷新網頁或滾動頁面的預設行為
         if (e.touches && e.cancelable) {
             e.preventDefault(); 
         }
@@ -1965,13 +1971,13 @@ function spawnDiyObject(imgSrc, name, savedProps = null) {
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
         obj.style.left = `${clientX - startX}px`;
         obj.style.top = `${clientY - startY}px`;
-        saveCurrentStateToMemory(); // 即時更新記憶體數值
+        saveCurrentStateToMemory(); 
     };
 
     const stopDrag = () => {
         if(isDragging) {
             isDragging = false;
-            autoSave(); // 拖曳完自動存進 IndexedDB
+            autoSave(); 
         }
     };
 
@@ -1983,17 +1989,16 @@ function spawnDiyObject(imgSrc, name, savedProps = null) {
     // 行動端觸控監聽
     obj.addEventListener('touchstart', startDrag);
     
-    // 🌟 【核心修正】這裡最後的 { passive: false } 絕對不能少！
-    // 這樣瀏覽器才肯放權讓 e.preventDefault() 生效，不再亂噴下拉重新整理
-    document.addEventListener('touchmove', doDrag);
+    // 🌟 修正：把剛剛漏掉的 { passive: false } 補在 document 監聽上，做雙重保險
+    document.addEventListener('touchmove', doDrag, { passive: false });
     document.addEventListener('touchend', stopDrag);
 
     gardenArea.appendChild(obj);
 
-    // 如果是新生成的，要存入狀態
+    // 如果是新生成的，要存入狀態（同步改成新版的預設座標）
     if (!savedProps) {
         gameState.currentLayoutObjects.push({
-            id: objId, img: imgSrc, name: name, x: 100, y: 200, scale: 1
+            id: objId, img: imgSrc, name: name, x: defaultX, y: defaultY, scale: 1
         });
         autoSave();
     }
