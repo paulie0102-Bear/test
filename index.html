@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>小星靈的暖心花園 - 溫柔療癒存檔版</title>
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/512/emoji_u1f338.png">
-
+    
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-title" content="小星靈花園">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -22,7 +22,7 @@
 * { 
     box-sizing: border-box; 
     -webkit-tap-highlight-color: transparent; 
-
+    
     /* 🚫 禁用長按與選取內容 (遊戲體驗優化) */
     -webkit-touch-callout: none;    /* iOS Safari 專用：禁用長按選單 */
     -webkit-user-select: none;      /* Safari, Chrome, Opera 舊版 */
@@ -45,21 +45,21 @@ body {
     padding: 0; 
     font-family: "PingFang TC", sans-serif;
     transition: background 1s, all 0.4s ease; 
-
+    
     /* 🌟 重點 1：改成 100% 並加上 border-box，確保 padding 不會撐破 100% 高度 */
     height: 100%;
     min-height: 100vh;
     box-sizing: border-box; 
     overflow: hidden;
-
+    
     display: flex; 
     flex-direction: column; 
     align-items: center; 
     padding-top: env(safe-area-inset-top);
-
+    
     background-size: 400% 400%;
     animation: gradientBG 15s ease infinite;
-
+    
     /* 🌟 重點 2：直接鎖死整個網頁的預設觸控手勢 */
     overscroll-behavior: none !important;
     overscroll-behavior-y: none !important;
@@ -148,11 +148,11 @@ body {
     width: 90px; 
     height: 90px; 
     cursor: pointer; 
-
+    
     /* 🌟 核心修正 1：設定動畫基準點在右下角（靠近原本在角落的位置） */
     transform-origin: right bottom; 
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-
+    
     z-index: 90; /* 確保在一般裝飾上方，但低於彈窗 */
     background: rgba(255, 255, 255, 0.85);
     border-radius: 50%;
@@ -168,11 +168,11 @@ body {
 /* 🔄 當被點擊放大時的「全螢幕種植艙」狀態 */
 #flower-pot.expanded {
     position: fixed;
-
+    
     /* 🌟 修正：移除原本的 top:0; left:0; 改成與原本一致的右下定位 */
     bottom: 0 !important; 
     right: 0 !important;
-
+    
     width: 100vw; 
     height: 100vh;
     border-radius: 0;
@@ -564,6 +564,174 @@ body.theme-night-study .pop-item { filter: drop-shadow(0 0 10px rgba(255,255,255
     z-index: 99999 !important; /* 👈 選單本體在最上層 */
 }
 
+/* 🎵 留聲機外框（底座，固定不動） */
+#garden-gramophone {
+    position: fixed;
+    bottom: calc(265px + env(safe-area-inset-bottom)); 
+    right: 20px; 
+    width: 90px; 
+    height: 90px; 
+    cursor: pointer; 
+    z-index: 90; 
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 50%;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    border: 2px solid #8561c5; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+    touch-action: none;
+}
+
+/* 💿 純 CSS 打造的幾何黑膠唱片 */
+.vinyl-record {
+    position: relative;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    /* 🎨 黑膠特有的無數微細溝槽陰影 + 基礎底色 */
+    background: repeating-radial-gradient(
+        circle,
+        #111,
+        #111 2px,
+        #222 3px,
+        #111 4px
+    );
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 4px 10px rgba(0,0,0,0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* ✨ 黑膠唱片的立體反光層（沙漏型光影） */
+.vinyl-record::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border-radius: 50%;
+    /* 🌟 使用錐形漸層創造出對角的絲綢十字反光 */
+    background: conic-gradient(
+        from 0deg,
+        transparent 10%,
+        rgba(255, 255, 255, 0.15) 25%,
+        transparent 40%,
+        transparent 60%,
+        rgba(255, 255, 255, 0.15) 75%,
+        transparent 90%
+    );
+    pointer-events: none;
+}
+
+/* 🔄 當播放音樂時，只讓「反光層 (光影)」原地旋轉，實體黑膠不動！ */
+#garden-gramophone.playing .vinyl-record::before {
+    animation: spinReflect 4s linear infinite;
+}
+
+/* 🪕 唱片中心的標籤圓心（貼紙） */
+.vinyl-center {
+    width: 22px;
+    height: 22px;
+    background: #8561c5; /* 配合妳的紫色主題，也可以換成別的顏色 */
+    border-radius: 50%;
+    border: 2px solid #111;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+}
+
+/* 📌 最中心穿過唱片機軸心的小黑點 */
+.vinyl-center::after {
+    content: '';
+    width: 4px;
+    height: 4px;
+    background: #111;
+    border-radius: 50%;
+}
+
+/* 🎬 讓光影優雅轉動的動畫 */
+@keyframes spinReflect {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* 🎴 歌單小卡片彈窗排版（完美適配 iOS/Android） */
+.music-grid {
+    display: flex;
+    flex-direction: column; /* 一條一條的小卡片列 */
+    gap: 12px;
+    margin-top: 15px;
+    max-height: 60vh; /* 防止歌單太長超出手機螢幕 */
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.music-card {
+    background: white;
+    padding: 12px 16px;
+    border-radius: 16px;
+    border: 2px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    transition: all 0.2s ease;
+}
+
+.music-card.owned { border-color: #8561c5; }
+.music-card.active { background: #f3e5f5; border-color: #9c27b0; }
+
+.music-info { text-align: left; }
+.music-title { font-size: 15px; font-weight: bold; color: #333; }
+.music-status { font-size: 12px; color: #888; margin-top: 2px; }
+
+.music-btn {
+    border: none;
+    border-radius: 12px;
+    padding: 8px 16px;
+    font-weight: bold;
+    cursor: pointer;
+    color: white;
+    min-width: 80px;
+    transition: background 0.2s;
+}
+
+/* 🎛️ 現正播放控制面板 */
+.now-playing-panel {
+    background: #f5f3f9;
+    padding: 16px;
+    border-radius: 20px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    border: 1px solid #e1daee;
+}
+
+.controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+/* 暫停/播放 圓形大按鈕 */
+.play-pause-btn {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: none;
+    background: #8561c5;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 8px rgba(133, 97, 197, 0.3);
+    transition: transform 0.1s, background 0.2s;
+}
+.play-pause-btn:active { transform: scale(0.92); }
+
 
     </style>
 </head>
@@ -584,7 +752,7 @@ body.theme-night-study .pop-item { filter: drop-shadow(0 0 10px rgba(255,255,255
 <div id="flower-pot" onclick="handlePlantClick(event)">
     <button id="close-pot-btn">返回花園 ↩</button>
     <img id="flower-img" src="" alt="plant">
-
+    
     <p id="hint-text" style="font-size: 14px; margin-top: 15px;">點擊土壤播下此刻的心情</p>
     <p id="flower-name-display" style="font-weight: bold; color: #e91e63; margin-top: 5px;"></p>
 
@@ -608,7 +776,7 @@ body.theme-night-study .pop-item { filter: drop-shadow(0 0 10px rgba(255,255,255
         <button style="background: #ffe0b2; color: #e65100;" onclick="toggleAlbum()">花卉圖鑑</button>
         <button style="background: #eeeeee;" onclick="openSaveMenu()">系統設定</button>
     </div>
-
+    
 
     <div id="plant-modal" class="modal">
         <div class="modal-content">
@@ -635,20 +803,21 @@ body.theme-night-study .pop-item { filter: drop-shadow(0 0 10px rgba(255,255,255
     <input type="range" id="emo-hope" min="0" max="100" value="20" step="20" oninput="validateEmotions()">
 </div>
             <div id="total-check" style="font-weight: bold; margin: 10px 0;">總和: 100 / 100</div>
+            <div id="weekly-theme-text" style="font-size: 13px; color: #888; margin-top: 5px; font-weight: bold;"></div>
             <button id="plant-btn" style="background: #aed581; width: 100%; padding: 15px; border-radius: 15px;" onclick="confirmPlanting()">開始種植</button>
             <p style="font-size: 13px; margin-top: 15px; color: #999; cursor: pointer;" onclick="closeModal()">先不種了</p>
         </div>
     </div>
 
     <div id="list-modal" class="modal"><div class="modal-content"><h3 id="list-title">清單</h3><div id="list-container" class="scroll-list"></div><button style="background: #eee; width: 100%; margin-top: 20px; padding: 12px;" onclick="closeModal()">返回花園</button></div></div>
-
+    
     <div id="lantern-modal" class="modal"><div class="modal-content"><h3 id="lantern-title">寫下你的心願</h3><textarea id="lantern-text" placeholder="寫點什麼吧..."></textarea><div id="date-picker-area"><p style="font-size: 14px;">預計抵達日期：</p><input type="date" id="lantern-date" style="width:100%; padding:10px; margin-bottom:10px; border-radius:10px; border:1px solid #ddd;"></div><button style="background: #ff6b6b; color: white; width: 100%; padding: 15px; border-radius: 15px;" onclick="launchLantern()">釋放天燈</button><p style="font-size: 12px; margin-top: 15px; color: #888;" onclick="closeModal()">取消</p></div></div>
 
     <div id="save-modal" class="modal">
         <div class="modal-content">
             <h3>資料管理中心</h3>
             <p style="font-size: 11px; color: #888; margin-bottom: 15px;">監控本地容量，建議定期匯出備份避免數據丟失。</p>
-
+            
             <div class="storage-progress-area">
                 <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 5px;">
                     <span style="font-weight:bold;">存檔空間佔用</span>
@@ -659,16 +828,16 @@ body.theme-night-study .pop-item { filter: drop-shadow(0 0 10px rgba(255,255,255
                 </div>
                 <p id="storage-kb-info" style="font-size: 10px; color: #999; margin-top: 6px; margin-bottom:0;">已使用: 0 KB / 5120 KB</p>
             </div>
-
+            
             <button style="background: #2196f3; color:white; width: 100%; margin-bottom: 12px; padding: 14px; border-radius: 12px;" onclick="exportSaveFile()">📤 匯出備份 (JSON)</button>
-
+            
             <button style="background: #9c27b0; color:white; width: 100%; margin-bottom: 12px; padding: 14px; border-radius: 12px;" onclick="triggerImport()">📥 匯入備份 (JSON)</button>
             <input type="file" id="import-input" accept=".json" onchange="importSaveFile(event)">
 
             <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
-
+            
             <button style="background: #ff5252; color:white; width: 100%; padding: 10px; border-radius: 12px; font-size: 12px;" onclick="clearData()">🔥 重置所有進度 (不可還原)</button>
-
+            
             <p style="font-size: 12px; margin-top: 15px; color: #888; cursor: pointer;" onclick="closeModal()">返回花園</p>
         </div>
     </div>
@@ -686,6 +855,43 @@ body.theme-night-study .pop-item { filter: drop-shadow(0 0 10px rgba(255,255,255
     </div>
 </div>
 
+<div id="garden-gramophone" onclick="openMusicPlayer()">
+    <div class="vinyl-record">
+        <div class="vinyl-center"></div>
+    </div>
+</div>
+
+<iframe id="youtube-garden-bgm" 
+        style="position: absolute; width: 0; height: 0; border: 0; pointer-events: none; visibility: hidden;"
+        src="" 
+        allow="autoplay">
+</iframe>
+
+<div id="music-modal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;">
+    <div class="modal-content" style="background: white; padding: 20px; border-radius: 24px; width: 85%; max-width: 360px; text-align: center; position: relative;">
+        
+        <span onclick="closeMusicModal()" style="position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 18px; font-weight: bold;">❌</span>
+        
+        <div style="font-size: 18px; font-weight: bold; margin-bottom: 5px;">🎵 花園點唱機</div>
+        <div style="font-size: 13px; color: #666;">用遊戲代幣解鎖妳喜歡的 YouTube 療癒音樂</div>
+        
+        <div class="now-playing-panel">
+            <div id="now-playing-title" style="font-size: 13px; font-weight: bold; color: #555; margin-bottom: 10px; text-align: left;">
+                📻 讀取音樂中...
+            </div>
+            <div class="controls-row">
+                <button id="modal-play-pause-btn" class="play-pause-btn" onclick="togglePlayPause()">⏸️</button>
+                
+                <div style="font-size: 11px; color: #888; text-align: right; flex: 1;">
+                    請使用手機/電腦的音量鍵調整聲音 🔊
+                </div>
+            </div>
+        </div>
+        
+        <div id="music-container" class="music-grid"></div>
+    </div>
+</div>
+
 <!-- 🌟 全新新增：寫真館大圖檢視彈窗 -->
 <div id="photo-view-modal" onclick="closePhotoViewModal()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; justify-content:center; align-items:center; flex-direction:column; backdrop-filter:blur(10px);">
     <div style="position:relative; max-width:90%; max-height:70%; text-align:center;" onclick="event.stopPropagation()">
@@ -700,7 +906,7 @@ body.theme-night-study .pop-item { filter: drop-shadow(0 0 10px rgba(255,255,255
     <script>
     // 1. 常數與設定區
     const STORAGE_KEY = 'myGardenGame_v4'; // 升級版本號以避免舊資料衝突
-    const GROWTH_TIME_LIMIT = 300; 
+    const GROWTH_TIME_LIMIT = 100; 
     const WORDS_LOW = ["妳辛苦了，給自己一點掌聲吧。", "深呼吸，情緒只是路過的雲。", "今天的妳也值得被好好對待。", "浮名本是身外物，不著方寸也風流。", "妳種下的不只是花，是與自己和解的證明。"];
     const WORDS_HIGH = ["心靈的花園因為妳的誠實而繁茂。", "擁抱每一種情緒，那是妳獨一無二的色彩。", "無論是風雨還是晴天，妳都在茁壯成長。", "不論過去如何，未來有妳有我。", "在這裡，每一份心情都值得被溫柔親吻。"];
 
@@ -712,13 +918,29 @@ body.theme-night-study .pop-item { filter: drop-shadow(0 0 10px rgba(255,255,255
         soil: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1fab4.png',
         sprout: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f331.png',
         flowers: [
-           
-            { id: 'f13', name: 'Quokka', img: 'https://raw.githubusercontent.com/paulie0102-Bear/garden/refs/heads/main/seed/1.png' },
-{ id: 'f14', name: 'Miffy', img: 'https://raw.githubusercontent.com/paulie0102-Bear/garden/refs/heads/main/seed/2.png' },
-{ id: 'f15', name: 'Miffy', img: 'https://raw.githubusercontent.com/paulie0102-Bear/garden/refs/heads/main/seed/3.png' },
-{ id: 'f16', name: 'Miffy', img: 'https://raw.githubusercontent.com/paulie0102-Bear/garden/refs/heads/main/seed/4.png' },
-{ id: 'f17', name: '漢頓', img: 'https://raw.githubusercontent.com/paulie0102-Bear/garden/refs/heads/main/seed/5.png' }
+            { id: 'f1', name: '向日葵', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f33b.png' },
+            { id: 'f2', name: '大雛菊', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f33c.png' },
+            { id: 'f3', name: '粉紅鬱金香', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f337.png' },
+            { id: 'f4', name: '綻放櫻花', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f338.png' },
+            { id: 'f5', name: '藍繡球', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1fabb.png' },
+            { id: 'f6', name: '紅玫瑰', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f339.png' },
+            { id: 'f7', name: '楓葉', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f341.png' },
+            { id: 'f8', name: '馬力歐菇', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f344.png' },
+            { id: 'f9', name: '葡萄', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f347.png' },
+            { id: 'f10', name: '哈密瓜', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f348.png' },
+            { id: 'f11', name: '牛頓的天敵', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f34e.png' },
+            { id: 'f12', name: '旺來', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f34d.png' },
+            ],
 
+        roles: [
+            { id: 'r1', name: 'Quokka', img: 'https://raw.githubusercontent.com/paulie0102-Bear/garden/refs/heads/main/seed/1.png' },
+            { id: 'r2', name: 'Miffy', img: 'https://raw.githubusercontent.com/paulie0102-Bear/garden/refs/heads/main/seed/2.png' },
+            { id: 'r3', name: 'Miffy', img: 'https://raw.githubusercontent.com/paulie0102-Bear/garden/refs/heads/main/seed/3.png' },
+            { id: 'r4', name: 'Miffy', img: 'https://raw.githubusercontent.com/paulie0102-Bear/garden/refs/heads/main/seed/4.png' },
+            { id: 'r5', name: '漢頓', img: 'https://raw.githubusercontent.com/paulie0102-Bear/garden/refs/heads/main/seed/5.png' },
+            { id: 'r6', name: 'Quokka', img: 'https://raw.githubusercontent.com/paulie0102-Bear/garden/refs/heads/main/seed/6.png' },
+            { id: 'r7', name: 'Quokka', img: 'https://raw.githubusercontent.com/paulie0102-Bear/garden/refs/heads/main/seed/7.png' },
+            { id: 'r8', name: 'Quokka', img: 'https://raw.githubusercontent.com/paulie0102-Bear/garden/refs/heads/main/seed/8.png' }
         ],
         foods: [
             { id: 'fd1', name: '草莓冰淇淋', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f366.png' },
@@ -726,7 +948,20 @@ body.theme-night-study .pop-item { filter: drop-shadow(0 0 10px rgba(255,255,255
             { id: 'fd3', name: '三色抹茶丸子', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f361.png' },
             { id: 'fd4', name: '提拉米蘇蛋糕', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f370.png' },
             { id: 'fd5', name: '法式吐司', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f35e.png' },
-            { id: 'fd6', name: '金黃薯條', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f35f.png' }
+            { id: 'fd6', name: '金黃薯條', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f35f.png' },
+            { id: 'fd7',  name: '杯子蛋糕',   img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f9c1.png' },
+            { id: 'fd8',  name: '生日蛋糕',   img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f382.png' },
+            { id: 'fd9',  name: '餅乾',       img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f36a.png' },
+            { id: 'fd10', name: '甜甜圈',     img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f369.png' },
+            { id: 'fd11', name: '糖果',       img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f36c.png' },
+            { id: 'fd12', name: '棒棒糖',     img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f36d.png' },
+            { id: 'fd13', name: '卡士達布丁', img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f36e.png' },
+            { id: 'fd14', name: '蜂蜜罐',     img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f36f.png' },
+            { id: 'fd15', name: '派',         img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f967.png' },
+            { id: 'fd16', name: '鬆餅',       img: 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f9c7.png' },
+        ],
+        materials: [
+            { id: 'm1', name: '彩虹色的人生', img: 'https://raw.githubusercontent.com/paulie0102-Bear/garden/refs/heads/main/seed/9.png' },
         ]
     };
 // 在常數區定義遊戲時間
@@ -748,7 +983,7 @@ let gameState = {
     coins: 0, 
     currentBg: 'default', 
     unlockedBgs: ['default'],
-
+    
     // 🎨 全新 DIY 系統欄位
     diyLayouts: [],          // 儲存的設計藍圖空間（最多可存多套，實現一鍵切換）
     currentLayoutObjects: [], // 當前畫面上正在擺設的所有物件 [ {id, img, x, y, scale}, ... ]
@@ -782,6 +1017,196 @@ let gameState = {
     'cloud': { name: '雲端之巔', price: 350, class: 'theme-cloud', preview: 'linear-gradient(#89f7fe, #66a6ff)', emojis: ['🌈', '🎈', '☁️'] }
 };
 
+
+
+// 🎵 YouTube 內嵌專用歌曲庫 (價格統一為 50，改為 YouTube 嵌入連結)
+// 提示：可以更換為單曲 ID，或直接換成一整串 YouTube 播放清單的 ID！
+const AUDIO_ASSETS = {
+    bgm_1: { id: 'bgm_1', name: '如果可以', price: 0, url: 'https://www.youtube-nocookie.com/embed/1C1rTd-ebyM?autoplay=1&loop=1&playlist=1' },
+    bgm_2: { id: 'bgm_2', name: '離開的一路上', price: 0, url: 'https://www.youtube.com/embed/2?autoplay=1&loop=1&playlist=2' },
+    bgm_3: { id: 'bgm_3', name: 'いつも何度でも', price: 50, url: 'https://www.youtube.com/embed/3?autoplay=1&loop=1&playlist=3' },
+    bgm_4: { id: 'bgm_4', name: 'Totoro', price: 50, url: 'https://www.youtube.com/embed/4?autoplay=1&loop=1&playlist=4' },
+    bgm_5: { id: 'bgm_5', name: 'Fairy Tail', price: 50, url: 'https://www.youtube.com/embed/5?autoplay=1&loop=1&playlist=5' },
+    bgm_6: { id: 'bgm_6', name: '心海孤帆', price: 50, url: 'https://www.youtube.com/embed/6?autoplay=1&loop=1&playlist=6' },
+    bgm_7: { id: 'bgm_7', name: '今はいいんだよ', price: 50, url: 'https://www.youtube.com/embed/7?autoplay=1&loop=1&playlist=7' },
+    bgm_8: { id: 'bgm_8', name: '夢と葉桜', price: 50, url: 'https://www.youtube.com/embed/8?autoplay=1&loop=1&playlist=8' },
+    bgm_9: { id: 'bgm_9', name: '不是因為天氣晴朗才愛你', price: 50, url: 'https://www.youtube.com/embed/9?autoplay=1&loop=1&playlist=9' },
+    bgm_10: { id: 'bgm_10', name: '總有一工', price: 50, url: 'https://www.youtube.com/embed/10?autoplay=1&loop=1&playlist=10' },
+    bgm_11: { id: 'bgm_11', name: '起風了', price: 50, url: 'https://www.youtube.com/embed/11?autoplay=1&loop=1&playlist=11' },
+    bgm_12: { id: 'bgm_12', name: '總會有人', price: 50, url: 'https://www.youtube.com/embed/12?autoplay=1&loop=1&playlist=12' },
+    bgm_13: { id: 'bgm_13', name: '想和你看五月的晚霞', price: 50, url: 'https://www.youtube.com/embed/13?autoplay=1&loop=1&playlist=13' }
+};
+
+let isAudioInitialized = false;
+
+// 🔊 方案 B：YouTube 播放核心控制
+function playMusicLogic() {
+    const ytPlayer = document.getElementById('youtube-garden-bgm');
+    const gramophone = document.getElementById('garden-gramophone');
+    if (!ytPlayer) return;
+
+    const currentTrack = AUDIO_ASSETS[gameState.currentMusic || 'bgm_1'];
+    if (!currentTrack) return;
+
+    // 根據玩家是否「手動暫停」來決定 YouTube 的行為
+    if (gameState.isMusicPaused) {
+        // ⏸️ 暫停：清空 src 讓影片徹底消失與閉嘴
+        ytPlayer.src = "";
+        if (gramophone) gramophone.classList.remove('playing'); // 黑膠停止旋轉
+    } else {
+        // ▶️ 播放：將目標 YouTube 內嵌網址餵給 iframe
+        const targetUrl = currentTrack.url;
+        // 只有在網址真正改變時才重新整理 iframe，避免沒換歌卻一直重頭播放
+        if (decodeURIComponent(ytPlayer.src) !== decodeURIComponent(targetUrl)) {
+            ytPlayer.src = targetUrl;
+        }
+        if (gramophone) gramophone.classList.add('playing'); // 黑膠優雅旋轉光影
+    }
+
+    // 同步更新控制面板介面
+    if (typeof updateControlPanelUI === 'function') {
+        updateControlPanelUI(currentTrack.name);
+    }
+}
+
+// 📱 跨平台防靜音黑洞：當玩家點擊螢幕任何地方時，嘗試解鎖背景音樂播放
+document.addEventListener('click', () => {
+    if (!isAudioInitialized && gameState.currentMusic) {
+        playMusicLogic();
+        isAudioInitialized = true; // 確保只觸發一次
+    }
+}, { once: false });
+
+// 📥 開啟播放器彈窗 & 渲染小卡片歌單
+function openMusicPlayer() {
+    const container = document.getElementById('music-container');
+    if (!container) return;
+    
+    container.innerHTML = ""; // 清空舊內容
+    
+    Object.keys(AUDIO_ASSETS).forEach(id => {
+        const track = AUDIO_ASSETS[id];
+        const isUnlocked = gameState.unlockedMusics.includes(id);
+        const isActive = gameState.currentMusic === id;
+        
+        const card = document.createElement('div');
+        card.className = `music-card ${isUnlocked ? 'owned' : ''} ${isActive ? 'active' : ''}`;
+        
+        let btnText = isUnlocked ? (isActive ? '播放中' : '播放') : `💰 ${track.price}`;
+        let btnColor = isUnlocked ? (isActive ? '#9c27b0' : '#64b5f6') : '#ffb74d';
+        let statusText = isUnlocked ? (isActive ? '✨ 現正熱播中' : '已收藏') : '尚未解鎖';
+
+        card.innerHTML = `
+            <div class="music-info">
+                <div class="music-title">${track.name}</div>
+                <div class="music-status">${statusText}</div>
+            </div>
+            <button class="music-btn" onclick="handleMusicAction('${id}')" style="background:${btnColor};">
+                ${btnText}
+            </button>
+        `;
+        container.appendChild(card);
+    });
+    
+    const currentTrack = AUDIO_ASSETS[gameState.currentMusic || 'bgm_1'];
+    if (currentTrack && typeof updateControlPanelUI === 'function') {
+        updateControlPanelUI(currentTrack.name);
+    }
+    
+    document.getElementById('music-modal').style.display = 'flex';
+}
+
+// 🎛️ 更新控制面板介面上的按鈕狀態
+function updateControlPanelUI(trackName) {
+    const titleText = document.getElementById('now-playing-title');
+    const playPauseBtn = document.getElementById('modal-play-pause-btn');
+
+    if (titleText) {
+        titleText.innerText = gameState.isMusicPaused 
+            ? `⏸️ 已暫停：${trackName}` 
+            : `🎵 現正播放：${trackName}`;
+    }
+    if (playPauseBtn) {
+        playPauseBtn.innerText = gameState.isMusicPaused ? '▶️' : '⏸️';
+    }
+}
+
+// ⏯️ 切換 暫停 / 開始 狀態
+function togglePlayPause() {
+    gameState.isMusicPaused = !gameState.isMusicPaused;
+    playMusicLogic(); 
+    if (typeof autoSave === 'function') autoSave(); 
+}
+
+// 💾 初始化大腦
+async function init() {
+    await loadGameOnStart();
+    
+    // 🎵 音樂播放器安全防護機制（針對新歌單與方案 B 優化）
+    gameState.unlockedMusics = gameState.unlockedMusics || ['bgm_1', 'bgm_2']; // 初始自動解鎖前兩首免費歌
+    gameState.currentMusic = gameState.currentMusic || 'bgm_1';
+    gameState.isMusicPaused = gameState.isMusicPaused !== undefined ? gameState.isMusicPaused : false;
+    
+    // 1. 優先套用背景與渲染 UI
+    updateUI(); 
+    
+    // 2. 設定定時器
+    setInterval(checkGrowth, 1000); 
+    
+    setInterval(() => {
+        if (gameState.currentBg === 'default') {
+            updateTheme();
+            updateUI(); 
+        }
+    }, 60000);
+    
+    // 3. 視窗縮放處理
+    window.addEventListener('resize', () => {
+        if (gameState.gardenLv >= 5) {
+            createLvlHighDecorations(); 
+        }
+    });
+
+    console.log("🌱 花園系統已透過 YouTube 播放模組成功啟動。");
+}
+
+// 🛒 4. 音樂購買與切換決策 (完美覆刻妳的 handleShopAction 邏輯)
+function handleMusicAction(id) {
+    const track = AUDIO_ASSETS[id];
+    if (!track) return;
+
+    if (gameState.unlockedMusics.includes(id)) {
+        // A. 已經買過，直接切換播放
+        gameState.currentMusic = id;
+        closeMusicModal();
+        playMusicLogic(); // 立即更換音訊源播放
+        if (typeof showBubble === 'function') showBubble(`🎵 正在播放【${track.name}】`);
+    } 
+    else {
+        // B. 沒買過，走扣款扣代幣機制
+        if (gameState.coins >= track.price) {
+            gameState.coins -= track.price;
+            gameState.unlockedMusics.push(id);
+            gameState.currentMusic = id;
+            closeMusicModal();
+            playMusicLogic();
+            if (typeof showBubble === 'function') showBubble(`🎉 成功購入並播放【${track.name}】`);
+        } else {
+            // 代幣不足，不關閉視窗
+            const need = track.price - gameState.coins;
+            if (typeof showBubble === 'function') showBubble(`代幣還差 ${need} 枚，\n多去種植心願吧！🧩`);
+            return;
+        }
+    }
+    
+    if (typeof updateUI === 'function') updateUI();
+    if (typeof autoSave === 'function') autoSave();
+}
+
+function closeMusicModal() {
+    document.getElementById('music-modal').style.display = 'none';
+}
+
 // ==========================================
 // 🌟 全新 IndexedDB 核心控制區
 // ==========================================
@@ -792,18 +1217,18 @@ const STORE_NAME = 'gameStateStore';
 function initDB() {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open(DB_NAME, DB_VERSION);
-
+        
         request.onupgradeneeded = function(e) {
             const db = e.target.result;
             if (!db.objectStoreNames.contains(STORE_NAME)) {
                 db.createObjectStore(STORE_NAME);
             }
         };
-
+        
         request.onsuccess = function(e) {
             resolve(e.target.result);
         };
-
+        
         request.onerror = function(e) {
             console.error("IndexedDB 打開失敗:", e.target.error);
             reject(e.target.error);
@@ -818,7 +1243,7 @@ function getGameDataFromDB() {
             const transaction = db.transaction([STORE_NAME], 'readonly');
             const store = transaction.objectStore(STORE_NAME);
             const request = store.get(STORAGE_KEY);
-
+            
             request.onsuccess = function() {
                 resolve(request.result || null);
             };
@@ -839,7 +1264,7 @@ function saveGameDataToDB(data) {
             const store = transaction.objectStore(STORE_NAME);
             // 存入複製出來的乾淨物件，確保不會受指標干擾
             const request = store.put(JSON.parse(JSON.stringify(data)), STORAGE_KEY);
-
+            
             request.onsuccess = function() { resolve(true); };
             request.onerror = function() { resolve(false); };
         } catch (err) {
@@ -856,30 +1281,86 @@ function saveGameDataToDB(data) {
 }
 
     function validateEmotions() {
-        const h = parseInt(document.getElementById('emo-happy').value), 
-              a = parseInt(document.getElementById('emo-angry').value),
-              w = parseInt(document.getElementById('emo-worry').value), 
-              s = parseInt(document.getElementById('emo-sad').value),
-              hp = parseInt(document.getElementById('emo-hope').value);
-        const total = h + a + w + s + hp;
-        const display = document.getElementById('total-check');
-        display.innerText = `總和: ${total} / 100`;
-        display.style.color = (total === 100) ? 'green' : 'red';
-        document.getElementById('plant-btn').disabled = (total !== 100);
+    const h = parseInt(document.getElementById('emo-happy').value), 
+          a = parseInt(document.getElementById('emo-angry').value),
+          w = parseInt(document.getElementById('emo-worry').value), 
+          s = parseInt(document.getElementById('emo-sad').value),
+          hp = parseInt(document.getElementById('emo-hope').value);
+    const total = h + a + w + s + hp;
+    const display = document.getElementById('total-check');
+    display.innerText = `總和: ${total} / 100`;
+    display.style.color = (total === 100) ? 'green' : 'red';
+    document.getElementById('plant-btn').disabled = (total !== 100);
+
+    // 🌟 這裡加入：即時更新本週限定主題
+    try {
+        const currentPoolInfo = getCurrentWeeklyPool(); // 呼叫剛剛寫的輪動小工具
+        
+        // 假設妳在 HTML 的總和文字（#total-check）附近，或彈窗裡有留一個放主題的 div/span
+        // 妳可以自己在 HTML 加上 <div id="weekly-theme-text" style="font-size:14px; margin-top:5px; color:#666;"></div>
+        const themeElement = document.getElementById('weekly-theme-text');
+        if (themeElement) {
+            themeElement.innerText = `✨ 本週限定卡池：${currentPoolInfo.name}`;
+        }
+    } catch(e) {
+        console.error("無法載入本週主題:", e);
     }
+}
+
+
+    // 🗓️ 取得當前是第幾週，並決定本週開放哪個卡池
+function getCurrentWeeklyPool() {
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    
+    // 計算今天距離今年第一天過了多少毫秒
+    const pastDaysOfWeek = (now - startOfYear) / 86400000;
+    
+    // 算出今天是今年的第幾週 (1 ~ 53 週)
+    const currentWeekNumber = Math.ceil((pastDaysOfWeek + startOfYear.getDay() + 1) / 7);
+    
+    // 🌟 核心修正 1：因為現在有 4 個卡池，所以改為對 4 取餘數 (結果會是 0, 1, 2, 3)
+    const poolIndex = currentWeekNumber % 4;
+    
+    // 定義 4 週一輪的動態順序
+    switch(poolIndex) {
+        case 0:
+            return { type: 'flowers', name: '浪漫花卉週 🌸', data: ASSETS.flowers };
+        case 1:
+            return { type: 'foods', name: '美味食物週 🍱', data: ASSETS.foods };
+        case 2:
+            return { type: 'roles', name: '神秘角色週 👥', data: ASSETS.roles };
+        case 3:
+            // 🌟 核心修正 2：新增第 4 個素材卡池（請確保妳的 ASSETS 裡有 materials 這個陣列）
+            return { type: 'materials', name: '稀有素材週 💎', data: ASSETS.materials };
+    }
+}
 
     function confirmPlanting() {
-    // 1. 決定這次會種出什麼（邏輯不變）
-    let pool = (gameState.gardenLv < 5) ? ASSETS.flowers : ASSETS.flowers.concat(ASSETS.foods);
+    // 🌟 核心修正：自動獲取本週限定的卡池資訊
+    const currentPoolInfo = getCurrentWeeklyPool();
+    const pool = currentPoolInfo.data; // 拿到該卡池的陣列
+
+    // 如果怕卡池沒資料，做個安全防護
+    if (!pool || pool.length === 0) {
+        console.error("目前輪動卡池無資料！");
+        return;
+    }
+
+    // 從本週限定卡池中隨機抽一個
     const item = pool[Math.floor(Math.random() * pool.length)];
 
+    // 儲存至當前培育狀態
     gameState.currentFlowerId = item.id; 
     gameState.currentFlowerName = item.name; 
     gameState.currentFlowerImg = item.img;
+    
+    // 妳可以視需求把卡池類型也存起來（選填，方便未來做圖鑑分類）
+    gameState.currentFlowerType = currentPoolInfo.type; 
 
-    // 2. 這裡原本是直接改為 'growing'，現在改為啟動小遊戲
+    // 2. 關閉彈窗並啟動小遊戲
     closeModal(); 
-    startNurturingGame(); // 呼叫下方新增的小遊戲函數
+    startNurturingGame(); 
 }
     function startNurturingGame() {
     gameState.plantStatus = 'nurturing'; // 切換至新狀態
@@ -901,11 +1382,11 @@ function createPopElement() {
     const el = document.createElement('div');
     el.className = 'pop-item'; // 對應妳 CSS 寫的樣式
     el.innerText = Math.random() > 0.5 ? '🫧' : '🍃';
-
+    
     // 隨機出現在畫面中（避開邊緣）
     el.style.left = (15 + Math.random() * 70) + '%';
     el.style.top = (25 + Math.random() * 45) + '%';
-
+    
     el.onclick = () => {
         miniGameScore++;
         el.classList.add('popped'); // 觸發破裂動畫
@@ -920,10 +1401,10 @@ function createPopElement() {
 function finishNurturing() {
     // 清理殘留泡泡
     document.querySelectorAll('.pop-item').forEach(el => el.remove());
-
+    
     // 獎勵計算：GROWTH_TIME_LIMIT 減去點擊次數，最低剩 3 秒
     const actualWait = Math.max(3, GROWTH_TIME_LIMIT - miniGameScore);
-
+    
     gameState.plantStatus = 'growing'; // 正式進入倒數
     // 透過調整開始時間來實現「剩餘時間變少」的效果
     gameState.growStartTime = Date.now() - (GROWTH_TIME_LIMIT - actualWait) * 1000;
@@ -933,7 +1414,7 @@ function finishNurturing() {
     updateUI();
     autoSave();
 }
-
+        
 
 function harvest() {
     const isNew = !gameState.flowerAlbum.find(f => f.id === gameState.currentFlowerId);
@@ -944,7 +1425,7 @@ function harvest() {
             img: gameState.currentFlowerImg 
         });
     }
-
+    
     gameState.points += 2;
     const words = (gameState.gardenLv >= 5) ? WORDS_HIGH : WORDS_LOW;
     const randomQuote = words[Math.floor(Math.random() * words.length)];
@@ -954,10 +1435,10 @@ function harvest() {
         : `【 ${gameState.currentFlowerName} 】盛開了\n\n「 ${randomQuote} 」`;
 
     showBubble(message);
-
+    
     // 變更為收成完畢狀態，updateUI 看到這個狀態會維持圖片，但把龍貓卡藏起來
     gameState.plantStatus = 'harvested'; 
-
+    
     checkLevelUp(); 
     updateUI(); 
     autoSave();
@@ -976,11 +1457,11 @@ function harvest() {
     const bar = document.getElementById('progress-bar');        
     const pointsDisp = document.getElementById('points-display');
     const nameDisp = document.getElementById('garden-name');
-
+    
     if(bar) bar.style.width = (gameState.points / threshold * 100) + "%";
     if(pointsDisp) pointsDisp.innerText = `${gameState.points} / ${threshold}`;
     if(nameDisp) nameDisp.innerText = `Lv.${gameState.gardenLv} ${gameState.gardenLv >= 5 ? '繁盛花園' : '新手花園'}`;
-
+    
     // --- 🌸 背景商店與裝飾修改開始 ---
     const coinCountDisp = document.getElementById('coin-count');
     if (coinCountDisp) coinCountDisp.innerText = gameState.coins || 0;
@@ -1034,7 +1515,7 @@ function harvest() {
         hint.innerText = "點擊土壤播下此刻的心情"; 
         flowerNameDisp.innerText = ""; 
         if(totoroCard) totoroCard.style.display = 'none'; 
-
+        
         // 回到閒置狀態時，把龍貓卡記憶點清空
         gameState.currentTotoroId = null; 
         if(totoroGif) totoroGif.src = ''; 
@@ -1059,14 +1540,14 @@ function harvest() {
             if (!gameState.currentTotoroId) {
                 // 如果是空的（代表這是點擊種植後的第一次），我們才抽號碼，並牢牢記在 gameState 裡！
                 gameState.currentTotoroId = Math.floor(Math.random() * config.count) + 1;
-
+                
                 // 抽完立刻記錄與自動存檔
                 if (typeof autoSave === 'function') autoSave();
             }
-
+            
             // 🌟 修正後：現在這裡可以安全地讀取 config 變數，不會再噴出 ReferenceError 了！
             totoroGif.src = `${config.baseUrl}${gameState.currentTotoroId}.gif?t=${Date.now()}`;
-
+            
             // 強制讓小卡顯示
             totoroCard.style.display = 'flex'; 
             if(closeBtn) closeBtn.style.display = 'none'; 
@@ -1091,12 +1572,17 @@ function harvest() {
         img.classList.remove('blur-content'); 
         hint.innerText = "🌸 點擊任意空白處返回花園"; 
         flowerNameDisp.innerText = "已盛開： " + gameState.currentFlowerName; 
-
+        
         if(totoroCard) totoroCard.style.display = 'none'; 
     }
+    // 🎵 播放器核心：每次 UI 更新都確保音樂狀態正確
+    if (typeof playMusicLogic === 'function') {
+        playMusicLogic();
+    }
 
+    // 💾 自動存檔
     if (typeof autoSave === 'function') autoSave();
-}
+} // ⬅️ 這是原本函數最底部的結尾大括號，這樣排版最乾淨！
 
     function createLvlHighDecorations() {
     // 1. 先移除舊的裝飾
@@ -1126,7 +1612,7 @@ function harvest() {
     for (let i = 0; i < count; i++) {
         const span = document.createElement('span');
         span.className = 'decoration-emoji';
-
+        
         // 從該背景的 Emoji 池中隨機抽一個
         span.innerText = emojiPool[Math.floor(Math.random() * emojiPool.length)];
 
@@ -1182,34 +1668,7 @@ async function loadGameOnStart() {
         }
     }
 }
-        // --- 同步修改：init 函數，確保重新調整視窗大小時裝飾位置正確 (選做，增加穩定性) ---
-        async function init() {
-    // 🌟 關鍵修改：等待資料庫讀取完畢後，才繼續往下走 UI 渲染與定時器
-    await loadGameOnStart();
-
-    // 1. 優先套用背景
-    updateUI(); 
-
-    // 2. 設定定時器
-    setInterval(checkGrowth, 1000); // 每秒檢查植物成長
-
-    // 🌟 只有在「預設背景」模式下，才需要每分鐘檢查日夜切換
-    setInterval(() => {
-        if (gameState.currentBg === 'default') {
-            updateTheme();
-            updateUI(); // 確保日夜切換後，裝飾物（櫻花/星星）也會跟著換
-        }
-    }, 60000);
-
-    // 3. 視窗縮放處理
-    window.addEventListener('resize', () => {
-        if (gameState.gardenLv >= 5) {
-            createLvlHighDecorations(); 
-        }
-    });
-
-    console.log("🌱 花園系統已透過 IndexedDB 成功啟動：", gameState.currentBg);
-}
+        
 
     function checkGrowth() {
         if (gameState.plantStatus === 'growing') {
@@ -1229,17 +1688,17 @@ async function loadGameOnStart() {
     function openShop() {
     const container = document.getElementById('shop-container');
     if (!container) return;
-
+    
     container.innerHTML = ""; // 清空舊內容
-
+    
     Object.keys(BACKGROUNDS).forEach(id => {
         const bg = BACKGROUNDS[id];
         const isUnlocked = gameState.unlockedBgs.includes(id);
         const isActive = gameState.currentBg === id;
-
+        
         const card = document.createElement('div');
         card.className = `bg-card ${isUnlocked ? 'owned' : ''} ${isActive ? 'active' : ''}`;
-
+        
         // 根據狀態決定按鈕文字與顏色
         let btnText = isUnlocked ? (isActive ? '使用中' : '切換') : `💰 ${bg.price}`;
         let btnColor = isUnlocked ? (isActive ? '#81c784' : '#64b5f6') : '#ffb74d';
@@ -1254,13 +1713,13 @@ async function loadGameOnStart() {
         `;
         container.appendChild(card);
     });
-
+    
     document.getElementById('shop-modal').style.display = 'flex';
 }
 
 function handleShopAction(id) {
     const bg = BACKGROUNDS[id];
-
+    
     if (gameState.unlockedBgs.includes(id)) {
         gameState.currentBg = id;
         closeModal(); // 🌟 成功切換就先關閉商店，讓玩家看到背景
@@ -1280,7 +1739,7 @@ function handleShopAction(id) {
             return; 
         }
     }
-
+    
     updateUI();
     autoSave();
 }
@@ -1296,26 +1755,26 @@ async function updateStorageProgress() {
     try {
         // 🌟 核心修正：直接將當前的 gameState 轉成 JSON 字串，計算最精準的「真實存檔長度」
         const jsonString = JSON.stringify(gameState);
-
+        
         // 1 個字元 = 1 Byte，除以 1024 換算成最直覺的 KB
         const actualSizeBytes = new Blob([jsonString]).size;
         const usageKB = (actualSizeBytes / 1024).toFixed(2); // 精確到小數點後兩位
-
+        
         // 🌟 自訂一個健康的「遊戲虛擬配額限制」（例如設定 512 KB，對文字存檔來說非常大）
         // 這樣百分比才會隨著妳的動作做出敏銳的上下起伏
         const virtualQuotaKB = 512.0; 
-
+        
         // 計算使用百分比
         const percentage = Math.min((usageKB / virtualQuotaKB) * 100, 100).toFixed(1);
-
+        
         // 🔄 更新畫面上的進度條
         bar.style.width = percentage + "%";
         bar.style.background = percentage > 80 ? '#f44336' : '#4caf50';
-
+        
         // 🔄 更新文字說明
         document.getElementById('storage-usage-text').innerText = percentage + "%";
         document.getElementById('storage-kb-info').innerText = `真實用量: ${usageKB} KB / 虛擬配額: ${virtualQuotaKB} KB`;
-
+        
     } catch (e) {
         console.error("無法估算精準儲存空間:", e);
     }
@@ -1336,22 +1795,22 @@ async function updateStorageProgress() {
     const file = event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-
+    
     // 🌟 修正點 1：在 reader.onload 的 function 前面加上 async
     reader.onload = async function(e) { 
         try {
             const imported = JSON.parse(e.target.result);
-
+            
             // 檢查是否為有效存檔 (至少要有等級)
             if (imported && imported.gardenLv !== undefined) {
-
+                
                 // 合併新舊資料
                 gameState = { ...gameState, ...imported };
-
+                
                 // 🌟 修正點 2：在 autoSave() 前面加上 await
                 // 這樣瀏覽器就會在這裡「卡住」，絕對會等 DB 寫入成功後，才往下走！
                 await autoSave();
-
+                
                 alert("進度匯入成功！即將重新載入...");
                 location.reload(); // 現在存完檔再重新整理，百分之百安全、不會漏字！
             } else {
@@ -1382,7 +1841,7 @@ async function updateStorageProgress() {
 function handlePlantClick(event) {
     // 安全檢查：如果沒傳入 event 物件就不處理
     if (!event) return;
-
+    
     const pot = document.getElementById('flower-pot');
     const isExpanded = pot.classList.contains('expanded');
     const targetId = event.target.id;
@@ -1409,15 +1868,15 @@ function handlePlantClick(event) {
     // 🚪 情況 B：點擊右上角「返回花園」按鈕，或是「已經收成完(harvested)」點擊全螢幕任意空白處
     if (targetId === 'close-pot-btn' || (isExpanded && gameState.plantStatus === 'harvested')) {
         event.stopPropagation(); // 阻止冒泡
-
+        
         pot.classList.remove('expanded'); // 縮回角落
-
+        
         // 隱藏對話氣泡與龍貓卡
         const bubble = document.getElementById('message-bubble');
         if (bubble) bubble.style.opacity = '0';
         const totoroCard = document.getElementById('totoro-card');
         if (totoroCard) totoroCard.style.display = 'none';
-
+        
         // 如果是收成完退場，正式重設為空閒狀態，變回空盆栽
         if (gameState.plantStatus === 'harvested') {
             gameState.plantStatus = 'idle';
@@ -1430,10 +1889,10 @@ function handlePlantClick(event) {
     // 📱 情況 C：目前是縮小的「角落小圖示」 ➔ 點擊負責「放大」
     if (!isExpanded) {
         pot.classList.add('expanded');
-
+        
         // 🌟 核心修正：放大的一瞬間，立刻驅動 updateUI() 更新內部元件（如龍貓卡）的顯示狀態！
         updateUI();
-
+        
         // 放大時的對話提示
         if (gameState.plantStatus === 'idle') {
             showBubble("🌱 進入觀賞艙！點擊土壤播下此刻的心情吧。");
@@ -1483,7 +1942,7 @@ async function openSaveMenu() {
     // 🌟 使用 classList 確保不會蓋掉其他 class
     document.body.classList.toggle('day', isDay);
     document.body.classList.toggle('night', !isDay);
-
+    
     console.log(`🌙 系統自動切換至：${isDay ? '日間' : '夜間'}模式`);
 }
     function showBubble(text) { const b = document.getElementById('message-bubble'); if(b) { b.innerText = text; b.style.opacity = 1; setTimeout(() => b.style.opacity = 0, 5000); } }
@@ -1507,15 +1966,15 @@ async function openSaveMenu() {
     function openLantern() { 
         // 🌟 修正：不再需要判斷 mode，直接固定為淨化煩惱模式
         document.getElementById('lantern-title').innerText = '煩惱隨風飄散'; 
-
+        
         // 確保隱藏已經不需要的日期選擇區域（防止畫面上殘留舊欄位）
         const dateArea = document.getElementById('date-picker-area');
         if (dateArea) dateArea.style.display = 'none'; 
-
+        
         // 清空輸入框並開啟彈窗
         const inputArea = document.getElementById('lantern-input');
         if (inputArea) inputArea.value = '';
-
+        
         document.getElementById('lantern-modal').style.display = 'flex'; 
     }
 
@@ -1530,7 +1989,7 @@ function togglePhotoAlbum() {
     const container = document.getElementById('list-container'); 
     document.getElementById('list-title').innerText = "📷 心靈花園寫真館"; 
     container.className = "scroll-list"; 
-
+    
     let html = `
         <div style="background:#e3f2fd; padding:12px; border-radius:15px; margin-bottom:15px; text-align:center;">
             <p style="margin:0 0 8px 0; color:#1565c0; font-weight:bold; font-size:14px;">📸 留下這一刻的美好佈置</p>
@@ -1554,7 +2013,7 @@ function togglePhotoAlbum() {
             `;
         });
     }
-
+    
     html += `</div>`;
     container.innerHTML = html;
     document.getElementById('list-modal').style.display = 'flex'; 
@@ -1564,18 +2023,18 @@ function togglePhotoAlbum() {
 function takeGardenPhoto() {
     const noteInput = document.getElementById('photo-note');
     const noteText = noteInput.value.trim() || `${new Date().toLocaleDateString()} 的花園紀錄`;
-
+    
     // 1. 取得主遊戲花園容器的尺寸（用來做等比例縮放快照）
     const gardenArea = document.getElementById('garden-area') || document.body;
     const originalWidth = gardenArea.clientWidth || window.innerWidth;
     const originalHeight = gardenArea.clientHeight || window.innerHeight;
-
+    
     // 2. 建立高畫質畫布
     const canvas = document.createElement('canvas');
     canvas.width = originalWidth;
     canvas.height = originalHeight;
     const ctx = canvas.getContext('2d');
-
+    
     // 3. 【步驟一】繪製當前背景
     // 取得妳目前遊戲背景的真實 Computed Style
     const bgStyle = window.getComputedStyle(gardenArea);
@@ -1605,7 +2064,7 @@ function takeGardenPhoto() {
             const pRect = gardenArea.getBoundingClientRect();
             const x = rect.left - pRect.left;
             const y = rect.top - pRect.top;
-
+            
             imagesToDraw.push({
                 src: imgEl.src,
                 isBg: false,
@@ -1658,7 +2117,7 @@ function takeGardenPhoto() {
 
         gameState.photoAlbum.unshift(newPhoto);
         autoSave();
-
+        
         noteInput.value = "";
         togglePhotoAlbum(); // 刷新寫真館，就會看到妳剛剛佈置好的「實景花園照片」囉！
     });
@@ -1679,12 +2138,12 @@ function viewFullPhoto(imgSrc, note) {
     const modal = document.getElementById('photo-view-modal');
     const img = document.getElementById('photo-view-img');
     const noteText = document.getElementById('photo-view-note');
-
+    
     if (modal && img && noteText) {
         img.src = imgSrc;
         noteText.innerText = note && note !== "null" ? `"${note}"` : `"今天的美好佈置"`;
         modal.style.display = 'flex';
-
+        
         // 加上微微淡入動畫效果
         modal.style.opacity = '0';
         setTimeout(() => { modal.style.opacity = '1'; modal.style.transition = 'opacity 0.3s'; }, 10);
@@ -1703,13 +2162,13 @@ function closePhotoViewModal() {
 function showRandomPurifyCard() {
     const modal = document.getElementById('purify-modal');
     const imgElement = document.getElementById('purify-img');
-
+    
     // 1. 隨機產生 1~12 的數字
     const randomNum = Math.floor(Math.random() * 24) + 1;
-
+    
     // 2. 組合 GitHub 圖片網址
     const imgUrl = `https://raw.githubusercontent.com/paulie0102-Bear/garden/refs/heads/main/${randomNum}.png`;
-
+    
     // 3. 設定圖片來源並顯示
     imgElement.src = imgUrl;
     modal.style.display = 'flex';
@@ -1721,7 +2180,7 @@ function startPuzzle() {
     const img = document.getElementById('purify-img');
     const board = document.getElementById('puzzle-board');
     const btn = document.getElementById('puzzle-switch-btn');
-
+    
     // 1. 先顯示容器，我們才量得到它在手機畫面上的「實際寬度」
     img.style.display = 'none';
     board.style.display = 'grid';
@@ -1729,7 +2188,7 @@ function startPuzzle() {
 
     // 2. 🌟 關鍵改動：自動測量寬度（取代原本的 280）
     const boardWidth = board.clientWidth; 
-
+    
     // 3. 獲取原圖比例
     const imgW = img.naturalWidth;
     const imgH = img.naturalHeight;
@@ -1737,7 +2196,7 @@ function startPuzzle() {
 
     const imgSrc = img.src;
     board.innerHTML = ''; // 清空舊拼圖
-
+    
     // 4. 建立並打亂碎片
     let pieces = [...Array(9).keys()];
     pieces.sort(() => Math.random() - 0.5);
@@ -1746,26 +2205,26 @@ function startPuzzle() {
         const piece = document.createElement('div');
         piece.className = 'puzzle-piece';
         piece.dataset.correctPos = pos;
-
+        
         // 5. 根據量出來的 boardWidth 動態計算
         const pieceWidth = boardWidth / 3;
         const pieceHeight = pieceWidth * ratio;
-
+        
         piece.style.height = `${pieceHeight}px`;
         piece.style.backgroundImage = `url(${imgSrc})`;
-
+        
         // 背景大小要撐滿整個拼圖板
         piece.style.backgroundSize = `${boardWidth}px ${boardWidth * ratio}px`;
-
+        
         // 計算該碎片對應的背景位置
         const row = Math.floor(pos / 3);
         const col = pos % 3;
         piece.style.backgroundPosition = `-${col * pieceWidth}px -${row * pieceHeight}px`;
-
+        
         piece.onclick = () => handlePieceClick(piece);
         board.appendChild(piece);
     });
-
+    
     document.getElementById('purify-msg').innerText = "動手修復這份心情吧！";
 }
 
@@ -1804,7 +2263,7 @@ function handlePieceClick(piece) {
 function checkWin() {
     const allPieces = document.querySelectorAll('.puzzle-piece');
     const board = document.getElementById('puzzle-board');
-
+    
     // 檢查每個碎片目前的 backgroundPosition 是否回到對的位置
     let isWin = true;
     allPieces.forEach((p, index) => {
@@ -1859,7 +2318,7 @@ function launchLantern() {
     lan.innerText = text.substring(0,5)+'...'; 
     if(currentLanternMode === 'worry') lan.style.background = '#90a4ae'; 
     document.getElementById('game-container').appendChild(lan); 
-
+    
     closeModal(); 
     textInput.value = ''; 
     autoSave(); 
@@ -1876,7 +2335,7 @@ function toggleDiyWorkshop() {
     const container = document.getElementById('list-container'); 
     document.getElementById('list-title').innerText = "🎨 佈置設計工坊"; 
     container.className = "scroll-list"; 
-
+    
     // 如果玩家還沒有解鎖任何圖鑑品項
     if (gameState.flowerAlbum.length === 0) {
         container.innerHTML = "<p style='padding:20px;'>你的圖鑑空空的，先去種花解鎖圖鑑，才能用它們來佈置喔！</p>";
@@ -1905,10 +2364,10 @@ function toggleDiyWorkshop() {
             </div>
         `;
     });
-
+    
     html += `</div>`;
     container.innerHTML = html;
-
+    
     renderBlueprintList();
     document.getElementById('list-modal').style.display = 'flex'; 
 }
@@ -1917,7 +2376,7 @@ function toggleDiyWorkshop() {
 function spawnDiyObject(imgSrc, name, savedProps = null) {
     const gardenArea = document.getElementById('garden-area') || document.body; 
     const objId = savedProps ? savedProps.id : 'diy_' + Date.now();
-
+    
     const defaultX = window.innerWidth * 0.4;
     const defaultY = window.innerHeight * 0.65; 
 
@@ -1925,21 +2384,27 @@ function spawnDiyObject(imgSrc, name, savedProps = null) {
     obj.id = objId;
     obj.className = 'diy-movable-object';
     obj.style.position = 'absolute';
-
+    
     obj.style.left = savedProps ? `${savedProps.x}px` : `${defaultX}px`;
     obj.style.top = savedProps ? `${savedProps.y}px` : `${defaultY}px`;
-
-    obj.style.transform = `scale(${savedProps ? savedProps.scale : 1})`;
+    
+    // 🌟 修正 1：生成時，同時套用「縮放」與「左右翻轉」
+    const initialScale = savedProps ? savedProps.scale : 1;
+    const initialFlip = savedProps && savedProps.isFlipped ? -1 : 1;
+    obj.style.transform = `scale(${initialScale}) scaleX(${initialFlip})`;
+    
     obj.style.cursor = 'move';
     obj.style.zIndex = '100';
     obj.style.userSelect = 'none';
     obj.style.touchAction = 'none'; 
 
+    // 🌟 修正 2：在控制選單（diy-controls）裡面，多塞一個 🔄 翻轉按鈕
     obj.innerHTML = `
         <img src="${imgSrc}" alt="${name}" style="width:80px; pointer-events:none; display:block;">
         <div class="diy-controls" style="position:absolute; top:-25px; left:0; display:none; gap:5px; background:rgba(0,0,0,0.6); padding:2px 5px; border-radius:5px;">
             <span onclick="resizeDiyObject('${objId}', 0.1)" style="color:#fff; cursor:pointer; font-weight:bold; padding:0 3px;">➕</span>
             <span onclick="resizeDiyObject('${objId}', -0.1)" style="color:#fff; cursor:pointer; font-weight:bold; padding:0 3px;">➖</span>
+            <span onclick="flipDiyObject('${objId}')" style="color:#fff; cursor:pointer; font-weight:bold; padding:0 3px;">🔄</span>
             <span onclick="removeDiyObject('${objId}')" style="color:#ff8a80; cursor:pointer; font-weight:bold; padding:0 3px;">❌</span>
         </div>
     `;
@@ -1950,7 +2415,7 @@ function spawnDiyObject(imgSrc, name, savedProps = null) {
     const startDrag = (e) => {
         document.querySelectorAll('.diy-controls').forEach(c => c.style.display = 'none');
         obj.querySelector('.diy-controls').style.display = 'flex';
-
+        
         isDragging = true;
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -1958,7 +2423,6 @@ function spawnDiyObject(imgSrc, name, savedProps = null) {
         startY = clientY - obj.offsetTop;
         e.stopPropagation();
 
-        // 🌟 核心修正：只有在「確定開始拖拽」時，才動態把監聽器掛到全域，避免平時堆疊
         document.addEventListener('mousemove', doDrag);
         document.addEventListener('mouseup', stopDrag);
         document.addEventListener('touchmove', doDrag, { passive: false });
@@ -1976,8 +2440,7 @@ function spawnDiyObject(imgSrc, name, savedProps = null) {
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
         obj.style.left = `${clientX - startX}px`;
         obj.style.top = `${clientY - startY}px`;
-
-        // 🌟 優化：拖曳時只更新物件自身的快取數據，不頻繁操作整個陣列
+        
         if (savedProps) {
             savedProps.x = clientX - startX;
             savedProps.y = clientY - startY;
@@ -1987,40 +2450,59 @@ function spawnDiyObject(imgSrc, name, savedProps = null) {
     const stopDrag = () => {
         if (isDragging) {
             isDragging = false;
-
-            // 🌟 核心修正：手放開時，立刻把全域的監聽器「卸載」乾淨！不留任何背景垃圾
+            
             document.removeEventListener('mousemove', doDrag);
             document.removeEventListener('mouseup', stopDrag);
             document.removeEventListener('touchmove', doDrag);
             document.removeEventListener('touchend', stopDrag);
-
-            // 手放開停止的一瞬間，同步一次數據並存檔
+            
             saveCurrentStateToMemory();
             autoSave(); 
         }
     };
 
-    // 物件本身只監聽「開始點擊/觸碰」
     obj.addEventListener('mousedown', startDrag);
     obj.addEventListener('touchstart', startDrag);
 
     gardenArea.appendChild(obj);
 
+    // 🌟 修正 3：如果是全新的物件，在存檔陣列裡也預設加上 isFlipped: false
     if (!savedProps) {
         gameState.currentLayoutObjects.push({
-            id: objId, img: imgSrc, name: name, x: defaultX, y: defaultY, scale: 1
+            id: objId, img: imgSrc, name: name, x: defaultX, y: defaultY, scale: 1, isFlipped: false
         });
         autoSave();
     }
 }
 
 // 3. 調整大小與刪除
+// 🌟 修正 4：更新大小的時候，要連同當前的翻轉狀態一併保留，不然翻轉會被蓋掉
 function resizeDiyObject(id, amount) {
     const obj = document.getElementById(id);
     const itemData = gameState.currentLayoutObjects.find(o => o.id === id);
     if (obj && itemData) {
         itemData.scale = Math.max(0.3, Math.min(3, (itemData.scale || 1) + amount));
-        obj.style.transform = `scale(${itemData.scale})`;
+        
+        const flipX = itemData.isFlipped ? -1 : 1;
+        obj.style.transform = `scale(${itemData.scale}) scaleX(${flipX})`;
+        autoSave();
+    }
+}
+
+// 🌟 新增：點擊 🔄 觸辦的翻轉函式
+function flipDiyObject(id) {
+    const obj = document.getElementById(id);
+    const itemData = gameState.currentLayoutObjects.find(o => o.id === id);
+    if (obj && itemData) {
+        // 狀態反轉：如果是 true 變 false，如果是 false 變 true
+        itemData.isFlipped = !itemData.isFlipped;
+        
+        // 取得當前的縮放大小，並根據新狀態計算 flip
+        const currentScale = itemData.scale || 1;
+        const flipX = itemData.isFlipped ? -1 : 1;
+        
+        // 同時套用，完美鏡像翻轉！
+        obj.style.transform = `scale(${currentScale}) scaleX(${flipX})`;
         autoSave();
     }
 }
@@ -2100,10 +2582,10 @@ function applyBlueprint(bpId) {
 
         // 還原背景
         gameState.currentBg = bp.background;
-
+        
         // 還原物件數據
         gameState.currentLayoutObjects = JSON.parse(JSON.stringify(bp.objects));
-
+        
         // 重新在畫面上生成
         gameState.currentLayoutObjects.forEach(obj => {
             spawnDiyObject(obj.img, obj.name, obj);
@@ -2137,7 +2619,7 @@ async function requestPersistentStorage() {
         // 檢查目前是否已經是永久儲存
         const isPersisted = await navigator.storage.persisted();
         console.log(`目前存檔狀態是否為永久性防刪除？ ${isPersisted ? "是的" : "不是"}`);
-
+        
         if (!isPersisted) {
             // 如果不是，主動向手機系統申請免死金牌
             const granted = await navigator.storage.persist();
@@ -2170,13 +2652,13 @@ window.addEventListener('touchmove', function(e) {
 <div id="purify-modal" onclick="closePurifyModal()">
     <div class="purify-card" onclick="event.stopPropagation()">
         <img id="purify-img" src="" alt="淨化成功" style="max-width:240px;">
-
+        
         <div id="puzzle-board" style="display:none;"></div>
 
         <p id="purify-msg">煩惱已經被淨化囉！</p>
-
+        
         <button id="puzzle-switch-btn" class="puzzle-btn" onclick="startPuzzle()">挑戰拼圖？</button>
-
+        
         <span style="font-size: 12px; color: #aaa; display:block; margin-top:10px;">(點擊空白處關閉)</span>
     </div>
 </div>
