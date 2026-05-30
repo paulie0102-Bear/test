@@ -1069,13 +1069,16 @@ function playMusicLogic() {
     }
 }
 
-// 📱 跨平台防靜音黑洞：當玩家點擊螢幕任何地方時，嘗試解鎖背景音樂播放
+// 📱 修正版的點擊解鎖：當玩家第一次與遊戲互動時，順便嘗試解鎖音樂
 document.addEventListener('click', () => {
-    if (!isAudioInitialized && gameState.currentMusic) {
-        playMusicLogic();
-        isAudioInitialized = true; // 確保只觸發一次
+    if (!isAudioInitialized) {
+        // 如果目前不是暫停狀態，且有設定歌曲，就去觸發播放
+        if (!gameState.isMusicPaused && gameState.currentMusic) {
+            playMusicLogic();
+        }
+        isAudioInitialized = true; // 確保點一次就完成初始化，不重複消耗效能
     }
-}, { once: false });
+}, { once: true }); // 🌟 改成 once: true，解鎖一次就自動銷毀這個監聽器，更省電！
 
 // 📥 開啟播放器彈窗 & 渲染小卡片歌單
 function openMusicPlayer() {
@@ -1178,6 +1181,9 @@ function handleMusicAction(id) {
     if (gameState.unlockedMusics.includes(id)) {
         // A. 已經買過，直接切換播放
         gameState.currentMusic = id;
+        gameState.isMusicPaused = false; // 🌟 關鍵優化：既然玩家主動點歌，就自動取消暫停
+        isAudioInitialized = true;       // 🌟 關鍵優化：標記已經過玩家主動點擊，解鎖自動播放限制
+        
         closeMusicModal();
         playMusicLogic(); // 立即更換音訊源播放
         if (typeof showBubble === 'function') showBubble(`🎵 正在播放【${track.name}】`);
@@ -1188,13 +1194,16 @@ function handleMusicAction(id) {
             gameState.coins -= track.price;
             gameState.unlockedMusics.push(id);
             gameState.currentMusic = id;
+            gameState.isMusicPaused = false; // 🌟 關鍵優化：解鎖新歌時，也自動取消暫停狀態
+            isAudioInitialized = true;       // 🌟 關鍵優化：借用這次點擊，同步解除瀏覽器音訊鎖
+
             closeMusicModal();
             playMusicLogic();
             if (typeof showBubble === 'function') showBubble(`🎉 成功購入並播放【${track.name}】`);
         } else {
             // 代幣不足，不關閉視窗
             const need = track.price - gameState.coins;
-            if (typeof showBubble === 'function') showBubble(`代幣還差 ${need} 枚，\n多去種植心願吧！🧩`);
+            if (typeof showBubble === 'function') showBubble(`代幣還差 ${need} 枚，\n多多種植心願吧！🧩`);
             return;
         }
     }
