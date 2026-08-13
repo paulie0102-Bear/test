@@ -2098,7 +2098,7 @@ const POKEMON_DATABASE = [
   { id: 123, name: '飛天螳螂', tag: 'EARTH', family: 123 },
   { id: 152, name: '菊草葉', tag: 'EARTH', family: 152 },
   { id: 153, name: '月桂葉', tag: 'EARTH', family: 152 },
-  { id: 154, name: '大花草', tag: 'EARTH', family: 152 },
+  { id: 154, name: '大竺葵', tag: 'EARTH', family: 152 },
   { id: 208, name: '大鋼蛇', tag: 'EARTH', family: 95, canMega: true },
   { id: 212, name: '巨鉗螳螂', tag: 'EARTH', family: 123, canMega: true },
   { id: 214, name: '赫拉克羅斯', tag: 'EARTH', family: 214, canMega: true },
@@ -3915,7 +3915,7 @@ function getSubLegendList() {
   });
 }
 
-// 💡 開啟一般池自選 UP 選單 (網格滿版優化版)
+// 💡 開啟一般池自選 UP 選單 (網格滿版優化版 - 不重置保底版本)
 function openSelectUpModal() {
   const container = document.getElementById("selectUpContainer");
   
@@ -3942,7 +3942,7 @@ function openSelectUpModal() {
 
   banner.innerHTML = `
     <p style="margin:0; color:#94a3b8; font-size:12px;">目前指定 UP：<b style="color:#00d2ff;">${currentName}</b></p>
-    <p style="font-size:11px; color:#64748b; margin:2px 0 0;">切換 UP 會重置常駐池保底進度</p>
+    <p style="font-size:11px; color:#10b981; margin:2px 0 0;">切換 UP 保留常駐池保底進度</p>
   `;
 
   // 3. 渲染次級神獸清單
@@ -3982,7 +3982,7 @@ function openSelectUpModal() {
 
     card.onclick = () => {
       gachaState.standardSelectedUpId = item.id;
-      gachaState.standardPityCount = 0; // 重置常駐池保底
+      // 💡 關鍵修改：移除原本的 gachaState.standardPityCount = 0; 以保留保底進度
       
       if (typeof updateGachaUI === "function") updateGachaUI(); 
       if (typeof saveGameToDB === "function") saveGameToDB();
