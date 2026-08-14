@@ -674,17 +674,45 @@ body {
 /* ==========================================================================
    8. 編隊 Modal 樣式 (Team Formation)
    ========================================================================== */
+
+/* 1. Modal 主容器：改為 Flex 直向佈局，並限制最大高度 */
 .battle-team-content {
   max-width: 600px;
   width: 90%;
+  max-height: 85vh; /* 限制最高佔螢幕 85%，避免太長超出螢幕 */
+  display: flex;
+  flex-direction: column;
   margin: 0 auto;
+  overflow: hidden; /* 防止外層出現雙滾動條 */
+}
+
+/* 2. 標題列與按鈕區塊 */
+.battle-team-content .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0; /* 標題不隨內容壓縮 */
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 12px;
+}
+
+.modal-header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* 3. 頂部固定區（隊伍 Slots + 屬性標籤） */
+.battle-team-fixed-top {
+  flex-shrink: 0; /* 確保列表滾動時，頂部區塊固定不被壓縮 */
 }
 
 .selected-team-container {
   background: rgba(0, 0, 0, 0.2);
   padding: 10px;
   border-radius: var(--radius-sm);
-  margin-bottom: 15px;
+  margin-bottom: 12px;
 }
 
 .section-subtitle {
@@ -711,7 +739,7 @@ body {
   position: relative;
   cursor: pointer;
   background: rgba(255, 255, 255, 0.05);
-  transition: border-color var(--transition-fast), background var(--transition-fast);
+  transition: border-color var(--transition-fast, 0.2s), background var(--transition-fast, 0.2s);
 }
 
 .team-slot.occupied {
@@ -753,6 +781,25 @@ body {
   align-items: center;
   justify-content: center;
   font-weight: bold;
+}
+
+/* 4. 屬性標籤列（水平滾動支援） */
+#battleTeamTabBar {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+  scrollbar-width: thin; /* 讓滾動條細一點 */
+}
+
+/* 5. 下方寶可夢卡片列表獨立滾動區 */
+.pokemon-grid-container {
+  flex: 1; /* 自動填滿下方的剩餘空間 */
+  overflow-y: auto; /* 只在這裡出現垂直滾動條 */
+  padding-right: 4px;
+  min-height: 180px;
 }
 
 .pokemon-card.selected-in-team {
@@ -1502,6 +1549,27 @@ body {
   box-sizing: border-box;
 }
 
+/* 異色按鈕專屬風格 (金色/炫光感) */
+.btn-shiny {
+  background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
+}
+
+.btn-shiny:disabled {
+  background: #a0a0a0;
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.btn-shiny-toggle {
+  background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 10px rgba(168, 85, 247, 0.3);
+}
 
 </style>
 </head>
@@ -1640,6 +1708,19 @@ body {
           </div>
           <button class="game-action-btn btn-mega" id="btnUnlockMega" onclick="unlockMega()">Mega 解鎖</button>
         </div>
+
+        <!-- 💡【新增】異色解鎖 / 切換外觀 -->
+        <div class="upgrade-row-card shiny-card-row" id="shinyRow" style="display: none;">
+          <div class="upgrade-info-side">
+            <div class="upgrade-label-main">異色型態</div>
+            <div class="upgrade-cost-desc" id="shinyStatusText">需滿級/滿技能/6星</div>
+          </div>
+          <div class="upgrade-btn-side">
+            <button class="game-action-btn btn-shiny" id="btnUnlockShiny" onclick="unlockShiny()">✨ 解鎖異色</button>
+            <button class="game-action-btn btn-shiny-toggle" id="btnToggleShiny" onclick="toggleShiny()" style="display: none;">✨ 切換外觀</button>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -1760,16 +1841,24 @@ body {
   <div class="modal-content battle-team-content">
     <div class="modal-header">
       <span class="modal-title" id="battleTeamTitle">選擇參戰隊伍</span>
-      <button class="back-btn" onclick="closeModal('battleTeamModal')">返回</button>
+      <div class="modal-header-actions" style="display: flex; gap: 8px; align-items: center;">
+        <button id="btnStartBattle" class="game-action-btn btn-exp" onclick="startBattle()">開始戰鬥</button>
+        <button class="back-btn" onclick="closeModal('battleTeamModal')">返回</button>
+      </div>
     </div>
-    <div class="selected-team-container">
-      <div class="section-subtitle">出戰陣容 (最多 5 隻)</div>
-      <div id="battleTeamSlots" class="team-slots-wrapper"></div>
+    
+    <!-- 頂部固定區：參戰陣容與屬性標籤 -->
+    <div class="battle-team-fixed-top">
+      <div class="selected-team-container">
+        <div class="section-subtitle">出戰陣容 (最多 5 隻)</div>
+        <div id="battleTeamSlots" class="team-slots-wrapper"></div>
+      </div>
+      <div id="battleTeamTabBar" class="tab-bar"></div>
     </div>
-    <div id="battleTeamTabBar" class="tab-bar"></div>
-    <div id="battlePokemonGrid" class="pokemon-grid"></div>
-    <div style="margin-top: 15px; text-align: right;">
-      <button id="btnStartBattle" class="game-action-btn btn-exp" onclick="startBattle()">開始戰鬥</button>
+
+    <!-- 下方獨立滾動區：寶可夢卡片列表 -->
+    <div id="battlePokemonGridContainer" class="pokemon-grid-container" style="overflow-y: auto; flex: 1; max-height: 50vh;">
+      <div id="battlePokemonGrid" class="pokemon-grid"></div>
     </div>
   </div>
 </div>
@@ -1902,27 +1991,38 @@ async function saveGameToDB() {
     const saveData = {
       version: "1.0",
       timestamp: Date.now(),
+
       pokemons: POKEMON_DATA.map(p => ({
         id: p.id,
         unlocked: p.unlocked || false,
         level: p.level || 1,
         skillLevel: p.skillLevel || 1,
         star: p.star || 1,
-        isMegaUnlocked: p.isMegaUnlocked || false
+
+        // ⭐ Mega 解鎖狀態
+        isMegaUnlocked: p.isMegaUnlocked || false,
+
+        // ✨ 異色狀態
+        isShinyUnlocked: p.isShinyUnlocked || false,
+        useShiny: p.useShiny || false
       })),
+
       dungeons: DUNGEONS.map(d => ({
         id: d.id,
         maxUnlockedFloor: d.maxUnlockedFloor || 1
       })),
+
       resources: {
         exp: getResValue("resExp"),
         coin: getResValue("resCoin"),
         universalShard: getResValue("resUniversalShard"),
         megaShard: getResValue("resMegaShard"),
-        pokeBall: getResValue("resPokeBall"),      // 💡 儲存高級球
-        masterBall: getResValue("resMasterBall")    // 💡 儲存大師球
+        pokeBall: getResValue("resPokeBall"),
+        masterBall: getResValue("resMasterBall")
       },
-      gachaState: gachaState // 💡 儲存保底與自選UP狀態
+
+      // 抽卡保底與自選 UP 狀態
+      gachaState: gachaState
     };
 
     store.put(saveData, "current_save");
@@ -1931,10 +2031,12 @@ async function saveGameToDB() {
       tx.oncomplete = () => resolve(true);
       tx.onerror = () => reject(tx.error);
     });
+
   } catch (e) {
     console.error("儲存至資料庫失敗", e);
   }
 }
+
 
 // 從瀏覽器資料庫讀取
 async function loadGameFromDB() {
@@ -1945,61 +2047,139 @@ async function loadGameFromDB() {
     const request = store.get("current_save");
 
     return new Promise((resolve, reject) => {
+
       request.onsuccess = () => {
         const data = request.result;
+
         if (data) {
+
+          // ==========================================
           // 1. 還原寶可夢狀態
+          // ==========================================
           if (data.pokemons) {
+
             data.pokemons.forEach(savedP => {
-              const target = POKEMON_DATA.find(p => p.id === savedP.id);
+
+              const target = POKEMON_DATA.find(
+                p => p.id === savedP.id
+              );
+
               if (target) {
+
                 target.unlocked = savedP.unlocked;
                 target.level = savedP.level;
                 target.skillLevel = savedP.skillLevel;
                 target.star = savedP.star;
-                target.isMegaUnlocked = savedP.isMegaUnlocked;
+
+                // ⭐ Mega
+                target.isMegaUnlocked =
+                  savedP.isMegaUnlocked || false;
+
+                // ✨ 異色解鎖狀態
+                target.isShinyUnlocked =
+                  savedP.isShinyUnlocked || false;
+
+                // ✨ 目前是否使用異色
+                target.useShiny =
+                  savedP.useShiny || false;
               }
             });
           }
 
-          // 2. 還原 DUNGEONS 各副本的解鎖進度
+
+          // ==========================================
+          // 2. 還原 DUNGEONS 各副本解鎖進度
+          // ==========================================
           if (data.dungeons) {
+
             data.dungeons.forEach(savedD => {
-              const target = DUNGEONS.find(d => d.id === savedD.id);
+
+              const target = DUNGEONS.find(
+                d => d.id === savedD.id
+              );
+
               if (target) {
-                target.maxUnlockedFloor = savedD.maxUnlockedFloor || 1;
+                target.maxUnlockedFloor =
+                  savedD.maxUnlockedFloor || 1;
               }
             });
           }
 
+
+          // ==========================================
           // 3. 還原資源數量
+          // ==========================================
           if (data.resources) {
-            setResValue("resExp", data.resources.exp || 0);
-            setResValue("resCoin", data.resources.coin || 0);
-            setResValue("resUniversalShard", data.resources.universalShard || 0);
-            setResValue("resMegaShard", data.resources.megaShard || 0);
-            setResValue("resPokeBall", data.resources.pokeBall || 0);
-            setResValue("resMasterBall", data.resources.masterBall || 0);
+
+            setResValue(
+              "resExp",
+              data.resources.exp || 0
+            );
+
+            setResValue(
+              "resCoin",
+              data.resources.coin || 0
+            );
+
+            setResValue(
+              "resUniversalShard",
+              data.resources.universalShard || 0
+            );
+
+            setResValue(
+              "resMegaShard",
+              data.resources.megaShard || 0
+            );
+
+            setResValue(
+              "resPokeBall",
+              data.resources.pokeBall || 0
+            );
+
+            setResValue(
+              "resMasterBall",
+              data.resources.masterBall || 0
+            );
           }
 
-          // 💡 4. 還原抽卡保底狀態
+
+          // ==========================================
+          // 4. 還原抽卡保底狀態
+          // ==========================================
           if (data.gachaState) {
-            gachaState = { ...gachaState, ...data.gachaState };
+
+            gachaState = {
+              ...gachaState,
+              ...data.gachaState
+            };
           }
-          
-          updateGachaUI(); // 更新抽卡介面顯示
+
+          updateGachaUI();
         }
+
         resolve(true);
       };
+
       request.onerror = () => reject(request.error);
     });
+
   } catch (e) {
-    console.error("從資料庫讀取失敗", e);
+    console.error("從瀏覽器資料庫讀取失敗", e);
   }
 }
 
     // 使用 GitHub PokeAPI 官方繪圖 (Official Artwork) 免費大圖素材
     const getImgUrl = (id) => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
+
+    function getBattleSpriteUrl(p) {
+  const paddedId = String(p.id).padStart(3, '0');
+
+  const baseUrl = p.useShiny
+    ? 'https://raw.githubusercontent.com/paulie0102-Bear/catch/refs/heads/main/png/shuffle/'
+    : 'https://raw.githubusercontent.com/paulie0102-Bear/Bear/refs/heads/main/shuffle/';
+
+  return `${baseUrl}${paddedId}.png`;
+}
 
 
     // ==================== 1. 資料庫與 API 核心設定 ====================
@@ -2049,7 +2229,8 @@ const EVENT_LEGEND_IDS = [
 const POKEMON_DATABASE = [
   { id: 4, name: '小火龍', tag: 'FIRE', family: 4 },
   { id: 5, name: '火恐龍', tag: 'FIRE', family: 4 },
-  { id: 6, name: '噴火龍', tag: 'FIRE', family: 4, canMega: true },
+  { id: 6, name: '噴火龍', tag: 'FIRE', family: 4, canMega: true ,
+  shinyId:6 },
   { id: 37, name: '六尾', tag: 'FIRE', family: 37 },
   { id: 38, name: '九尾', tag: 'FIRE', family: 37 },
   { id: 58, name: '卡蒂狗', tag: 'FIRE', family: 58 },
@@ -2139,8 +2320,10 @@ const POKEMON_DATABASE = [
   { id: 60, name: '蚊香蝌蚪', tag: 'WATER', family: 60 },
   { id: 61, name: '蚊香君', tag: 'WATER', family: 60 },
   { id: 62, name: '蚊香泳士', tag: 'WATER', family: 60 },
-  { id: 129, name: '鯉魚王', tag: 'WATER', family: 129 },
-  { id: 130, name: '暴鯉龍', tag: 'WATER', family: 129, canMega: true },
+  { id: 129, name: '鯉魚王', tag: 'WATER', family: 129 ,
+  shinyId:129},
+  { id: 130, name: '暴鯉龍', tag: 'WATER', family: 129, canMega: true ,
+  shinyId:130},
   { id: 131, name: '拉普拉斯', tag: 'WATER', family: 131 },
   { id: 134, name: '水伊布', tag: 'WATER', family: 133 },
   { id: 144, name: '急凍鳥', tag: 'WATER', family: 144 },
@@ -2219,29 +2402,35 @@ const POKEMON_DATABASE = [
 
   { id: 92, name: '鬼斯', tag: 'WHITE', family: 92 },
   { id: 93, name: '鬼斯通', tag: 'WHITE', family: 92 },
-  { id: 94, name: '耿鬼', tag: 'WHITE', family: 92, canMega: true },
-  { id: 150, name: '超夢', tag: 'WHITE', family: 150, isEventLegend: true, canMega: true },
+  { id: 94, name: '耿鬼', tag: 'WHITE', family: 92, canMega: true ,
+  shinyId: 94},
+  { id: 150, name: '超夢', tag: 'WHITE', family: 150, isEventLegend: true, canMega: true ,
+  shinyId:150},
   { id: 151, name: '夢幻', tag: 'WHITE', family: 151, isEventLegend: true },
   { id: 196, name: '太陽伊布', tag: 'WHITE', family: 133 },
   { id: 197, name: '月亮伊布', tag: 'WHITE', family: 133 },
   { id: 249, name: '洛奇亞', tag: 'WHITE', family: 249, isEventLegend: true },
-  { id: 250, name: '鳳王', tag: 'WHITE', family: 250, isEventLegend: true },
+  { id: 250, name: '鳳王', tag: 'WHITE', family: 250, isEventLegend: true ,
+  shinyId:250},
   { id: 251, name: '時拉比', tag: 'WHITE', family: 251 },
   { id: 280, name: '拉魯拉絲', tag: 'WHITE', family: 280 },
   { id: 281, name: '奇魯莉安', tag: 'WHITE', family: 280 },
-  { id: 282, name: '沙奈朵', tag: 'WHITE', family: 280, canMega: true },
+  { id: 282, name: '沙奈朵', tag: 'WHITE', family: 280, canMega: true ,
+  shinyId:282},
   { id: 359, name: '阿勃梭魯', tag: 'WHITE', family: 359, canMega: true },
   { id: 371, name: '寶貝龍', tag: 'WHITE', family: 371 },
   { id: 372, name: '甲殼龍', tag: 'WHITE', family: 371 },
   { id: 373, name: '暴飛龍', tag: 'WHITE', family: 371, canMega: true },
   { id: 374, name: '鐵啞鈴', tag: 'WHITE', family: 374 },
   { id: 375, name: '金屬怪', tag: 'WHITE', family: 374 },
-  { id: 376, name: '巨金怪', tag: 'WHITE', family: 374, canMega: true },
+  { id: 376, name: '巨金怪', tag: 'WHITE', family: 374, canMega: true ,
+  shinyId:376},
   { id: 380, name: '拉帝亞斯', tag: 'WHITE', family: 380, isEventLegend: true, canMega: true },
   { id: 381, name: '拉帝歐斯', tag: 'WHITE', family: 381, isEventLegend: true, canMega: true },
   { id: 382, name: '蓋歐卡', tag: 'WHITE', family: 382, isEventLegend: true, canMega: true },
   { id: 383, name: '固拉多', tag: 'WHITE', family: 383, isEventLegend: true, canMega: true },
-  { id: 384, name: '烈空坐', tag: 'WHITE', family: 384, isEventLegend: true, canMega: true },
+  { id: 384, name: '烈空坐', tag: 'WHITE', family: 384, isEventLegend: true, canMega: true ,
+  shinyId:384},
   { id: 385, name: '基拉祈', tag: 'WHITE', family: 385 },
   { id: 386, name: '代歐奇希斯', tag: 'WHITE', family: 386, isEventLegend: true },
   { id: 442, name: '花岩怪', tag: 'WHITE', family: 442 },
@@ -2250,7 +2439,7 @@ const POKEMON_DATABASE = [
   { id: 484, name: '帕路奇亞', tag: 'WHITE', family: 484, isEventLegend: true },
   { id: 485, name: '席多藍恩', tag: 'WHITE', family: 485 },
   { id: 486, name: '雷吉奇卡斯', tag: 'WHITE', family: 486, isEventLegend: true },
-  { id: 487, name: '騎拉帝納', tag: 'WHITE', family: 487, isEventLegend: true,  },
+  { id: 487, name: '騎拉帝納', tag: 'WHITE', family: 487, isEventLegend: true, canMega: true },
   { id: 488, name: '克雷色莉亞', tag: 'WHITE', family: 488, isEventLegend: true },
   { id: 491, name: '達克萊伊', tag: 'WHITE', family: 491, isEventLegend: true },
   { id: 493, name: '阿爾宙斯', tag: 'WHITE', family: 493, isEventLegend: true },
@@ -2258,10 +2447,12 @@ const POKEMON_DATABASE = [
   { id: 643, name: '萊希拉姆', tag: 'WHITE', family: 643, isEventLegend: true },
   { id: 644, name: '捷克羅姆', tag: 'WHITE', family: 644, isEventLegend: true },
   { id: 646, name: '酋雷姆', tag: 'WHITE', family: 646, isEventLegend: true, canMega: true },
-  { id: 716, name: '哲爾尼亞斯', tag: 'WHITE', family: 716, isEventLegend: true },
-  { id: 717, name: '伊裴爾塔爾', tag: 'WHITE', family: 717, isEventLegend: true },
-  { id: 718, name: '基格爾德', tag: 'WHITE', family: 718, isEventLegend: true,  },
-  { id: 720, name: '胡帕', tag: 'WHITE', family: 720, isEventLegend: true,  }
+  { id: 716, name: '哲爾尼亞斯', tag: 'WHITE', family: 716, isEventLegend: true ,
+  shinyId:716},
+  { id: 717, name: '伊裴爾塔爾', tag: 'WHITE', family: 717, isEventLegend: true ,
+  shinyId:717},
+  { id: 718, name: '基格爾德', tag: 'WHITE', family: 718, isEventLegend: true, canMega: true },
+  { id: 720, name: '胡帕', tag: 'WHITE', family: 720, isEventLegend: true, canMega: true }
 ];
 
 const PokemonAPI = {
@@ -2299,20 +2490,19 @@ const PokemonAPI = {
       { id: 646, name: "酋雷姆" }, { id: 716, name: "哲爾尼亞斯" }, { id: 717, name: "伊裴爾塔爾" }, { id: 718, name: "基格爾德" },
       { id: 720, name: "胡帕" }
     ];
-
-    let currentEventIndex = 0;
-
     
 
 
-// 1. 初始化寶可夢狀態（對應資料庫，加入 star 與 isMegaUnlocked）
+// 1. 初始化寶可夢狀態（加入異色相關欄位）
 const POKEMON_DATA = PokemonAPI.getAll().map((p, index) => ({
   ...p,
   unlocked: index < 5,
   level: 1,
   skillLevel: 1,
   star: 1,
-  isMegaUnlocked: false
+  isMegaUnlocked: false,
+  isShinyUnlocked: false, // 是否已解鎖異色
+  useShiny: false         // 當前是否啟用異色外觀
 }));
 
 let selectedPokemon = null;
@@ -2404,9 +2594,19 @@ function updateUpgradeUI() {
   setElText("upgradeStarLevel", `${selectedPokemon.star}星`);
   setElProp("upgradeAvatarBorder", "className", `upgrade-avatar-wrapper ${rarityInfo.className}`);
 
+  const upgradeImg = document.getElementById("upgradeImg") || document.getElementById("upgradeAvatarImg");
+
+if (upgradeImg && typeof getPokePixelUrl === 'function') {
+  upgradeImg.src = getPokePixelUrl(
+    selectedPokemon.id,
+    selectedPokemon.useShiny
+  );
+}
+
   const universalCost = PokemonAPI.getStarCost(selectedPokemon.id, selectedPokemon.star);
   setElText("universalCostText", selectedPokemon.star >= 6 ? "MAX" : universalCost);
 
+  // Mega 列控制
   const megaRow = document.getElementById("megaRow");
   const megaStatusText = document.getElementById("megaStatusText");
   const btnUnlockMega = document.getElementById("btnUnlockMega");
@@ -2432,6 +2632,48 @@ function updateUpgradeUI() {
     if (megaRow) megaRow.style.display = "none";
   }
 
+  // 💡【新增】異色列 UI 狀態控制
+  const shinyRow = document.getElementById("shinyRow");
+  const shinyStatusText = document.getElementById("shinyStatusText");
+  const btnUnlockShiny = document.getElementById("btnUnlockShiny");
+  const btnToggleShiny = document.getElementById("btnToggleShiny");
+
+  // 若該隻寶可夢有設定異色 ID (shinyId) 才顯示異色列
+  if (shinyRow) {
+    if (selectedPokemon.shinyId) {
+      shinyRow.style.display = "flex";
+      const readyToUnlock = isMaxedOut(selectedPokemon);
+
+      if (selectedPokemon.isShinyUnlocked) {
+        // --- 已解鎖狀態 ---
+        if (shinyStatusText) {
+          shinyStatusText.innerText = selectedPokemon.useShiny ? "✨ 已啟用" : "已解鎖 (原色中)";
+        }
+        if (btnUnlockShiny) btnUnlockShiny.style.display = "none";
+        
+        if (btnToggleShiny) {
+          btnToggleShiny.style.display = "inline-block";
+          btnToggleShiny.innerText = selectedPokemon.useShiny ? "切換為原色" : "✨ 切換為異色";
+        }
+      } else {
+        // --- 未解鎖狀態 ---
+        if (shinyStatusText) {
+          shinyStatusText.innerText = readyToUnlock ? "可解鎖" : "需滿級/滿技能/6星";
+        }
+        if (btnToggleShiny) btnToggleShiny.style.display = "none";
+
+        if (btnUnlockShiny) {
+          btnUnlockShiny.style.display = "inline-block";
+          btnUnlockShiny.disabled = !readyToUnlock;
+          btnUnlockShiny.innerText = readyToUnlock ? "✨ 解鎖異色" : "未達條件";
+        }
+      }
+    } else {
+      // 若該隻寶可夢沒有異色版本，則隱藏整列
+      shinyRow.style.display = "none";
+    }
+  }
+
   // 按鈕啟用/禁用狀態與動態消耗提示
   const btnLevelUp = document.getElementById("btnLevelUp");
   const btnSkillUp = document.getElementById("btnSkillUp");
@@ -2455,16 +2697,39 @@ function filterPokemonGrid(gridId, catId) {
   const grid = document.getElementById(gridId);
   if (!grid) return;
 
-  const list = catId === 'all' ? POKEMON_DATA : POKEMON_DATA.filter(p => p.tag === catId);
+  const list = catId === 'all'
+    ? POKEMON_DATA
+    : POKEMON_DATA.filter(p => p.tag === catId);
   
   grid.innerHTML = list.map(p => {
-    const rarityClass = p.unlocked ? RARITY_MAP[p.star].className : '';
-    const megaBadge = (p.canMega && p.isMegaUnlocked) ? `<img class="mega-icon-badge" src="https://raw.githubusercontent.com/msikma/pokesprite/master/items/key-item/key-stone.png" alt="Mega">` : '';
-    
+    const rarityClass = p.unlocked
+      ? RARITY_MAP[p.star].className
+      : '';
+
+    // Mega 徽章
+    const megaBadge = (p.canMega && p.isMegaUnlocked) 
+      ? `<img class="mega-icon-badge"
+              src="https://raw.githubusercontent.com/msikma/pokesprite/master/items/key-item/key-stone.png"
+              alt="Mega">`
+      : '';
+
+    // ✨ 異色標籤
+    const shinyBadge = (p.isShinyUnlocked && p.useShiny)
+      ? `<div class="shiny-icon-badge">✨</div>`
+      : '';
+
+    // 📖 圖鑑 / 🔧 強化使用 PokeAPI
+    const displayImgUrl = getPokePixelUrl(
+      p.id,
+      p.isShinyUnlocked && p.useShiny
+    );
+
     return `
-      <div class="pokemon-card ${p.unlocked ? '' : 'locked'} ${rarityClass}" onclick="clickPokemon(${p.id})">
+      <div class="pokemon-card ${p.unlocked ? '' : 'locked'} ${rarityClass}"
+           onclick="clickPokemon(${p.id})">
         ${megaBadge}
-        <img class="pokemon-img" src="${getImgUrl(p.id)}" alt="${p.name}">
+        ${shinyBadge}
+        <img class="pokemon-img" src="${displayImgUrl}" alt="${p.name}">
         <div class="pokemon-name">${p.name}</div>
       </div>
     `;
@@ -2480,21 +2745,73 @@ const DUNGEONS = [
 ];
 
 let currentDungeon = null;
+let currentEventIndex = 0;
+let lastCycleCount = -1; // 用於跨週期自動重置與更新
+
+// 💡 1. 輪換時間設定 (14 天 = 14 * 24 * 60 * 60 * 1000 毫秒)
+const ROTATION_MS = 14 * 24 * 60 * 60 * 1000;
+
+// 💡 2. 全球統一基準時間點 (固定 anchor 時間，確保所有玩家時間線 100% 對齊)
+const EVENT_ANCHOR_TIME = new Date("2026-01-01T00:00:00Z").getTime();
 
 // 網頁載入時初始化，自動從 IndexedDB 讀取存檔
 document.addEventListener("DOMContentLoaded", async () => {
   await loadGameFromDB();
+  
+  // 初始化全球統一的活動副本狀態
+  syncGlobalEventState();
+  
   renderDungeons();
   startEventTimer();
+  
   renderTabs("pokedexTabBar", "pokedexGrid");
   renderTabs("teamTabBar", "teamGrid");
   filterPokemonGrid("pokedexGrid", "all");
   filterPokemonGrid("teamGrid", "all");
 });
 
+// 計算全球統一的週期數、當前活動索引與倒數時間
+function getGlobalEventInfo() {
+  const now = Date.now();
+  const elapsed = Math.max(0, now - EVENT_ANCHOR_TIME);
+  
+  // 計算從基準點至今經歷了幾輪 (每 14 天為一輪)
+  const cycleCount = Math.floor(elapsed / ROTATION_MS);
+  
+  // 計算全世界統一的活動副本索引
+  const eventIndex = cycleCount % EVENT_ROTATION.length;
+  
+  // 下一次輪換的時間點與剩餘毫秒數
+  const nextRotationTime = EVENT_ANCHOR_TIME + (cycleCount + 1) * ROTATION_MS;
+  const diff = Math.max(0, nextRotationTime - now);
+
+  return { cycleCount, eventIndex, diff };
+}
+
+// 同步與檢查活動狀態（跨兩週時自動重置副本與存檔）
+function syncGlobalEventState() {
+  const { cycleCount, eventIndex } = getGlobalEventInfo();
+  
+  // 檢查是否跨入了新的 14 天週期 (首刷網頁或掛網剛好跨過輪換點)
+  if (lastCycleCount !== -1 && lastCycleCount !== cycleCount) {
+    const eventDungeon = DUNGEONS.find(d => d.isEvent);
+    if (eventDungeon) {
+      eventDungeon.maxUnlockedFloor = 1; // 重置最大解鎖層數為第 1 層
+    }
+
+    if (typeof saveGameToDB === 'function') {
+      saveGameToDB();
+    }
+  }
+
+  currentEventIndex = eventIndex;
+  lastCycleCount = cycleCount;
+}
+
 function renderDungeons() {
   const container = document.getElementById("dungeonContainer");
   if (!container) return;
+  
   container.innerHTML = DUNGEONS.map((d, index) => {
     if (d.isEvent) {
       const currentEvent = EVENT_ROTATION[currentEventIndex];
@@ -2502,7 +2819,7 @@ function renderDungeons() {
         <div class="dungeon-card ${d.class}" onclick="openFloorModal(${index})">
           <div class="dungeon-info">
             <div class="dungeon-name" id="eventDungeonName">活動副本 (${currentEvent.name})</div>
-            <div class="dungeon-timer" id="eventTimer">輪換倒數: 2天 14小時</div>
+            <div class="dungeon-timer" id="eventTimer">載入中...</div>
           </div>
           <img class="dungeon-icon" id="eventDungeonImg" src="${getImgUrl(currentEvent.id)}" alt="${currentEvent.name}">
         </div>
@@ -2531,39 +2848,35 @@ function updateEventDungeonUI() {
   }
 }
 
-function startEventTimer() {
-  let hoursLeft = 62;
-  setInterval(() => {
-    const days = Math.floor(hoursLeft / 24);
-    const hours = hoursLeft % 24;
-    const timerEl = document.getElementById("eventTimer");
-    if (timerEl) timerEl.innerText = `輪換倒數: ${days}天 ${hours}小時`;
+// 實時更新倒數文字顯示與輪換監控
+function updateTimerDisplay() {
+  const { cycleCount, diff } = getGlobalEventInfo();
 
-    hoursLeft--;
-    if (hoursLeft <= 0) {
-      hoursLeft = 72;
-      currentEventIndex = (currentEventIndex + 1) % EVENT_ROTATION.length;
+  // 若倒數歸零並進入新週期，即時刷新 UI 與狀態
+  if (cycleCount !== lastCycleCount) {
+    syncGlobalEventState();
+    updateEventDungeonUI();
 
-      // 💡 1. 找到活動副本，將最大解鎖層數重置回第 1 層
-      const eventDungeon = DUNGEONS.find(d => d.isEvent);
-      if (eventDungeon) {
-        eventDungeon.maxUnlockedFloor = 1;
-      }
-
-      // 2. 更新活動副本卡片 UI (名稱與圖片)
-      updateEventDungeonUI();
-
-      // 💡 3. 若玩家剛好打開著活動副本的選單，即時刷新層數列表
-      if (typeof currentDungeon !== 'undefined' && currentDungeon && currentDungeon.isEvent) {
-        renderFloorList();
-      }
-
-      // 💡 4. 將重置後的第 1 層狀態寫入 IndexedDB 存檔
-      if (typeof saveGameToDB === 'function') {
-        saveGameToDB();
-      }
+    if (typeof currentDungeon !== 'undefined' && currentDungeon && currentDungeon.isEvent) {
+      renderFloorList();
     }
-  }, 5000);
+  }
+
+  // 計算剩餘 天、時、分、秒
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+  const timerEl = document.getElementById("eventTimer");
+  if (timerEl) {
+    timerEl.innerText = `輪換倒數: ${days}天 ${hours}小時 ${minutes}分 ${seconds}秒`;
+  }
+}
+
+function startEventTimer() {
+  updateTimerDisplay(); // 載入時立即渲染時間，避免 1 秒空白
+  setInterval(updateTimerDisplay, 1000); // 每秒自動更新
 }
 
 function openFloorModal(dungeonIndex) {
@@ -2597,12 +2910,45 @@ function renderFloorList() {
 let selectedFloorNum = 1;
 let battleTeam = []; // 存放已選出戰的寶可夢 ID (上限 5 隻)
 
+const BATTLE_TEAM_STORAGE_KEY = 'last_battle_team';
+
+// 讀取記憶隊伍
+function loadSavedBattleTeam() {
+  try {
+    const saved = localStorage.getItem(BATTLE_TEAM_STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) {
+        // 過濾確保記憶中的寶可夢依然存在且已解鎖
+        return parsed.filter(id => {
+          const p = POKEMON_DATA.find(item => item.id === id);
+          return p && p.unlocked;
+        }).slice(0, 5);
+      }
+    }
+  } catch (e) {
+    console.error("讀取記憶隊伍失敗:", e);
+  }
+  return [];
+}
+
+// 儲存記憶隊伍
+function saveBattleTeam(team) {
+  try {
+    localStorage.setItem(BATTLE_TEAM_STORAGE_KEY, JSON.stringify(team));
+  } catch (e) {
+    console.error("儲存隊伍失敗:", e);
+  }
+}
+
 // 1. 覆寫選擇關卡邏輯：開啟編隊 Modal
 function selectFloor(floorNum, isUnlocked) {
   if (!isUnlocked) return;
   
   selectedFloorNum = floorNum;
-  battleTeam = []; // 每次開啟初始化隊伍 (可留空或預設帶入上一局)
+  
+  // 💡 記憶隊伍功能：開啟時自動載入上一次出戰隊伍
+  battleTeam = loadSavedBattleTeam();
   
   closeModal('floorModal');
   
@@ -2654,12 +3000,23 @@ function renderBattleTeamSlots() {
   
   for (let i = 0; i < MAX_SLOTS; i++) {
     const pId = battleTeam[i];
+
     if (pId) {
       const p = POKEMON_DATA.find(item => item.id === pId);
+
+      if (!p) continue;
+
+      const spriteUrl = getPokePixelUrl(
+        p.id,
+        p.isShinyUnlocked && p.useShiny
+      );
+
       html += `
         <div class="team-slot occupied" onclick="toggleBattleMember(${p.id})">
           <div class="remove-btn">×</div>
-          <img class="slot-img" src="${getImgUrl(p.id)}" alt="${p.name}">
+          <img class="slot-img"
+               src="${spriteUrl}"
+               alt="${p.name}">
           <div class="slot-name">${p.name}</div>
         </div>
       `;
@@ -2673,8 +3030,7 @@ function renderBattleTeamSlots() {
   }
   
   container.innerHTML = html;
-  
-  // 更新發起戰鬥按鈕的啟用/禁用狀態
+
   const btnStart = document.getElementById("btnStartBattle");
   if (btnStart) {
     btnStart.disabled = battleTeam.length === 0;
@@ -2686,29 +3042,48 @@ function filterBattlePokemonGrid(catId) {
   const grid = document.getElementById("battlePokemonGrid");
   if (!grid) return;
 
-  // 僅篩選 unlocked === true 的寶可夢
   let list = POKEMON_DATA.filter(p => p.unlocked);
+
   if (catId !== 'all') {
     list = list.filter(p => p.tag === catId);
   }
 
   if (list.length === 0) {
-    grid.innerHTML = `<div style="grid-column: 1/-1; color: #aaa; text-align: center; padding: 20px;">此分類下尚無已獲得的寶可夢</div>`;
+    grid.innerHTML = `
+      <div style="grid-column: 1/-1; color: #aaa; text-align: center; padding: 20px;">
+        此分類下尚無已獲得的寶可夢
+      </div>`;
     return;
   }
 
   grid.innerHTML = list.map(p => {
     const isSelected = battleTeam.includes(p.id);
     const rarityClass = RARITY_MAP[p.star]?.className || '';
-    const megaBadge = (p.canMega && p.isMegaUnlocked) 
-      ? `<img class="mega-icon-badge" src="https://raw.githubusercontent.com/msikma/pokesprite/master/items/key-item/key-stone.png" alt="Mega">` 
+
+    const megaBadge = (p.canMega && p.isMegaUnlocked)
+      ? `<img class="mega-icon-badge"
+              src="https://raw.githubusercontent.com/msikma/pokesprite/master/items/key-item/key-stone.png"
+              alt="Mega">`
       : '';
 
+    // ✨ 根據目前是否啟用異色，使用 PokeAPI 原色 / 異色
+    const spriteUrl = getPokePixelUrl(
+      p.id,
+      p.isShinyUnlocked && p.useShiny
+    );
+
     return `
-      <div class="pokemon-card ${rarityClass} ${isSelected ? 'selected-in-team' : ''}" onclick="toggleBattleMember(${p.id})">
+      <div class="pokemon-card ${rarityClass} ${isSelected ? 'selected-in-team' : ''}"
+           onclick="toggleBattleMember(${p.id})">
+
         ${megaBadge}
+
         ${isSelected ? '<div class="selected-overlay">已在隊伍中</div>' : ''}
-        <img class="pokemon-img" src="${getImgUrl(p.id)}" alt="${p.name}">
+
+        <img class="pokemon-img"
+             src="${spriteUrl}"
+             alt="${p.name}">
+
         <div class="pokemon-name">${p.name}</div>
       </div>
     `;
@@ -2731,6 +3106,9 @@ function toggleBattleMember(pId) {
     battleTeam.push(pId);
   }
 
+  // 💡 異動隊伍時即時更新記憶數據
+  saveBattleTeam(battleTeam);
+
   // 重新渲染陣容狀態與列表
   renderBattleTeamSlots();
   const activeTab = document.querySelector("#battleTeamTabBar .tab-btn.active")?.dataset?.cat || 'all';
@@ -2748,9 +3126,16 @@ function getPokeGifUrl(id) {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${numId}.gif`;
 }
 
-// 2. 新增：取得 PokeAPI 標準靜態像素圖網址 (PNG)
-function getPokePixelUrl(id) {
+// 2. 取得 PokeAPI 標準靜態像素圖網址 (PNG)
+function getPokePixelUrl(id, useShiny = false) {
   const numId = parseInt(id, 10);
+
+  // ✨ 異色 → PokeAPI Shiny
+  if (useShiny) {
+    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${numId}.png`;
+  }
+
+  // 📖 普通 → PokeAPI
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${numId}.png`;
 }
 
@@ -2762,6 +3147,9 @@ function startBattle() {
     alert("請至少選擇 1 隻寶可夢出戰！");
     return;
   }
+
+  // 💡 再次確保儲存當前隊伍
+  saveBattleTeam(battleTeam);
 
   // 1. 關閉選擇隊員彈窗
   if (typeof closeModal === 'function') {
@@ -2788,26 +3176,36 @@ function renderBattleScreen() {
     ? `活動副本 (${EVENT_ROTATION[currentEventIndex].name})` 
     : currentDungeon.name;
 
-  // 1. 設定頂部精簡標題
   const titleEl = document.getElementById("battleTitle");
   if (titleEl) {
     titleEl.innerText = `${dungeonName} (第 ${selectedFloorNum} 層)`;
   }
 
-  // 2. 依照組隊順序渲染寶可夢圖片
   const stageEl = document.getElementById("battleStage");
+
   if (stageEl) {
     stageEl.innerHTML = battleTeam.map(pId => {
       const p = POKEMON_DATA.find(item => item.id === pId);
       if (!p) return '';
-      
-      const shuffleUrl = getPlayerSpriteUrl({ id: p.id, isMega: false });
-      const fallbackUrl = getImgUrl ? getImgUrl(p.id) : shuffleUrl;
+
+      // ⚔️ 戰場仍然使用 Shuffle
+      // ✨ useShiny 會跟著 POKEMON_DATA 一起傳入
+      const shuffleUrl = getPlayerSpriteUrl({
+        ...p,
+        isMega: false
+      });
+
+      // 圖片載入失敗時，改用 PokeAPI
+      // 原色 / 異色會依照目前狀態切換
+      const fallbackUrl = getPokePixelUrl(
+        p.id,
+        p.isShinyUnlocked && p.useShiny
+      );
 
       return `
         <div class="battle-sprite-wrapper">
-          <img class="battle-sprite-img" 
-               src="${shuffleUrl}" 
+          <img class="battle-sprite-img"
+               src="${shuffleUrl}"
                alt="${p.name || ''}"
                onerror="this.onerror=null; this.src='${fallbackUrl}';">
         </div>
@@ -2919,36 +3317,60 @@ function startBattleSystem(dungeon, floorNum, teamIds) {
 
   // 2. 敵方初始化
   const rawEnemies = battleState.waves[0] || [];
+
   battleState.enemies = rawEnemies.map((enemy) => {
     return {
       ...enemy,
       x: 10 + Math.random() * 80,
       y: 15 + Math.random() * 30,
-      speed: 0.8 + Math.random() * 0.6, 
+      speed: 0.8 + Math.random() * 0.6,
       vx: (Math.random() - 0.5) * 2,
       vy: (Math.random() - 0.5) * 2
     };
   });
 
-  // 3. 我方初始化
+  // 3. 我方初始化（修正：結合玩家存檔資料，確保 Mega 與異色狀態正確載入）
   battleState.players = teamIds.map((id, index) => {
-    const pData = POKEMON_DATA.find(item => item.id === id) || { id, level: 1, skillLevel: 1 };
-    
+    // 優先從玩家擁有的寶可夢清單（playerPokemonList）中尋找
+    const ownedPokemon = typeof playerPokemonList !== 'undefined' 
+      ? playerPokemonList.find(p => p.id === id) 
+      : null;
+
+    // 基礎圖鑑資料（用來補齊名稱、屬性等預設值）
+    const baseData = POKEMON_DATA.find(item => item.id === id) || {};
+
+    // 綜合玩家資料與基礎資料
+    const pData = {
+      ...baseData,
+      ...(ownedPokemon || {}),
+      id: id,
+      level: ownedPokemon ? ownedPokemon.level : 1,
+      skillLevel: ownedPokemon ? ownedPokemon.skillLevel : 1
+    };
+
     return {
       id: id,
       name: pData.name || '寶可夢',
       tag: (pData.tag || 'FIRE').toUpperCase(),
       canMega: pData.canMega || false,
-      
-      // 💡 修改點 2：從 POKEMON_DATA 中同步帶入 Mega 解鎖狀態 (預設為 false)
+
+      // Mega 狀態
       isMegaUnlocked: pData.isMegaUnlocked || false,
-      
       megaForm: pData.megaForm || null,
       isMega: false,
       megaTriggered: false,
+
+      // ✨ 異色狀態
+      isShinyUnlocked: pData.isShinyUnlocked || false,
+      useShiny: pData.useShiny || false,
+
+      // 傷害
       dps: calculatePlayerDamage(pData, { isMega: false }),
-      x: 15 + (index % 5) * 18, 
+
+      // 戰場位置
+      x: 15 + (index % 5) * 18,
       y: 65 + Math.floor(index / 5) * 12,
+
       speed: 0.6,
       angleOffset: (index / teamIds.length) * Math.PI * 2,
       skillCooldown: Math.floor(Math.random() * 10)
@@ -2958,7 +3380,7 @@ function startBattleSystem(dungeon, floorNum, teamIds) {
   // 4. 先繪製/開啟戰場畫面
   renderBattleScreen();
 
-  // 5. 在 renderBattleScreen() 後更新標題
+  // 5. 更新標題
   updateBattleTitle(dungeon, floorNum);
 
   // 6. 啟動計時器與邏輯迴圈
@@ -3034,11 +3456,11 @@ function generateIndividualEnemies(dungeon, floorNum) {
     });
   };
 
-  for (let i = 0; i < 30; i++) addEnemy(0, ids.minion, 'minion', hpMinion, 45);
-  for (let i = 0; i < 20; i++) addEnemy(1, ids.minion, 'minion', hpMinion, 45);
-  for (let i = 0; i < 5; i++)  addEnemy(1, ids.elite,  'elite',  hpElite,  80);
-  for (let i = 0; i < 5; i++)  addEnemy(2, ids.elite,  'elite',  hpElite,  80);
-  addEnemy(2, ids.boss, 'boss', hpBoss, 200);
+  for (let i = 0; i < 30; i++) addEnemy(0, ids.minion, 'minion', hpMinion, 40);
+  for (let i = 0; i < 20; i++) addEnemy(1, ids.minion, 'minion', hpMinion, 40);
+  for (let i = 0; i < 5; i++)  addEnemy(1, ids.elite,  'elite',  hpElite,  60);
+  for (let i = 0; i < 5; i++)  addEnemy(2, ids.elite,  'elite',  hpElite,  60);
+  addEnemy(2, ids.boss, 'boss', hpBoss, 150);
 
   return waves;
 }
@@ -3096,7 +3518,7 @@ function updateBattleLoop() {
       p.y += (dy / dist) * 1.2;
     }
 
-    // 我方互相推開，避免重疊
+    // 💡 我方成員互相推開，避免重疊
     battleState.players.forEach((otherP, oIdx) => {
       if (idx !== oIdx) {
         const pdx = p.x - otherP.x;
@@ -3106,6 +3528,32 @@ function updateBattleLoop() {
           p.x += (pdx / pDist) * 0.6;
           p.y += (pdy / pDist) * 0.6;
         }
+      }
+    });
+
+    // 💡【新增】我方成員與敵人互相推開，避免重疊遮擋
+    enemies.forEach(e => {
+      const edx = p.x - e.x;
+      const edy = p.y - e.y;
+      const eDist = Math.hypot(edx, edy);
+      const MIN_PE_DIST = 6; // 我方與敵人的防重疊安全距離 (視圖示大小調整，約 6%)
+
+      if (eDist < MIN_PE_DIST && eDist > 0) {
+        const pushForce = (MIN_PE_DIST - eDist) * 0.25; // 越近推力越強
+        const nx = edx / eDist;
+        const ny = edy / eDist;
+
+        // 我方反向推開
+        p.x += nx * pushForce;
+        p.y += ny * pushForce;
+
+        // 敵人同步被輕微反推（增加碰撞真實感）
+        e.x -= nx * (pushForce * 0.5);
+        e.y -= ny * (pushForce * 0.5);
+
+        // 敵人邊界限制
+        e.x = Math.max(MIN_X, Math.min(MAX_X, e.x));
+        e.y = Math.max(MIN_Y, Math.min(MAX_Y, e.y));
       }
     });
 
@@ -3219,7 +3667,6 @@ function triggerMegaEvolution() {
 function openMegaSelectionDialog(player) {
   const curId = player.id;
   const curName = player.name || '寶可夢';
-  const paddedId = String(curId).padStart(3, '0');
 
   const dialogEl = document.getElementById('evoDialog');
   const titleEl = document.getElementById('evoTitle');
@@ -3230,7 +3677,6 @@ function openMegaSelectionDialog(player) {
     return;
   }
 
-  // 統一標題為 Mega 進化
   titleEl.innerText = `✨ ${curName} 的 Mega 進化`;
   container.innerHTML = "";
 
@@ -3238,23 +3684,30 @@ function openMegaSelectionDialog(player) {
     const card = document.createElement('div');
     card.className = 'evo-card';
 
-    // 預覽圖路徑 (例如 646-mega-x.png, 646-mega-y.png)
-    const bImg = `https://raw.githubusercontent.com/paulie0102-Bear/Bear/refs/heads/main/shuffle/${paddedId}-${type}.png`;
+    // ⚡ Mega 預覽也交給 getPlayerSpriteUrl
+    // ✨ 會自動依照 player.useShiny 決定普通 / 異色 Shuffle
+    const bImg = getPlayerSpriteUrl({
+      ...player,
+      isMega: true,
+      megaForm: type
+    });
 
-    // 顯示名稱 (例如 Mega 酋雷姆 X / Mega 酋雷姆 Y)
     const formTag = type.replace('mega-', '').toUpperCase();
     const displayName = `Mega ${curName} ${formTag}`;
 
     card.innerHTML = `
       <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 10px;">
-        <img src="${bImg}" style="width:80px; height:80px; filter: drop-shadow(0 0 8px #ff007f);">
+        <img src="${bImg}"
+             style="width:80px; height:80px; filter: drop-shadow(0 0 8px #ff007f);">
       </div>
-      <p style="margin:8px 0 0; font-size:13px; color:#ff007f; font-weight:bold;">${displayName}</p>
+      <p style="margin:8px 0 0; font-size:13px; color:#ff007f; font-weight:bold;">
+        ${displayName}
+      </p>
     `;
 
-    // 點擊直接轉換型態
     card.onclick = () => {
       executeMega(player, type);
+
       if (typeof dialogEl.close === 'function') {
         dialogEl.close();
       } else {
@@ -3284,23 +3737,76 @@ function executeMega(player, megaFormKey) {
   console.log(`⚡ ${player.name} 已成功進化為 Mega 形態：${megaFormKey}`);
 }
 
-// 🎯 計算我方寶可夢的 shuffle 圖源 URL
+// 🎯 計算我方寶可夢的 shuffle 圖源 URL (依據 useShiny 動態切換原色/異色圖片庫)
 function getPlayerSpriteUrl(p) {
   const paddedId = String(p.id).padStart(3, '0');
   
-  // 普通型態 (例: 001.png)
+  // 💡 根據是否啟用異色，決定圖片倉庫網址前綴
+  const baseUrl = p.useShiny
+    ? 'https://raw.githubusercontent.com/paulie0102-Bear/catch/refs/heads/main/png/shuffle/'
+    : 'https://raw.githubusercontent.com/paulie0102-Bear/Bear/refs/heads/main/shuffle/';
+
+  // 普通型態 (例如: 006.png)
   if (!p.isMega) {
-    return `https://raw.githubusercontent.com/paulie0102-Bear/Bear/refs/heads/main/shuffle/${paddedId}.png`;
+    return `${baseUrl}${paddedId}.png`;
   }
 
-  // Mega 型態 (例: 006-mega-x.png, 003-mega.png)
+  // Mega 型態 (例如: 006-mega-x.png)
   let megaSuffix = p.megaForm || 'mega';
   if (!megaSuffix.startsWith('-')) {
     megaSuffix = `-${megaSuffix}`;
   }
 
-  return `https://raw.githubusercontent.com/paulie0102-Bear/Bear/refs/heads/main/shuffle/${paddedId}${megaSuffix}.png`;
+  return `${baseUrl}${paddedId}${megaSuffix}.png`;
 }
+
+
+// 💡 檢查是否達到三項滿級條件 (Lv.100 + 技能 Lv.10 + 6星)
+function isMaxedOut(p) {
+  return p && p.level >= 100 && p.skillLevel >= 10 && p.star >= 6;
+}
+
+// 💡 執行異色解鎖
+function unlockShiny() {
+  if (!selectedPokemon || selectedPokemon.isShinyUnlocked) return;
+
+  // 驗證是否達成條件
+  if (isMaxedOut(selectedPokemon)) {
+    selectedPokemon.isShinyUnlocked = true;
+    selectedPokemon.useShiny = true; // 解鎖後自動啟用異色
+
+    updateUpgradeUI();
+    
+    // 重新渲染圖鑑/隊伍列表
+    const activeTab = document.querySelector("#pokedexTabBar .tab-btn.active")?.dataset?.cat || 'all';
+    filterPokemonGrid("pokedexGrid", activeTab);
+
+    // 寫入 IndexedDB 存檔
+    if (typeof saveGameToDB === 'function') saveGameToDB();
+    
+    alert(`✨ 恭喜！已成功解鎖 ${selectedPokemon.name} 的異色型態！`);
+  } else {
+    alert("解鎖條件未達成！需要將【等級達 Lv.100】、【技能達 Lv.10】且【培育至 6星】。");
+  }
+}
+
+// 💡 切換異色 / 原色外觀
+function toggleShiny() {
+  if (!selectedPokemon || !selectedPokemon.isShinyUnlocked) return;
+
+  // 切換啟用狀態 (true <-> false)
+  selectedPokemon.useShiny = !selectedPokemon.useShiny;
+
+  updateUpgradeUI();
+
+  // 重新渲染圖鑑網格
+  const activeTab = document.querySelector("#pokedexTabBar .tab-btn.active")?.dataset?.cat || 'all';
+  filterPokemonGrid("pokedexGrid", activeTab);
+
+  // 寫入存檔
+  if (typeof saveGameToDB === 'function') saveGameToDB();
+}
+
 
 // ==================== 6. 戰場畫面 DOM 渲染 ====================
 
@@ -3310,7 +3816,7 @@ function renderDynamicStage() {
 
   let html = '';
 
-  // 1. 渲染 AOE 衝擊波與打擊特效
+  // 1. 渲染 AOE 衝擊波與打擊特效（放在最底層）
   battleState.effects.forEach(eff => {
     if (eff.type === 'aoe_wave') {
       html += `
@@ -3329,36 +3835,50 @@ function renderDynamicStage() {
     }
   });
 
-  // 2. 渲染獨立敵人 (敵人保持原樣)
-  battleState.enemies.forEach(e => {
-    const gifUrl = getPokeGifUrl(e.pokeId);
-    const fallbackUrl = getImgUrl(e.pokeId);
-    const hpPercent = Math.max(0, (e.hp / e.maxHp) * 100);
+  // 2. 合併我方與敵人，並依據 Y 座標從小到大排序（Y-Sorting 深度排序）
+  // 靠上面的角色 (Y 較小) 先渲染，靠下面的角色 (Y 較大) 後渲染，後渲染者會擋住前者
+  const sortedUnits = [
+    ...battleState.enemies.map(e => ({ ...e, isEnemy: true })),
+    ...battleState.players.map(p => ({ ...p, isEnemy: false }))
+  ].sort((a, b) => a.y - b.y);
 
-    html += `
-      <div class="enemy-single-wrapper ${e.type}" style="
-        left: ${e.x}%; top: ${e.y}%; 
-        width: ${e.size}px; height: ${e.size}px;
-      ">
-        <div class="hp-bar-mini">
-          <div class="hp-bar-fill" style="width: ${hpPercent}%;"></div>
+  // 3. 依據排序後的順序進行繪製，並加上動態 z-index 雙重保險
+  sortedUnits.forEach(unit => {
+    const zIndex = Math.floor(unit.y * 10); // Y 軸越大，z-index 越高
+
+    if (unit.isEnemy) {
+      // 渲染敵人
+      const gifUrl = getPokeGifUrl(unit.pokeId);
+      const fallbackUrl = getImgUrl(unit.pokeId);
+      const hpPercent = Math.max(0, (unit.hp / unit.maxHp) * 100);
+
+      html += `
+        <div class="enemy-single-wrapper ${unit.type}" style="
+          left: ${unit.x}%; top: ${unit.y}%; 
+          width: ${unit.size}px; height: ${unit.size}px;
+          z-index: ${zIndex};
+        ">
+          <div class="hp-bar-mini">
+            <div class="hp-bar-fill" style="width: ${hpPercent}%;"></div>
+          </div>
+          <img class="battle-sprite-img" src="${gifUrl}" 
+               onerror="this.onerror=null; this.src='${fallbackUrl}';">
         </div>
-        <img class="battle-sprite-img" src="${gifUrl}" 
-             onerror="this.onerror=null; this.src='${fallbackUrl}';">
-      </div>
-    `;
-  });
+      `;
+    } else {
+      // 渲染我方隊員
+      const spriteUrl = getPlayerSpriteUrl(unit);
 
-  // 3. 渲染我方隊員 (使用更新後的 getPlayerSpriteUrl)
-  battleState.players.forEach(p => {
-    const spriteUrl = getPlayerSpriteUrl(p);
-
-    html += `
-      <div class="player-sprite-wrapper ${p.isMega ? 'mega-active' : ''}" style="left: ${p.x}%; top: ${p.y}%;">
-        ${p.isMega ? '<div class="mega-tag-aura">MEGA</div>' : ''}
-        <img class="battle-sprite-img" src="${spriteUrl}" alt="${p.name}">
-      </div>
-    `;
+      html += `
+        <div class="player-sprite-wrapper ${unit.isMega ? 'mega-active' : ''}" style="
+          left: ${unit.x}%; top: ${unit.y}%;
+          z-index: ${zIndex};
+        ">
+          ${unit.isMega ? '<div class="mega-tag-aura">MEGA</div>' : ''}
+          <img class="battle-sprite-img" src="${spriteUrl}" alt="${unit.name}">
+        </div>
+      `;
+    }
   });
 
   stageEl.innerHTML = html;
