@@ -5354,7 +5354,10 @@ async function importData(e) {
                 claimedGifts:(mainData.claimedGifts||s.claimedGifts||[])
             };
 
-            localStorage.setItem('pokemaster_v60',JSON.stringify(s));
+            // 匯入後雙存檔同步
+             saveGameData();
+             await flushMainSave();
+
 
             if(shuffleData!==null&&shuffleData!==undefined){
                 localStorage.setItem('SHUFFLE_WEB_SAVE',JSON.stringify(shuffleData));
@@ -5465,9 +5468,10 @@ function getAccountAge() {
 }
 
 // =========================================================
-// 🛡️ 主遊戲安全存檔系統
-// IndexedDB 主存檔 + localStorage 相容備援 + 2 層 DB 備份
-// 注意：DB 維持 v1，避免破壞 catch/index.html
+// =========================================================
+// 🛡️ 主遊戲雙存檔系統
+// localStorage + IndexedDB 同時保存
+// 舊存檔保留，新舊資料自動比較
 // =========================================================
 const MAIN_SAVE_DB_NAME = "PokeMasterDB";
 const MAIN_SAVE_DB_VERSION = 1;
@@ -5477,6 +5481,8 @@ const MAIN_BACKUP_1 = "main_backup_1";
 const MAIN_BACKUP_2 = "main_backup_2";
 const MAIN_SHUFFLE_KEY = "shuffle_save_v1";
 const MAIN_SETTING_PREFIX = "setting_";
+const MAIN_LS_KEY = "pokemaster_v60";
+const MAIN_LS_TIME_KEY = "pokemaster_v60_timestamp";
 
 let mainSaveDB = null;
 let mainSaveTimer = null;
@@ -5495,71 +5501,39 @@ function openMainSaveDB() {
             } catch (e) {}
             mainSaveDB = null;
         }
-
-        const request = indexedDB.open(
-            MAIN_SAVE_DB_NAME,
-            MAIN_SAVE_DB_VERSION
-        );
-
+        const request = indexedDB.open(MAIN_SAVE_DB_NAME, MAIN_SAVE_DB_VERSION);
         request.onupgradeneeded = event => {
             const db = event.target.result;
-
-            // 保留現有大亂鬥 gameData store
             if (!db.objectStoreNames.contains(MAIN_SAVE_STORE)) {
                 db.createObjectStore(MAIN_SAVE_STORE);
             }
         };
-
         request.onsuccess = event => {
             mainSaveDB = event.target.result;
-
-            // DB 被其他頁面升級時，關閉舊連線
             mainSaveDB.onversionchange = () => {
                 try { mainSaveDB.close(); } catch (e) {}
                 mainSaveDB = null;
             };
-
             resolve(mainSaveDB);
         };
-
-        request.onerror = () => {
-            reject(request.error);
-        };
-
-        request.onblocked = () => {
-            console.warn("⚠️ IndexedDB 開啟被其他分頁阻擋");
-        };
+        request.onerror = () => reject(request.error);
+        request.onblocked = () => console.warn("⚠️ IndexedDB 開啟被其他分頁阻擋");
     });
 }
 
 function createDurableTransaction(db, storeName, mode) {
     try {
-        // 支援 durability 的瀏覽器使用 strict
-        return db.transaction(
-            storeName,
-            mode,
-            { durability: "strict" }
-        );
+        return db.transaction(storeName, mode, { durability: "strict" });
     } catch (e) {
-        // 舊瀏覽器自動退回標準 transaction
         return db.transaction(storeName, mode);
     }
 }
 
 function dbGet(key) {
     return openMainSaveDB().then(db => new Promise((resolve, reject) => {
-        let tx;
-
         try {
-            tx = createDurableTransaction(
-                db,
-                MAIN_SAVE_STORE,
-                "readonly"
-            );
-
-            const request =
-                tx.objectStore(MAIN_SAVE_STORE).get(key);
-
+            const tx = createDurableTransaction(db, MAIN_SAVE_STORE, "readonly");
+            const request = tx.objectStore(MAIN_SAVE_STORE).get(key);
             request.onsuccess = () => resolve(request.result ?? null);
             request.onerror = () => reject(request.error);
         } catch (e) {
@@ -5570,25 +5544,13 @@ function dbGet(key) {
 
 function dbPutMany(items) {
     return openMainSaveDB().then(db => new Promise((resolve, reject) => {
-        let tx;
-
         try {
-            tx = createDurableTransaction(
-                db,
-                MAIN_SAVE_STORE,
-                "readwrite"
-            );
-
+            const tx = createDurableTransaction(db, MAIN_SAVE_STORE, "readwrite");
             const store = tx.objectStore(MAIN_SAVE_STORE);
-
             Object.entries(items).forEach(([key, value]) => {
-                if (value === undefined) {
-                    store.delete(key);
-                } else {
-                    store.put(value, key);
-                }
+                if (value === undefined) store.delete(key);
+                else store.put(value, key);
             });
-
             tx.oncomplete = () => resolve(true);
             tx.onerror = () => reject(tx.error);
             tx.onabort = () => reject(tx.error || new Error("IndexedDB transaction aborted"));
@@ -5598,38 +5560,13 @@ function dbPutMany(items) {
     }));
 }
 
-function dbDelete(key) {
-    return openMainSaveDB().then(db => new Promise((resolve, reject) => {
-        let tx;
-
-        try {
-            tx = createDurableTransaction(
-                db,
-                MAIN_SAVE_STORE,
-                "readwrite"
-            );
-
-            tx.objectStore(MAIN_SAVE_STORE).delete(key);
-
-            tx.oncomplete = () => resolve(true);
-            tx.onerror = () => reject(tx.error);
-            tx.onabort = () => reject(tx.error || new Error("IndexedDB delete aborted"));
-        } catch (e) {
-            reject(e);
-        }
-    }));
-}
-
 async function createSaveChecksum(json) {
-    // SHA-256 只作完整性檢查，不用於安全認證
     if (!window.crypto?.subtle) return "";
-
     try {
         const buffer = await crypto.subtle.digest(
             "SHA-256",
             new TextEncoder().encode(json)
         );
-
         return Array.from(new Uint8Array(buffer))
             .map(b => b.toString(16).padStart(2, "0"))
             .join("");
@@ -5638,44 +5575,33 @@ async function createSaveChecksum(json) {
     }
 }
 
-async function makeMainSaveEnvelope(data) {
+async function makeMainSaveEnvelope(data, timestamp = Date.now()) {
     const json = JSON.stringify(data);
-
     return {
         format: "PokeMasterMainSave",
         version: 1,
-        timestamp: Date.now(),
+        timestamp,
         json,
         checksum: await createSaveChecksum(json)
     };
 }
 
 async function validateMainSaveEnvelope(envelope) {
-    if (!envelope || typeof envelope !== "object") {
-        return null;
-    }
+    if (!envelope || typeof envelope !== "object") return null;
 
-    // 新格式
     if (
         envelope.format === "PokeMasterMainSave" &&
         typeof envelope.json === "string"
     ) {
         try {
             const data = JSON.parse(envelope.json);
-
-            if (
-                envelope.checksum &&
-                window.crypto?.subtle
-            ) {
-                const checksum =
-                    await createSaveChecksum(envelope.json);
-
+            if (envelope.checksum && window.crypto?.subtle) {
+                const checksum = await createSaveChecksum(envelope.json);
                 if (checksum !== envelope.checksum) {
                     console.error("❌ 存檔完整性檢查失敗");
                     return null;
                 }
             }
-
             return {
                 data,
                 timestamp: Number(envelope.timestamp) || 0
@@ -5686,7 +5612,7 @@ async function validateMainSaveEnvelope(envelope) {
         }
     }
 
-    // 舊式直接存入 object 的相容處理
+    // 相容舊版直接存 object
     if (!envelope.format && typeof envelope === "object") {
         return {
             data: envelope,
@@ -5697,8 +5623,40 @@ async function validateMainSaveEnvelope(envelope) {
     return null;
 }
 
-async function writeMainSaveNow(data, createBackup = true) {
-    const envelope = await makeMainSaveEnvelope(data);
+function readLegacyLocalSave() {
+    try {
+        const raw = localStorage.getItem(MAIN_LS_KEY);
+        if (!raw) return null;
+
+        const data = JSON.parse(raw);
+        if (!data || typeof data !== "object") return null;
+
+        const timestamp =
+            Number(localStorage.getItem(MAIN_LS_TIME_KEY)) || 0;
+
+        return {
+            data,
+            timestamp
+        };
+    } catch (e) {
+        console.error("❌ localStorage 舊存檔讀取失敗:", e);
+        return null;
+    }
+}
+
+function writeLegacyLocalSave(data, timestamp = Date.now()) {
+    try {
+        localStorage.setItem(MAIN_LS_KEY, JSON.stringify(data));
+        localStorage.setItem(MAIN_LS_TIME_KEY, String(timestamp));
+        return true;
+    } catch (e) {
+        console.warn("⚠️ localStorage 寫入失敗，IndexedDB 仍會繼續:", e);
+        return false;
+    }
+}
+
+async function writeMainSaveNow(data, createBackup = true, timestamp = Date.now()) {
+    const envelope = await makeMainSaveEnvelope(data, timestamp);
 
     let current = null;
     let backup1 = null;
@@ -5708,7 +5666,7 @@ async function writeMainSaveNow(data, createBackup = true) {
             current = await dbGet(MAIN_SAVE_KEY);
             backup1 = await dbGet(MAIN_BACKUP_1);
         } catch (e) {
-            console.warn("⚠️ 讀取 DB 備份失敗，仍嘗試保存最新資料:", e);
+            console.warn("⚠️ DB 備份讀取失敗，仍嘗試保存:", e);
         }
     }
 
@@ -5716,83 +5674,90 @@ async function writeMainSaveNow(data, createBackup = true) {
         [MAIN_SAVE_KEY]: envelope
     };
 
-    // 舊 current → backup1
-    if (current) {
-        writes[MAIN_BACKUP_1] = current;
-    }
-
-    // 舊 backup1 → backup2
-    if (backup1) {
-        writes[MAIN_BACKUP_2] = backup1;
-    }
+    if (current) writes[MAIN_BACKUP_1] = current;
+    if (backup1) writes[MAIN_BACKUP_2] = backup1;
 
     await dbPutMany(writes);
-
     return true;
 }
 
 async function loadBestMainSave() {
-    // 1. 主存檔
-    const current = await dbGet(MAIN_SAVE_KEY);
-    const currentValid = await validateMainSaveEnvelope(current);
+    let dbSave = null;
+    let localSave = null;
 
-    if (currentValid) {
+    // ① 讀 IndexedDB
+    try {
+        const current = await dbGet(MAIN_SAVE_KEY);
+        dbSave = await validateMainSaveEnvelope(current);
+    } catch (e) {
+        console.warn("⚠️ IndexedDB 主存檔讀取失敗:", e);
+    }
+
+    // ② 讀 localStorage
+    localSave = readLegacyLocalSave();
+
+    // ③ 兩邊都有：比較時間，較新的優先
+    if (dbSave && localSave) {
+        if (localSave.timestamp > dbSave.timestamp) {
+            console.log("🟡 localStorage 較新，採用 localStorage 存檔");
+            try {
+                await writeMainSaveNow(
+                    localSave.data,
+                    false,
+                    localSave.timestamp
+                );
+                console.log("✅ localStorage 最新存檔已同步至 IndexedDB");
+            } catch (e) {
+                console.warn("⚠️ localStorage → IndexedDB 同步失敗:", e);
+            }
+
+            return {
+                data: localSave.data,
+                source: "localStorage-newer"
+            };
+        }
+
+        console.log("🟢 IndexedDB 較新，採用 IndexedDB 存檔");
+
+        // DB 較新時同步回 localStorage，保持雙邊一致
+        writeLegacyLocalSave(dbSave.data, dbSave.timestamp);
+
         return {
-            data: currentValid.data,
+            data: dbSave.data,
+            source: "db-newer"
+        };
+    }
+
+    // ④ 只有 DB
+    if (dbSave) {
+        console.log("🟢 找到 IndexedDB 存檔");
+
+        // DB 存檔同步回 localStorage
+        writeLegacyLocalSave(dbSave.data, dbSave.timestamp);
+
+        return {
+            data: dbSave.data,
             source: "db-current"
         };
     }
 
-    // 2. 第一備份
-    const backup1 = await dbGet(MAIN_BACKUP_1);
-    const backup1Valid = await validateMainSaveEnvelope(backup1);
+    // ⑤ 只有 localStorage：舊玩家無縫遷移
+    if (localSave) {
+        console.log("📦 偵測到舊版 localStorage，開始遷移至 IndexedDB");
 
-    if (backup1Valid) {
-        console.warn("⚠️ 主存檔異常，使用 DB backup_1 恢復");
-        return {
-            data: backup1Valid.data,
-            source: "db-backup-1"
-        };
-    }
-
-    // 3. 第二備份
-    const backup2 = await dbGet(MAIN_BACKUP_2);
-    const backup2Valid = await validateMainSaveEnvelope(backup2);
-
-    if (backup2Valid) {
-        console.warn("⚠️ 主存檔與 backup_1 異常，使用 DB backup_2 恢復");
-        return {
-            data: backup2Valid.data,
-            source: "db-backup-2"
-        };
-    }
-
-    // 4. 舊 localStorage
-    let legacy = null;
-
-    try {
-        const raw = localStorage.getItem("pokemaster_v60");
-
-        if (raw) {
-            legacy = JSON.parse(raw);
-        }
-    } catch (e) {
-        console.error("❌ 舊 localStorage 讀取失敗:", e);
-    }
-
-    if (legacy && typeof legacy === "object") {
-        console.log("📦 偵測到舊版 localStorage，開始安全遷移");
-
-        // 只新增 DB，不刪除 localStorage
         try {
-            await writeMainSaveNow(legacy, false);
-            console.log("✅ 舊版存檔已安全複製到 IndexedDB");
+            await writeMainSaveNow(
+                localSave.data,
+                false,
+                localSave.timestamp || Date.now()
+            );
+            console.log("✅ 舊版存檔已複製到 IndexedDB");
         } catch (e) {
-            console.error("❌ 舊版存檔遷移至 DB 失敗:", e);
+            console.error("❌ 舊版存檔遷移失敗:", e);
         }
 
         return {
-            data: legacy,
+            data: localSave.data,
             source: "localStorage-migration"
         };
     }
@@ -5806,43 +5771,26 @@ async function initSaveSystem() {
     const result = await loadBestMainSave();
 
     if (result?.data) {
-        // DB 優先，完整合併進目前預設資料結構
         s = {
             ...s,
             ...result.data
         };
 
         console.log(`💾 主存檔來源: ${result.source}`);
-
-        // 如果從 backup 恢復，立即建立新的 current
-        if (
-            result.source === "db-backup-1" ||
-            result.source === "db-backup-2"
-        ) {
-            try {
-                await writeMainSaveNow(s, false);
-                console.log("✅ 已由備份恢復主存檔");
-            } catch (e) {
-                console.error("❌ 備份恢復失敗:", e);
-            }
-        }
     }
 
     mainSaveInitialized = true;
 
-    // 啟動時同步一次舊版輔助資料
+    // 舊版輔助資料同步
     try {
         const carrier = localStorage.getItem("user_carrier");
-
         if (carrier && !(await dbGet(MAIN_SETTING_PREFIX + "user_carrier"))) {
             await dbPutMany({
                 [MAIN_SETTING_PREFIX + "user_carrier"]: carrier
             });
         }
 
-        const hideDate =
-            localStorage.getItem("hide_announcement_date");
-
+        const hideDate = localStorage.getItem("hide_announcement_date");
         if (
             hideDate &&
             !(await dbGet(MAIN_SETTING_PREFIX + "hide_announcement_date"))
@@ -5859,9 +5807,11 @@ async function initSaveSystem() {
 function scheduleMainSave() {
     if (!mainSaveInitialized) return;
 
-    // 複製當下狀態，避免後續修改 s 造成 DB 寫入內容被污染
     try {
-        mainSavePending = JSON.parse(JSON.stringify(s));
+        mainSavePending = {
+            data: JSON.parse(JSON.stringify(s)),
+            timestamp: Date.now()
+        };
     } catch (e) {
         console.error("❌ 無法建立存檔快照:", e);
         return;
@@ -5869,7 +5819,6 @@ function scheduleMainSave() {
 
     clearTimeout(mainSaveTimer);
 
-    // 防止連續 updateUI() 狂寫 IndexedDB
     mainSaveTimer = setTimeout(() => {
         flushMainSave();
     }, 400);
@@ -5883,18 +5832,29 @@ async function flushMainSave() {
 
     mainSaveBusy = true;
 
-    const snapshot = mainSavePending;
+    const pending = mainSavePending;
     mainSavePending = null;
 
     try {
-        await writeMainSaveNow(snapshot, true);
+        await writeMainSaveNow(
+            pending.data,
+            true,
+            pending.timestamp
+        );
+
         console.log("💾 IndexedDB 主存檔完成");
+
+        // DB 成功後再次同步 localStorage
+        writeLegacyLocalSave(
+            pending.data,
+            pending.timestamp
+        );
     } catch (e) {
         console.error("❌ IndexedDB 主存檔失敗:", e);
 
-        // 失敗資料保留在 queue，下次繼續嘗試
+        // 保留 queue，下次繼續
         if (!mainSavePending) {
-            mainSavePending = snapshot;
+            mainSavePending = pending;
         }
     } finally {
         mainSaveBusy = false;
@@ -5909,28 +5869,21 @@ async function flushMainSave() {
 }
 
 function saveGameData() {
-    // ① 舊系統立即保留 localStorage，失敗也不能阻止 DB
-    try {
-        localStorage.setItem(
-            "pokemaster_v60",
-            JSON.stringify(s)
-        );
-    } catch (e) {
-        // localStorage 滿了也不影響 IndexedDB
-        console.warn("⚠️ localStorage 備援寫入失敗，IndexedDB 仍會繼續:", e);
-    }
+    const timestamp = Date.now();
 
-    // ② 新系統進入 IndexedDB queue
+    // ① 立即保存舊 localStorage
+    writeLegacyLocalSave(s, timestamp);
+
+    // ② 同時排程 IndexedDB
     scheduleMainSave();
 
-    // ③ 更新空間顯示
+    // ③ 更新儲存空間顯示
     updateStorageUI();
 
     return true;
 }
 
-// 舊程式已有部分地方會呼叫 saveData()
-// 統一導向新的安全存檔入口
+// 舊程式全部繼續使用 saveData()
 function saveData() {
     return saveGameData();
 }
