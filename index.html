@@ -1409,24 +1409,252 @@
 </style>
 
 <div id="chartPage" class="page">
-    <div class="card">
-        <div style="display:flex; gap:5px; margin-bottom:10px;">
-            <button onclick="switchChart('year')" style="flex:1; padding:10px; border-radius:5px; border:1px solid #ddd; background:#f8f9fa; cursor:pointer;">年統計</button>
-            <button onclick="switchChart('month')" style="flex:1; padding:10px; border-radius:5px; border:1px solid #ddd; background:#f8f9fa; cursor:pointer;">月統計</button>
-            <button onclick="switchChart('cat')" style="flex:1; padding:10px; border-radius:5px; border:1px solid #ddd; background:#f8f9fa; cursor:pointer;">月分類</button>
+    <div class="card" style="padding:12px;">
+
+        <!-- 統計模式 -->
+        <div style="
+            display:grid;
+            grid-template-columns:repeat(3,1fr);
+            gap:5px;
+            margin-bottom:10px;
+        ">
+            <button
+                onclick="switchChart('year')"
+                style="
+                    padding:10px 5px;
+                    border-radius:8px;
+                    border:1px solid #ddd;
+                    background:#f8f9fa;
+                    font-weight:bold;
+                "
+            >📊 年統計</button>
+
+            <button
+                onclick="switchChart('month')"
+                style="
+                    padding:10px 5px;
+                    border-radius:8px;
+                    border:1px solid #ddd;
+                    background:#f8f9fa;
+                    font-weight:bold;
+                "
+            >📅 月統計</button>
+
+            <button
+                onclick="switchChart('cat')"
+                style="
+                    padding:10px 5px;
+                    border-radius:8px;
+                    border:1px solid #ddd;
+                    background:#f8f9fa;
+                    font-weight:bold;
+                "
+            >🥧 月分類</button>
         </div>
 
-        <div id="chartControls" style="margin-bottom:15px; display:none; gap:10px; align-items:center; background:#fff9db; padding:10px; border-radius:5px;">
-            <label for="chartMonthPicker" style="font-size:14px; color:#666;">選擇月份：</label>
-            <input type="month" id="chartMonthPicker" onchange="renderCharts()" style="flex:1; padding:5px; border:1px solid #ccc; border-radius:4px;">
+        <!-- 年份 / 月份選擇 -->
+        <div
+            id="chartControls"
+            style="
+                margin-bottom:12px;
+                display:none;
+                flex-direction:column;
+                gap:8px;
+                background:#f8f9fa;
+                padding:10px;
+                border-radius:8px;
+            "
+        >
+
+            <div
+                id="yearPickerRow"
+                style="
+                    display:none;
+                    align-items:center;
+                    gap:8px;
+                "
+            >
+                <label
+                    for="chartYearPicker"
+                    style="font-size:14px;color:#555;white-space:nowrap;"
+                >選擇年度：</label>
+
+                <input
+                    type="number"
+                    id="chartYearPicker"
+                    min="2000"
+                    max="2100"
+                    step="1"
+                    style="
+                        flex:1;
+                        padding:8px;
+                        border:1px solid #ccc;
+                        border-radius:5px;
+                        box-sizing:border-box;
+                    "
+                >
+            </div>
+
+            <div
+                id="monthPickerRow"
+                style="
+                    display:none;
+                    align-items:center;
+                    gap:8px;
+                "
+            >
+                <label
+                    for="chartMonthPicker"
+                    style="font-size:14px;color:#555;white-space:nowrap;"
+                >選擇月份：</label>
+
+                <input
+                    type="month"
+                    id="chartMonthPicker"
+                    style="
+                        flex:1;
+                        padding:8px;
+                        border:1px solid #ccc;
+                        border-radius:5px;
+                        box-sizing:border-box;
+                    "
+                >
+            </div>
+
         </div>
 
-        <div style="position:relative; height:300px; width:100%;">
-            <canvas id="chartCanvas"></canvas>
+        <!-- 當期收支儀表板 -->
+        <div
+            id="chartDashboard"
+            style="
+                display:grid;
+                grid-template-columns:1fr 1fr;
+                gap:8px;
+                margin-bottom:12px;
+            "
+        >
+
+            <div
+                style="
+                    background:#eef8ff;
+                    border:1px solid #3498db;
+                    border-radius:10px;
+                    padding:12px;
+                    text-align:center;
+                "
+            >
+                <div style="
+                    color:#3498db;
+                    font-size:13px;
+                    font-weight:bold;
+                ">🔵 收入</div>
+
+                <div
+                    id="chartIncome"
+                    style="
+                        margin-top:4px;
+                        color:#2874a6;
+                        font-size:20px;
+                        font-weight:bold;
+                    "
+                >$0</div>
+            </div>
+
+            <div
+                style="
+                    background:#fff5eb;
+                    border:1px solid #e67e22;
+                    border-radius:10px;
+                    padding:12px;
+                    text-align:center;
+                "
+            >
+                <div style="
+                    color:#e67e22;
+                    font-size:13px;
+                    font-weight:bold;
+                ">🔴 支出</div>
+
+                <div
+                    id="chartExpense"
+                    style="
+                        margin-top:4px;
+                        color:#d35400;
+                        font-size:20px;
+                        font-weight:bold;
+                    "
+                >$0</div>
+            </div>
+
+            <div
+                style="
+                    grid-column:1 / -1;
+                    background:#f8f9fa;
+                    border:1px solid #ddd;
+                    border-radius:10px;
+                    padding:12px;
+                    text-align:center;
+                "
+            >
+                <div style="
+                    color:#666;
+                    font-size:13px;
+                    font-weight:bold;
+                ">💰 結餘</div>
+
+                <div
+                    id="chartBalance"
+                    style="
+                        margin-top:4px;
+                        font-size:22px;
+                        font-weight:bold;
+                    "
+                >$0</div>
+            </div>
+
         </div>
+
+        <!-- 圖表 -->
+        <div
+    id="chartWrapper"
+    style="
+        position:relative;
+        width:100%;
+        max-width:100%;
+        height:420px;
+        overflow:hidden;
+        box-sizing:border-box;
+    "
+>
+    <canvas
+        id="chartCanvas"
+        style="
+            display:block;
+            width:100% !important;
+            max-width:100%;
+        "
+    ></canvas>
+</div>
+
     </div>
 
-    <button class="btn-back" onclick="back()" style="width:100%; margin-top:15px; padding:12px; background:#e74c3c; color:white; border:none; border-radius:5px; cursor:pointer;">✖ 關閉圖表</button>
+    <button
+    class="btn-back"
+    onclick="back()"
+    style="
+        display:block;
+        width:100%;
+        max-width:320px;
+        margin:10px auto 25px;
+        box-sizing:border-box;
+        padding:12px;
+        background:#e74c3c;
+        color:white;
+        border:none;
+        border-radius:8px;
+        cursor:pointer;
+    "
+>✖ 關閉統計</button>
 </div>
 
 <div id="historyPage" class="page">
@@ -4836,6 +5064,41 @@ function record() {
     updateUI();
 }
 
+function rebuildAccountingStats(){
+    if(!s) return;
+
+    // 重新建立支出統計
+    s.yearSums = {};
+    s.catSums = {};
+
+    const history = Array.isArray(s.hist) ? s.hist : [];
+
+    history.forEach(h => {
+        if(!h || !h.date) return;
+
+        // 舊存檔沒有 type 時，視為支出
+        const type = h.type === "income"
+            ? "income"
+            : "expense";
+
+        // 收入不進入原本的支出統計
+        if(type !== "expense") return;
+
+        const amount = Number(h.amt) || 0;
+        if(amount <= 0) return;
+
+        const monthKey = h.date.substring(0,7);
+        const category = h.cat || "其他";
+
+        // 月支出
+        s.yearSums[monthKey] =
+            (Number(s.yearSums[monthKey]) || 0) + amount;
+
+        // 分類支出
+        s.catSums[category] =
+            (Number(s.catSums[category]) || 0) + amount;
+    });
+}
 
 // --- [ 戰鬥核心：修正版 ] ---
 function spawnEnemy(targetId, restoreData) {
@@ -5511,41 +5774,114 @@ function claimTask(id) {
 }
 
 let chartInstance = null;
-function switchChart(type) { 
-    currentChartType = type; 
-    document.getElementById('chartControls').style.display = (type==='month') ? 'flex' : 'none'; 
-    renderCharts(); 
+
+function switchChart(type) {
+    currentChartType = type;
+
+    const controls = document.getElementById("chartControls");
+    const yearRow = document.getElementById("yearPickerRow");
+    const monthRow = document.getElementById("monthPickerRow");
+
+    if(!controls || !yearRow || !monthRow) return;
+
+    controls.style.display = "flex";
+    yearRow.style.display = "none";
+    monthRow.style.display = "none";
+
+    if(type === "year") {
+        yearRow.style.display = "flex";
+    } else {
+        monthRow.style.display = "flex";
+    }
+
+    // 第一次進入統計頁時，自動帶入目前日期
+    const now = new Date();
+
+    const yearPicker = document.getElementById("chartYearPicker");
+    const monthPicker = document.getElementById("chartMonthPicker");
+
+    if(yearPicker && !yearPicker.value) {
+        yearPicker.value = now.getFullYear();
+    }
+
+    if(monthPicker && !monthPicker.value) {
+        monthPicker.value =
+            `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+    }
+
+    bindChartPickerEvents();
+    renderCharts();
+}
+
+function bindChartPickerEvents(){
+    const yearPicker =
+        document.getElementById("chartYearPicker");
+
+    const monthPicker =
+        document.getElementById("chartMonthPicker");
+
+    if(yearPicker && !yearPicker.dataset.bound){
+        yearPicker.addEventListener("change",function(){
+            renderCharts();
+        });
+
+        yearPicker.dataset.bound="1";
+    }
+
+    if(monthPicker && !monthPicker.dataset.bound){
+        monthPicker.addEventListener("change",function(){
+            renderCharts();
+        });
+
+        monthPicker.dataset.bound="1";
+    }
 }
 
 function renderCharts() {
-    const canvas = document.getElementById('chartCanvas');
-    if (!canvas) return;
+    const canvas = document.getElementById("chartCanvas");
+    if(!canvas) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
 
-    // 銷毀舊圖表，避免重疊
-    if (chartInstance) {
+    // ==========================================
+    // 清除舊圖表
+    // ==========================================
+
+    if(chartInstance) {
         chartInstance.destroy();
         chartInstance = null;
     }
 
-    let labels = [];
-    let datasets = [];
-    let chartType = 'line';
+    // ==========================================
+    // 取得目前選擇的年月
+    // ==========================================
 
-    const monthPicker = document.getElementById('chartMonthPicker');
-    const targetMonth = monthPicker ? monthPicker.value : '';
+    const yearPicker =
+        document.getElementById("chartYearPicker");
 
-    const history = Array.isArray(s.hist) ? s.hist : [];
+    const monthPicker =
+        document.getElementById("chartMonthPicker");
+
+    const now = new Date();
+
+    const targetYear =
+        yearPicker && yearPicker.value
+            ? Number(yearPicker.value)
+            : now.getFullYear();
+
+    const targetMonth =
+        monthPicker && monthPicker.value
+            ? monthPicker.value
+            : `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+
+    const history =
+        Array.isArray(s.hist) ? s.hist : [];
 
     // ==========================================
-    // 判斷資料類型
-    // 新版：
-    // type === "income"  → 收入
-    // type === "expense" → 支出
+    // 舊存檔相容
     //
-    // 舊存檔沒有 type：
-    // 一律視為支出，保持舊資料相容
+    // 沒有 type 的舊資料
+    // 一律視為支出
     // ==========================================
 
     function getRecordType(h) {
@@ -5555,136 +5891,286 @@ function renderCharts() {
     }
 
     // ==========================================
-    // 📊 年統計
-    // 🔵 收入
-    // 🔴 支出
+    // 計算收支
     // ==========================================
 
-    if (currentChartType === 'year') {
+    function getTotals(records) {
+        let income = 0;
+        let expense = 0;
+
+        records.forEach(h => {
+            const amount = Number(h.amt) || 0;
+
+            if(getRecordType(h) === "income") {
+                income += amount;
+            } else {
+                expense += amount;
+            }
+        });
+
+        return {
+            income,
+            expense,
+            balance: income - expense
+        };
+    }
+
+    // ==========================================
+    // 更新儀表板
+    // ==========================================
+
+    let dashboardRecords = [];
+
+    if(currentChartType === "year") {
+
+        dashboardRecords = history.filter(h => {
+            if(!h || !h.date) return false;
+
+            return Number(
+                h.date.substring(0,4)
+            ) === targetYear;
+        });
+
+    } else {
+
+        dashboardRecords = history.filter(h => {
+            return h &&
+                h.date &&
+                h.date.startsWith(targetMonth);
+        });
+    }
+
+    const totals = getTotals(dashboardRecords);
+
+    const incomeEl =
+        document.getElementById("chartIncome");
+
+    const expenseEl =
+        document.getElementById("chartExpense");
+
+    const balanceEl =
+        document.getElementById("chartBalance");
+
+    if(incomeEl) {
+        incomeEl.innerText =
+            "$" + totals.income.toLocaleString();
+    }
+
+    if(expenseEl) {
+        expenseEl.innerText =
+            "$" + totals.expense.toLocaleString();
+    }
+
+    if(balanceEl) {
+        balanceEl.innerText =
+            "$" + totals.balance.toLocaleString();
+
+        balanceEl.style.color =
+            totals.balance >= 0
+                ? "#2e7d32"
+                : "#c0392b";
+    }
+
+    // ==========================================
+    // 圖表資料
+    // ==========================================
+
+    let labels = [];
+    let datasets = [];
+    let chartType = "bar";
+
+    // ==========================================
+    // 📊 年統計
+    // 選擇年度
+    // 每個月份一組橫向長條
+    // ==========================================
+
+    if(currentChartType === "year") {
 
         const monthlyData = {};
 
+        // 固定顯示 1～12 月
+        for(let m=1;m<=12;m++) {
+
+            const key =
+                `${targetYear}-${String(m).padStart(2,"0")}`;
+
+            monthlyData[key] = {
+                income:0,
+                expense:0
+            };
+        }
+
         history.forEach(h => {
-            if (!h || !h.date) return;
 
-            const month = h.date.substring(0, 7);
-            const amount = Number(h.amt) || 0;
+            if(!h || !h.date) return;
 
-            if (!monthlyData[month]) {
+            const year =
+                Number(h.date.substring(0,4));
+
+            if(year !== targetYear) return;
+
+            const month =
+                h.date.substring(0,7);
+
+            if(!monthlyData[month]) {
                 monthlyData[month] = {
-                    income: 0,
-                    expense: 0
+                    income:0,
+                    expense:0
                 };
             }
 
-            if (getRecordType(h) === "income") {
+            const amount =
+                Number(h.amt) || 0;
+
+            if(getRecordType(h) === "income") {
                 monthlyData[month].income += amount;
             } else {
                 monthlyData[month].expense += amount;
             }
         });
 
-        labels = Object.keys(monthlyData).sort();
+        labels =
+            Object.keys(monthlyData)
+                .sort()
+                .map(key => {
+                    const month =
+                        Number(key.substring(5,7));
+
+                    return `${month}月`;
+                });
+
+        const keys =
+            Object.keys(monthlyData).sort();
 
         datasets = [
             {
-                label: '🔵 收入',
-                data: labels.map(month =>
-                    monthlyData[month].income
+                label:"🔵 收入",
+                data:keys.map(
+                    key => monthlyData[key].income
                 ),
-                backgroundColor: 'rgba(52, 152, 219, 0.65)',
-                borderColor: '#3498db',
-                borderWidth: 2
+                backgroundColor:"#3498db",
+                borderColor:"#3498db",
+                borderWidth:1,
+                borderRadius:4
             },
             {
-                label: '🔴 支出',
-                data: labels.map(month =>
-                    monthlyData[month].expense
+                label:"🔴 支出",
+                data:keys.map(
+                    key => monthlyData[key].expense
                 ),
-                backgroundColor: 'rgba(230, 126, 34, 0.65)',
-                borderColor: '#e67e22',
-                borderWidth: 2
+                backgroundColor:"#e67e22",
+                borderColor:"#e67e22",
+                borderWidth:1,
+                borderRadius:4
             }
         ];
 
-        chartType = 'bar';
+        chartType = "bar";
     }
 
     // ==========================================
     // 📅 月統計
-    // 🔵 每日收入
-    // 🔴 每日支出
+    // 選擇月份
+    // 每一天一組橫向長條
     // ==========================================
 
-    else if (currentChartType === 'month') {
+    else if(currentChartType === "month") {
+
+        const parts =
+            targetMonth.split("-");
+
+        const year =
+            Number(parts[0]);
+
+        const month =
+            Number(parts[1]);
+
+        // 計算當月天數
+        const daysInMonth =
+            new Date(year,month,0).getDate();
 
         const dailyData = {};
 
-        history
-            .filter(h =>
-                h &&
-                h.date &&
-                h.date.startsWith(targetMonth)
-            )
-            .forEach(h => {
+        // 固定顯示當月每一天
+        for(let d=1;d<=daysInMonth;d++) {
 
-                const date = h.date;
-                const amount = Number(h.amt) || 0;
+            const date =
+                `${targetMonth}-${String(d).padStart(2,"0")}`;
 
-                if (!dailyData[date]) {
-                    dailyData[date] = {
-                        income: 0,
-                        expense: 0
-                    };
-                }
+            dailyData[date] = {
+                income:0,
+                expense:0
+            };
+        }
 
-                if (getRecordType(h) === "income") {
-                    dailyData[date].income += amount;
-                } else {
-                    dailyData[date].expense += amount;
-                }
-            });
+        history.forEach(h => {
 
-        labels = Object.keys(dailyData).sort();
+            if(!h || !h.date) return;
+
+            if(!h.date.startsWith(targetMonth)) {
+                return;
+            }
+
+            const date = h.date;
+
+            if(!dailyData[date]) {
+                dailyData[date] = {
+                    income:0,
+                    expense:0
+                };
+            }
+
+            const amount =
+                Number(h.amt) || 0;
+
+            if(getRecordType(h) === "income") {
+                dailyData[date].income += amount;
+            } else {
+                dailyData[date].expense += amount;
+            }
+        });
+
+        const keys =
+            Object.keys(dailyData).sort();
+
+        labels =
+            keys.map(date =>
+                `${Number(date.substring(8,10))}日`
+            );
 
         datasets = [
             {
-                label: '🔵 收入',
-                data: labels.map(date =>
-                    dailyData[date].income
+                label:"🔵 收入",
+                data:keys.map(
+                    date => dailyData[date].income
                 ),
-                borderColor: '#3498db',
-                backgroundColor: 'rgba(52, 152, 219, 0.12)',
-                borderWidth: 2,
-                fill: false,
-                tension: 0.3
+                backgroundColor:"#3498db",
+                borderColor:"#3498db",
+                borderWidth:1,
+                borderRadius:4
             },
             {
-                label: '🔴 支出',
-                data: labels.map(date =>
-                    dailyData[date].expense
+                label:"🔴 支出",
+                data:keys.map(
+                    date => dailyData[date].expense
                 ),
-                borderColor: '#e67e22',
-                backgroundColor: 'rgba(230, 126, 34, 0.12)',
-                borderWidth: 2,
-                fill: false,
-                tension: 0.3
+                backgroundColor:"#e67e22",
+                borderColor:"#e67e22",
+                borderWidth:1,
+                borderRadius:4
             }
         ];
 
-        chartType = 'line';
+        chartType = "bar";
     }
 
     // ==========================================
-    // 🥧 類別統計
-    // 只統計 🔴 支出
-    //
-    // 收入不會出現在支出分類圓餅圖
+    // 🥧 月分類
+    // 只顯示支出
     // ==========================================
 
     else {
-
-        chartType = 'pie';
 
         const monthlyCat = {};
 
@@ -5697,38 +6183,76 @@ function renderCharts() {
             )
             .forEach(h => {
 
-                const catName = h.cat || "未分類";
-                const amount = Number(h.amt) || 0;
+                const cat =
+                    h.cat || "未分類";
 
-                monthlyCat[catName] =
-                    (monthlyCat[catName] || 0) + amount;
+                const amount =
+                    Number(h.amt) || 0;
+
+                monthlyCat[cat] =
+                    (monthlyCat[cat] || 0) + amount;
             });
 
-        labels = Object.keys(monthlyCat);
-
-        const data = labels.map(
-            label => monthlyCat[label]
-        );
+        labels =
+            Object.keys(monthlyCat);
 
         datasets = [
             {
-                label: '🔴 支出',
-                data,
-                backgroundColor: [
-                    '#FF6384',
-                    '#FF9F40',
-                    '#FFCE56',
-                    '#E67E22',
-                    '#E74C3C',
-                    '#F1C40F',
-                    '#C0392B',
-                    '#D35400',
-                    '#BDBDBD'
+                label:"🔴 支出",
+                data:labels.map(
+                    cat => monthlyCat[cat]
+                ),
+                backgroundColor:[
+                    "#FF6384",
+                    "#FF9F40",
+                    "#FFCE56",
+                    "#E67E22",
+                    "#E74C3C",
+                    "#F1C40F",
+                    "#C0392B",
+                    "#D35400",
+                    "#BDBDBD"
                 ],
-                borderColor: '#ffffff',
-                borderWidth: 2
+                borderColor:"#ffffff",
+                borderWidth:2
             }
         ];
+
+        chartType = "pie";
+    }
+
+    // ==========================================
+    // 手機版圖表高度
+    //
+    // 年統計：12 個月
+    // 月統計：依當月天數增加高度
+    // 避免 31 天全部擠在 420px
+    // ==========================================
+
+    const chartWrapper =
+    document.getElementById("chartWrapper") ||
+    canvas.parentElement;
+
+    if(chartWrapper) {
+
+        if(currentChartType === "year") {
+
+            chartWrapper.style.height =
+                "520px";
+
+        } else if(currentChartType === "month") {
+
+            chartWrapper.style.height =
+                Math.max(
+                    520,
+                    labels.length * 42
+                ) + "px";
+
+        } else {
+
+            chartWrapper.style.height =
+                "380px";
+        }
     }
 
     // ==========================================
@@ -5736,26 +6260,38 @@ function renderCharts() {
     // ==========================================
 
     chartInstance = new Chart(ctx, {
-        type: chartType,
 
-        data: {
-            labels,
-            datasets
+        type:chartType,
+
+        data:{
+            labels:labels,
+            datasets:datasets
         },
 
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
 
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'bottom'
+            indexAxis:
+                chartType === "bar"
+                    ? "y"
+                    : "x",
+
+            interaction:{
+                mode:"index",
+                intersect:false
+            },
+
+            plugins:{
+                legend:{
+                    display:true,
+                    position:"bottom"
                 },
 
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
+                tooltip:{
+                    callbacks:{
+                        label:function(context){
+
                             const value =
                                 Number(context.raw) || 0;
 
@@ -5765,23 +6301,32 @@ function renderCharts() {
                 }
             },
 
-            scales: chartType === 'pie'
-                ? {}
-                : {
-                    y: {
-                        beginAtZero: true,
+            scales:
+                chartType === "pie"
+                    ? {}
+                    : {
+                        x:{
+                            beginAtZero:true,
 
-                        ticks: {
-                            callback: function(value) {
-                                return '$' +
-                                    Number(value).toLocaleString();
+                            ticks:{
+                                callback:function(value){
+                                    return "$" +
+                                        Number(value).toLocaleString();
+                                }
+                            }
+                        },
+
+                        y:{
+                            ticks:{
+                                autoSkip:false
                             }
                         }
                     }
-                }
         }
     });
 }
+
+
 
 let tempData = []; // 暫存區
 let lastImportCount = 0; // 儲存上次匯入成功筆數
@@ -5875,34 +6420,48 @@ function handleCSV(e) {
 } // handleCSV 函式結束 (🚩 這邊之前少了這個括號)
 
 
-function cancelImport(){
-    tempData=[];
-    lastImportCount=0;
-    document.getElementById('csvPreviewArea').style.display="none";
-    document.getElementById('csvFile').value="";
-    document.getElementById('importCount').innerText=`預覽資料數量: 0`;
-}
-
 function confirmImport() {
-    if(!tempData || tempData.length===0){ cancelImport(); return; }
+    if(!tempData || tempData.length===0){
+        cancelImport();
+        return;
+    }
 
     tempData.forEach((item,index)=>{
-        const reward=Math.floor(item.amt*0.5);
+        const amount=Number(item.amt)||0;
+        const reward=Math.floor(amount*0.5);
         const monthKey=item.date.substring(0,7);
 
+        // ==========================================
+        // 發票載具匯入固定視為 🔴 支出
+        // ==========================================
+
         s.bal+=reward;
-        s.pool+=item.amt;
-        s.yearSums[monthKey]=(s.yearSums[monthKey]||0)+item.amt;
-        s.catSums[item.cat]=(s.catSums[item.cat]||0)+item.amt;
+        s.pool+=amount;
+
+        s.yearSums[monthKey]=
+            (s.yearSums[monthKey]||0)+amount;
+
+        s.catSums[item.cat]=
+            (s.catSums[item.cat]||0)+amount;
+
+        // ==========================================
+        // 建立新版記帳資料
+        // type 明確標記為 expense
+        // ==========================================
 
         s.hist.push({
             id:Date.now()+index+Math.random(),
             date:item.date,
+            type:"expense",
             cat:item.cat,
-            amt:item.amt,
+            amt:amount,
             note:item.note,
             reward:reward
         });
+
+        // ==========================================
+        // 記帳任務
+        // ==========================================
 
         if(s.tasks){
             s.tasks.dRec++;
@@ -5911,11 +6470,16 @@ function confirmImport() {
         }
     });
 
-    // ⚔️ 戰鬥觸發
+    // ==========================================
+    // ⚔️ 發票支出匯入後照舊觸發遭遇
+    // ==========================================
+
     const encounterCount=Math.floor(s.pool/200);
+
     if(encounterCount>0){
         s.pool%=200;
         battleQueue+=encounterCount;
+
         if(!isInBattle){
             battleQueue--;
             isInBattle=true;
@@ -5924,15 +6488,35 @@ function confirmImport() {
     }
 
     const importedCount=tempData.length;
+
     cancelImport();
     updateUI();
-    if(window.renderCharts)renderCharts();
+
+    if(window.renderCharts){
+        renderCharts();
+    }
+
     alert(`正式導入成功！共 ${importedCount} 筆資料。`);
 }
 
-function cancelImport() {
-    tempData = [];
-    document.getElementById('csvPreviewArea').style.display = "none";
+function cancelImport(){
+    tempData=[];
+    lastImportCount=0;
+
+    const previewArea=document.getElementById('csvPreviewArea');
+    if(previewArea){
+        previewArea.style.display="none";
+    }
+
+    const csvFile=document.getElementById('csvFile');
+    if(csvFile){
+        csvFile.value="";
+    }
+
+    const importCount=document.getElementById('importCount');
+    if(importCount){
+        importCount.innerText="預覽資料數量: 0";
+    }
 }
 
 function searchHistory() {
