@@ -1523,118 +1523,40 @@
 
         </div>
 
-        <!-- 當期收支儀表板 -->
-        <div
-            id="chartDashboard"
-            style="
-                display:grid;
-                grid-template-columns:1fr 1fr;
-                gap:8px;
-                margin-bottom:12px;
-            "
-        >
+<!-- 當期收支儀表板 -->
+<div id="chartDashboard" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
 
-            <div
-                style="
-                    background:#eef8ff;
-                    border:1px solid #3498db;
-                    border-radius:10px;
-                    padding:12px;
-                    text-align:center;
-                "
-            >
-                <div style="
-                    color:#3498db;
-                    font-size:13px;
-                    font-weight:bold;
-                ">🔵 收入</div>
+    <div onclick="switchCategoryChart('income')" style="background:#eef8ff;border:1px solid #3498db;border-radius:10px;padding:12px;text-align:center;cursor:pointer;">
+        <div style="color:#3498db;font-size:13px;font-weight:bold;">🔵 收入</div>
+        <div id="chartIncome" style="margin-top:4px;color:#2874a6;font-size:20px;font-weight:bold;">$0</div>
+        <div id="chartIncomeChange" style="margin-top:3px;font-size:12px;color:#666;">較上月 —</div>
+    </div>
 
-                <div
-                    id="chartIncome"
-                    style="
-                        margin-top:4px;
-                        color:#2874a6;
-                        font-size:20px;
-                        font-weight:bold;
-                    "
-                >$0</div>
-            </div>
+    <div onclick="switchCategoryChart('expense')" style="background:#fff5eb;border:1px solid #e67e22;border-radius:10px;padding:12px;text-align:center;cursor:pointer;">
+        <div style="color:#e67e22;font-size:13px;font-weight:bold;">🔴 支出</div>
+        <div id="chartExpense" style="margin-top:4px;color:#d35400;font-size:20px;font-weight:bold;">$0</div>
+        <div id="chartExpenseChange" style="margin-top:3px;font-size:12px;color:#666;">較上月 —</div>
+    </div>
 
-            <div
-                style="
-                    background:#fff5eb;
-                    border:1px solid #e67e22;
-                    border-radius:10px;
-                    padding:12px;
-                    text-align:center;
-                "
-            >
-                <div style="
-                    color:#e67e22;
-                    font-size:13px;
-                    font-weight:bold;
-                ">🔴 支出</div>
+    <div style="background:#f8f9fa;border:1px solid #ddd;border-radius:10px;padding:12px;text-align:center;">
+        <div style="color:#666;font-size:13px;font-weight:bold;">💰 結餘</div>
+        <div id="chartBalance" style="margin-top:4px;font-size:20px;font-weight:bold;">$0</div>
+    </div>
 
-                <div
-                    id="chartExpense"
-                    style="
-                        margin-top:4px;
-                        color:#d35400;
-                        font-size:20px;
-                        font-weight:bold;
-                    "
-                >$0</div>
-            </div>
+    <div style="background:#eef8ff;border:1px solid #3498db;border-radius:10px;padding:12px;text-align:center;">
+        <div style="color:#3498db;font-size:13px;font-weight:bold;">📉 支出率</div>
+        <div id="chartExpenseRate" style="margin-top:4px;color:#3498db;font-size:20px;font-weight:bold;">—</div>
+    </div>
 
-            <div
-                style="
-                    grid-column:1 / -1;
-                    background:#f8f9fa;
-                    border:1px solid #ddd;
-                    border-radius:10px;
-                    padding:12px;
-                    text-align:center;
-                "
-            >
-                <div style="
-                    color:#666;
-                    font-size:13px;
-                    font-weight:bold;
-                ">💰 結餘</div>
-
-                <div
-                    id="chartBalance"
-                    style="
-                        margin-top:4px;
-                        font-size:22px;
-                        font-weight:bold;
-                    "
-                >$0</div>
-            </div>
-
-        </div>
+</div>
 
         <!-- 圖表 -->
-        <div
-    id="chartWrapper"
-    style="
-        position:relative;
-        width:100%;
-        max-width:100%;
-        height:420px;
-        overflow:hidden;
-        box-sizing:border-box;
-    "
->
-    <canvas
-        id="chartCanvas"
-        style="
-            display:block;
-            width:100% !important;
-            max-width:100%;
-        "
-    ></canvas>
+<div id="chartWrapper" style="position:relative;width:100%;max-width:100%;height:420px;overflow:hidden;box-sizing:border-box;">
+    <canvas id="chartCanvas" style="display:block;width:100% !important;max-width:100%;"></canvas>
 </div>
+
+<!-- 分類排行 -->
+<div id="categoryRanking" style="margin-top:12px;"></div>
 
     </div>
 
@@ -5100,6 +5022,47 @@ function rebuildAccountingStats(){
     });
 }
 
+function getAccountingRecords(filter = {}){
+    const history = Array.isArray(s.hist) ? s.hist : [];
+
+    return history.filter(h => {
+        if(!h || !h.date) return false;
+
+        // 舊資料沒有 type 時，一律視為支出
+        const type =
+            h.type === "income"
+                ? "income"
+                : "expense";
+
+        // 篩選收支類型
+        if(filter.type && type !== filter.type){
+            return false;
+        }
+
+        // 篩選月份
+        if(filter.month && !h.date.startsWith(filter.month)){
+            return false;
+        }
+
+        // 篩選年份
+        if(filter.year){
+            const year =
+                Number(h.date.substring(0,4));
+
+            if(year !== Number(filter.year)){
+                return false;
+            }
+        }
+
+        // 篩選分類
+        if(filter.cat && (h.cat || "其他") !== filter.cat){
+            return false;
+        }
+
+        return true;
+    });
+}
+
 // --- [ 戰鬥核心：修正版 ] ---
 function spawnEnemy(targetId, restoreData) {
     // 🔒 如果是恢復存檔，直接使用原本戰鬥資料
@@ -5774,6 +5737,7 @@ function claimTask(id) {
 }
 
 let chartInstance = null;
+let categoryChartType = "expense";
 
 function switchChart(type) {
     currentChartType = type;
@@ -5813,6 +5777,15 @@ function switchChart(type) {
     renderCharts();
 }
 
+function switchCategoryChart(type){
+    categoryChartType =
+        type === "income"
+            ? "income"
+            : "expense";
+
+    renderCharts();
+}
+
 function bindChartPickerEvents(){
     const yearPicker =
         document.getElementById("chartYearPicker");
@@ -5835,6 +5808,405 @@ function bindChartPickerEvents(){
 
         monthPicker.dataset.bound="1";
     }
+}
+
+function getPreviousMonthTotals(targetMonth){
+    const parts = targetMonth.split("-");
+    const year = Number(parts[0]);
+    const month = Number(parts[1]);
+
+    const previousDate = new Date(year, month - 2, 1);
+    const previousMonth =
+        `${previousDate.getFullYear()}-${String(previousDate.getMonth() + 1).padStart(2,"0")}`;
+
+    const records = getAccountingRecords({
+        month:previousMonth
+    });
+
+    let income = 0;
+    let expense = 0;
+
+    records.forEach(h => {
+        const amount = Number(h.amt) || 0;
+
+        if(h.type === "income"){
+            income += amount;
+        }else{
+            expense += amount;
+        }
+    });
+
+    return {
+        income,
+        expense,
+        month:previousMonth
+    };
+}
+
+function renderCategoryRanking(records,type){
+    const box = document.getElementById("categoryRanking");
+    if(!box) return;
+
+    if(!records || !records.length){
+        box.innerHTML = `
+            <div style="padding:15px;text-align:center;color:#888;">
+                目前沒有分類資料
+            </div>
+        `;
+        return;
+    }
+
+    const categoryData = {};
+
+    records.forEach(h => {
+        if(!h) return;
+
+        const recordType =
+            h.type === "income"
+                ? "income"
+                : "expense";
+
+        if(recordType !== type) return;
+
+        const category =
+            h.cat ||
+            (type === "income"
+                ? "其他收入"
+                : "未分類");
+
+        const amount =
+            Number(h.amt) || 0;
+
+        categoryData[category] =
+            (categoryData[category] || 0) + amount;
+    });
+
+    const entries =
+        Object.entries(categoryData)
+            .sort((a,b) => b[1] - a[1]);
+
+    if(!entries.length){
+        box.innerHTML = `
+            <div style="padding:15px;text-align:center;color:#888;">
+                目前沒有${type === "income" ? "收入" : "支出"}資料
+            </div>
+        `;
+        return;
+    }
+
+    const total =
+        entries.reduce(
+            (sum,item) => sum + item[1],
+            0
+        );
+
+    const topEntries = entries.slice(0,5);
+
+    if(entries.length > 5){
+        const otherAmount =
+            entries
+                .slice(5)
+                .reduce(
+                    (sum,item) => sum + item[1],
+                    0
+                );
+
+        topEntries.push([
+            "其他",
+            otherAmount
+        ]);
+    }
+
+    const color =
+        type === "income"
+            ? "#3498db"
+            : "#e67e22";
+
+    const icon =
+        type === "income"
+            ? "🔵"
+            : "🔴";
+
+    box.innerHTML = `
+        <div style="
+            background:#fff;
+            border:1px solid #ddd;
+            border-radius:10px;
+            padding:12px;
+        ">
+            <div style="
+                font-weight:bold;
+                margin-bottom:8px;
+                color:${color};
+            ">
+                ${icon} ${type === "income" ? "收入" : "支出"}分類排行
+            </div>
+
+            ${topEntries.map((item,index) => {
+                const name = item[0];
+                const amount = item[1];
+
+                const percent =
+                    total > 0
+                        ? (amount / total) * 100
+                        : 0;
+
+                const encodedName =
+                    encodeURIComponent(name);
+
+                return `
+                    <div
+                        onclick="toggleCategoryDetail('${encodedName}','${type}')"
+                        style="
+                            display:flex;
+                            align-items:center;
+                            gap:6px;
+                            padding:9px 0;
+                            border-bottom:1px solid #eee;
+                            font-size:14px;
+                            cursor:pointer;
+                        "
+                    >
+                        <div style="
+                            width:22px;
+                            text-align:center;
+                            font-weight:bold;
+                            color:#777;
+                        ">
+                            ${index + 1}
+                        </div>
+
+                        <div style="
+                            flex:1;
+                            min-width:0;
+                            overflow:hidden;
+                            text-overflow:ellipsis;
+                            white-space:nowrap;
+                        ">
+                            ${icon} ${name}
+                        </div>
+
+                        <div style="
+                            text-align:right;
+                            white-space:nowrap;
+                            font-weight:bold;
+                        ">
+                            $${amount.toLocaleString()}
+                        </div>
+
+                        <div style="
+                            width:50px;
+                            text-align:right;
+                            color:#777;
+                            font-size:12px;
+                        ">
+                            ${percent.toFixed(1)}%
+                        </div>
+                    </div>
+
+                    <div
+                        id="categoryDetail_${type}_${encodedName}"
+                        style="display:none;"
+                    ></div>
+                `;
+            }).join("")}
+        </div>
+    `;
+}
+
+function toggleCategoryDetail(encodedName,type){
+    const name = decodeURIComponent(encodedName);
+
+    const id =
+        `categoryDetail_${type}_${encodedName}`;
+
+    const box =
+        document.getElementById(id);
+
+    if(!box) return;
+
+    if(box.style.display === "block"){
+        box.style.display = "none";
+        box.innerHTML = "";
+        return;
+    }
+
+    const monthPicker =
+        document.getElementById("chartMonthPicker");
+
+    if(!monthPicker || !monthPicker.value) return;
+
+    const targetMonth =
+        monthPicker.value;
+
+    const records =
+        getAccountingRecords({
+            month:targetMonth,
+            type:type
+        });
+
+    let detailRecords = records.filter(h => {
+
+        const category =
+            h.cat ||
+            (type === "income"
+                ? "其他收入"
+                : "未分類");
+
+        return category === name;
+    });
+
+    // 「其他」代表排行第 6 名以後的所有分類
+    if(name === "其他"){
+        const categoryTotals = {};
+
+        records.forEach(h => {
+            const category =
+                h.cat ||
+                (type === "income"
+                    ? "其他收入"
+                    : "未分類");
+
+            const amount =
+                Number(h.amt) || 0;
+
+            categoryTotals[category] =
+                (categoryTotals[category] || 0) + amount;
+        });
+
+        const topCategories =
+            Object.entries(categoryTotals)
+                .sort((a,b) => b[1] - a[1])
+                .slice(0,5)
+                .map(item => item[0]);
+
+        detailRecords =
+            records.filter(h => {
+
+                const category =
+                    h.cat ||
+                    (type === "income"
+                        ? "其他收入"
+                        : "未分類");
+
+                return !topCategories.includes(category);
+            });
+    }
+
+    detailRecords.sort((a,b) =>
+        String(b.date).localeCompare(
+            String(a.date)
+        )
+    );
+
+    const color =
+        type === "income"
+            ? "#3498db"
+            : "#e67e22";
+
+    const icon =
+        type === "income"
+            ? "🔵"
+            : "🔴";
+
+    const total =
+        detailRecords.reduce(
+            (sum,h) =>
+                sum + (Number(h.amt) || 0),
+            0
+        );
+
+    if(!detailRecords.length){
+        box.innerHTML = `
+            <div style="
+                padding:10px;
+                color:#888;
+                text-align:center;
+            ">
+                沒有明細資料
+            </div>
+        `;
+
+        box.style.display = "block";
+        return;
+    }
+
+    box.innerHTML = `
+        <div style="
+            margin:4px 0 8px 28px;
+            padding:10px;
+            background:#f8f9fa;
+            border-radius:8px;
+            border-left:3px solid ${color};
+        ">
+            <div style="
+                color:${color};
+                font-weight:bold;
+                margin-bottom:6px;
+            ">
+                ${icon} ${name}明細
+            </div>
+
+            ${detailRecords.map(h => {
+
+                const amount =
+                    Number(h.amt) || 0;
+
+                const note =
+                    h.note ||
+                    h.remark ||
+                    h.memo ||
+                    "";
+
+                return `
+                    <div style="
+                        display:flex;
+                        align-items:center;
+                        gap:6px;
+                        padding:6px 0;
+                        border-bottom:1px solid #e5e5e5;
+                        font-size:13px;
+                    ">
+                        <div style="
+                            width:75px;
+                            flex-shrink:0;
+                        ">
+                            ${h.date || ""}
+                        </div>
+
+                        <div style="
+                            flex:1;
+                            min-width:0;
+                            overflow:hidden;
+                            text-overflow:ellipsis;
+                            white-space:nowrap;
+                            color:#555;
+                        ">
+                            ${note || name}
+                        </div>
+
+                        <div style="
+                            white-space:nowrap;
+                            font-weight:bold;
+                        ">
+                            $${amount.toLocaleString()}
+                        </div>
+                    </div>
+                `;
+            }).join("")}
+
+            <div style="
+                text-align:right;
+                padding-top:8px;
+                font-weight:bold;
+                color:${color};
+            ">
+                合計 $${total.toLocaleString()}
+            </div>
+        </div>
+    `;
+
+    box.style.display = "block";
 }
 
 function renderCharts() {
@@ -5923,24 +6295,118 @@ function renderCharts() {
 
     if(currentChartType === "year") {
 
-        dashboardRecords = history.filter(h => {
-            if(!h || !h.date) return false;
-
-            return Number(
-                h.date.substring(0,4)
-            ) === targetYear;
-        });
+        dashboardRecords = getAccountingRecords({
+    year:targetYear
+});
 
     } else {
 
-        dashboardRecords = history.filter(h => {
-            return h &&
-                h.date &&
-                h.date.startsWith(targetMonth);
-        });
+        dashboardRecords = getAccountingRecords({
+    month:targetMonth
+});
     }
 
     const totals = getTotals(dashboardRecords);
+
+    let previousTotals = null;
+
+if(currentChartType !== "year"){
+    previousTotals =
+        getPreviousMonthTotals(targetMonth);
+}
+
+function updateChange(elId,current,previous){
+    const el = document.getElementById(elId);
+    if(!el) return;
+
+    if(!previous || previous === 0){
+        el.innerText = "較上月 —";
+        el.style.color = "#666";
+        return;
+    }
+
+    const change =
+        ((current - previous) / previous) * 100;
+
+    const arrow =
+        change > 0
+            ? "↑"
+            : change < 0
+                ? "↓"
+                : "→";
+
+    el.innerText =
+        `較上月 ${arrow} ${Math.abs(change).toFixed(1)}%`;
+
+    // 收入增加通常是好事
+    // 支出減少通常是好事
+    if(elId === "chartIncomeChange"){
+        el.style.color =
+            change >= 0
+                ? "#2e7d32"
+                : "#c0392b";
+    }else{
+        el.style.color =
+            change <= 0
+                ? "#2e7d32"
+                : "#c0392b";
+    }
+}
+
+if(currentChartType !== "year" && previousTotals){
+
+    updateChange(
+        "chartIncomeChange",
+        totals.income,
+        previousTotals.income
+    );
+
+    updateChange(
+        "chartExpenseChange",
+        totals.expense,
+        previousTotals.expense
+    );
+
+}else{
+
+    const incomeChange =
+        document.getElementById("chartIncomeChange");
+
+    const expenseChange =
+        document.getElementById("chartExpenseChange");
+
+    if(incomeChange){
+        incomeChange.innerText = "年度統計";
+        incomeChange.style.color = "#666";
+    }
+
+    if(expenseChange){
+        expenseChange.innerText = "年度統計";
+        expenseChange.style.color = "#666";
+    }
+}
+
+    const expenseRate =
+    totals.income > 0
+        ? (totals.expense / totals.income) * 100
+        : null;
+
+const expenseRateEl =
+    document.getElementById("chartExpenseRate");
+
+if(expenseRateEl) {
+    expenseRateEl.innerText =
+        expenseRate === null
+            ? "—"
+            : expenseRate.toFixed(1) + "%";
+
+    expenseRateEl.style.color =
+        expenseRate === null
+            ? "#666"
+            : expenseRate > 100
+                ? "#c0392b"
+                : "#3498db";
+}
 
     const incomeEl =
         document.getElementById("chartIncome");
@@ -5962,14 +6428,16 @@ function renderCharts() {
     }
 
     if(balanceEl) {
-        balanceEl.innerText =
-            "$" + totals.balance.toLocaleString();
+    balanceEl.innerText =
+        totals.balance < 0
+            ? "-$" + Math.abs(totals.balance).toLocaleString()
+            : "$" + totals.balance.toLocaleString();
 
-        balanceEl.style.color =
-            totals.balance >= 0
-                ? "#2e7d32"
-                : "#c0392b";
-    }
+    balanceEl.style.color =
+        totals.balance >= 0
+            ? "#2e7d32"
+            : "#c0392b";
+}
 
     // ==========================================
     // 圖表資料
@@ -6001,34 +6469,29 @@ function renderCharts() {
             };
         }
 
-        history.forEach(h => {
+        getAccountingRecords({
+    year:targetYear
+}).forEach(h => {
 
-            if(!h || !h.date) return;
+    const month =
+        h.date.substring(0,7);
 
-            const year =
-                Number(h.date.substring(0,4));
+    if(!monthlyData[month]) {
+        monthlyData[month] = {
+            income:0,
+            expense:0
+        };
+    }
 
-            if(year !== targetYear) return;
+    const amount =
+        Number(h.amt) || 0;
 
-            const month =
-                h.date.substring(0,7);
-
-            if(!monthlyData[month]) {
-                monthlyData[month] = {
-                    income:0,
-                    expense:0
-                };
-            }
-
-            const amount =
-                Number(h.amt) || 0;
-
-            if(getRecordType(h) === "income") {
-                monthlyData[month].income += amount;
-            } else {
-                monthlyData[month].expense += amount;
-            }
-        });
+    if(getRecordType(h) === "income") {
+        monthlyData[month].income += amount;
+    } else {
+        monthlyData[month].expense += amount;
+    }
+});
 
         labels =
             Object.keys(monthlyData)
@@ -6104,15 +6567,11 @@ function renderCharts() {
             };
         }
 
-        history.forEach(h => {
+        getAccountingRecords({
+    month:targetMonth
+}).forEach(h => {
 
-            if(!h || !h.date) return;
-
-            if(!h.date.startsWith(targetMonth)) {
-                return;
-            }
-
-            const date = h.date;
+    const date = h.date;
 
             if(!dailyData[date]) {
                 dailyData[date] = {
@@ -6171,55 +6630,38 @@ function renderCharts() {
     // ==========================================
 
     else {
+    const monthlyCat = {};
 
-        const monthlyCat = {};
+    getAccountingRecords({
+        month:targetMonth,
+        type:categoryChartType
+    }).forEach(h => {
+        const cat = h.cat || (categoryChartType === "income" ? "其他收入" : "未分類");
+        const amount = Number(h.amt) || 0;
 
-        history
-            .filter(h =>
-                h &&
-                h.date &&
-                h.date.startsWith(targetMonth) &&
-                getRecordType(h) === "expense"
-            )
-            .forEach(h => {
+        monthlyCat[cat] = (monthlyCat[cat] || 0) + amount;
+    });
 
-                const cat =
-                    h.cat || "未分類";
+    labels = Object.keys(monthlyCat);
 
-                const amount =
-                    Number(h.amt) || 0;
+    datasets = [{
+        label: categoryChartType === "income" ? "🔵 收入" : "🔴 支出",
+        data: labels.map(cat => monthlyCat[cat]),
+        backgroundColor: categoryChartType === "income"
+            ? ["#3498db","#5dade2","#85c1e9","#aed6f1"]
+            : ["#FF6384","#FF9F40","#FFCE56","#E67E22","#E74C3C","#F1C40F","#C0392B","#D35400","#BDBDBD"],
+        borderColor:"#ffffff",
+        borderWidth:2
+    }];
 
-                monthlyCat[cat] =
-                    (monthlyCat[cat] || 0) + amount;
-            });
-
-        labels =
-            Object.keys(monthlyCat);
-
-        datasets = [
-            {
-                label:"🔴 支出",
-                data:labels.map(
-                    cat => monthlyCat[cat]
-                ),
-                backgroundColor:[
-                    "#FF6384",
-                    "#FF9F40",
-                    "#FFCE56",
-                    "#E67E22",
-                    "#E74C3C",
-                    "#F1C40F",
-                    "#C0392B",
-                    "#D35400",
-                    "#BDBDBD"
-                ],
-                borderColor:"#ffffff",
-                borderWidth:2
-            }
-        ];
-
-        chartType = "pie";
-    }
+    chartType = "pie";
+    renderCategoryRanking(
+    getAccountingRecords({
+        month:targetMonth
+    }),
+    categoryChartType
+);
+}
 
     // ==========================================
     // 手機版圖表高度
@@ -6377,9 +6819,9 @@ function handleCSV(e) {
 
                 let category = "其他";
                 const note = (cols[7] || "").toLowerCase().trim();
-                if (note.includes("超商")||note.includes("企業社")||note.includes("便利商店")||note.includes("餐飲")||note.includes("商行")||note.includes("茶")) category="餐飲";
-                else if (note.includes("捷運")||note.includes("高鐵")||note.includes("台鐵")||note.includes("油品")) category="交通";
-                else if (note.includes("藥局")||note.includes("醫療")||note.includes("健保")) category="醫療";
+                if (note.includes("超商")||note.includes("企業社")||note.includes("便利商店")||note.includes("餐飲")||note.includes("商行")||note.includes("食")||note.includes("茶")) category="餐飲";
+                else if (note.includes("捷運")||note.includes("高鐵")||note.includes("台鐵")||note.includes("油品")||note.includes("中油")||note.includes("汽油")) category="交通";
+                else if (note.includes("藥局")||note.includes("醫")||note.includes("健保")) category="醫療";
                 else if (note.includes("購物")||note.includes("百貨")||note.includes("電子")) category="購物";
                 else if (note.includes("娛樂")||note.includes("影城")) category="娛樂";
 
