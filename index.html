@@ -6808,60 +6808,112 @@ if(expenseRateEl) {
         },
 
         options:{
-            responsive:true,
-            maintainAspectRatio:false,
+    responsive:true,
+    maintainAspectRatio:false,
 
-            indexAxis:
-                chartType === "bar"
-                    ? "y"
-                    : "x",
+    indexAxis:
+        chartType === "bar"
+            ? "y"
+            : "x",
 
-            interaction:{
-                mode:"index",
-                intersect:false
-            },
+    interaction:{
+        mode:"index",
+        intersect:false
+    },
 
-            plugins:{
-                legend:{
-                    display:true,
-                    position:"bottom"
+    // ==========================================
+    // 🥧 圓餅圖點擊分類
+    // 自動展開下面的分類明細
+    // ==========================================
+
+    onClick:function(event,elements){
+
+        // 只有圓餅圖可以點擊
+        if(chartType !== "pie") return;
+
+        if(!elements || !elements.length) return;
+
+        const index =
+            elements[0].index;
+
+        const category =
+            labels[index];
+
+        if(!category) return;
+
+        // 取得目前收入 / 支出
+        const type =
+            categoryChartType === "income"
+                ? "income"
+                : "expense";
+
+        // 與分類排行使用相同的分類名稱
+        const encodedName =
+            encodeURIComponent(category);
+
+        // 自動展開對應分類
+        toggleCategoryDetail(
+            encodedName,
+            type
+        );
+
+        // 將分類排行捲動到畫面
+        const ranking =
+            document.getElementById(
+                "categoryRanking"
+            );
+
+        if(ranking){
+            setTimeout(()=>{
+                ranking.scrollIntoView({
+                    behavior:"smooth",
+                    block:"nearest"
+                });
+            },50);
+        }
+    },
+
+    plugins:{
+        legend:{
+            display:true,
+            position:"bottom"
+        },
+
+        tooltip:{
+            callbacks:{
+                label:function(context){
+
+                    const value =
+                        Number(context.raw) || 0;
+
+                    return `${context.dataset.label}: $${value.toLocaleString()}`;
+                }
+            }
+        }
+    },
+
+    scales:
+        chartType === "pie"
+            ? {}
+            : {
+                x:{
+                    beginAtZero:true,
+
+                    ticks:{
+                        callback:function(value){
+                            return "$" +
+                                Number(value).toLocaleString();
+                        }
+                    }
                 },
 
-                tooltip:{
-                    callbacks:{
-                        label:function(context){
-
-                            const value =
-                                Number(context.raw) || 0;
-
-                            return `${context.dataset.label}: $${value.toLocaleString()}`;
-                        }
+                y:{
+                    ticks:{
+                        autoSkip:false
                     }
                 }
-            },
-
-            scales:
-                chartType === "pie"
-                    ? {}
-                    : {
-                        x:{
-                            beginAtZero:true,
-
-                            ticks:{
-                                callback:function(value){
-                                    return "$" +
-                                        Number(value).toLocaleString();
-                                }
-                            }
-                        },
-
-                        y:{
-                            ticks:{
-                                autoSkip:false
-                            }
-                        }
-                    }
-        }
+            }
+}
     });
 }
 
